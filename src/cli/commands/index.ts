@@ -1,4 +1,5 @@
-export { createAddFeedCommand } from './add-feed';
-export { createListCommand } from './list';
+export { createAddCommand } from './add';
+export { createArticlesCommand } from './articles';
 export { createUpdateCommand } from './update';
-export { createFeedsCommand } from './feeds';
+export { createListCommand } from './feeds';
+export { createRmCommand } from './rm';

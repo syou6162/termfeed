@@ -2,10 +2,11 @@
 
 import { Command } from 'commander';
 import {
-  createAddFeedCommand,
-  createListCommand,
+  createAddCommand,
+  createArticlesCommand,
   createUpdateCommand,
-  createFeedsCommand,
+  createListCommand,
+  createRmCommand,
 } from './cli/commands';
 
 export const VERSION = '0.1.0';
@@ -18,10 +19,11 @@ program
   .version(VERSION);
 
 // Register subcommands
-program.addCommand(createAddFeedCommand());
-program.addCommand(createListCommand());
+program.addCommand(createAddCommand());
+program.addCommand(createArticlesCommand());
 program.addCommand(createUpdateCommand());
-program.addCommand(createFeedsCommand());
+program.addCommand(createListCommand());
+program.addCommand(createRmCommand());
 
 // Main CLI entry point
 if (require.main === module) {
