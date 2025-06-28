@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { DatabaseManager } from './database';
-import { ArticleModel, CreateArticleInput } from './article';
-import { FeedModel } from './feed';
+import { DatabaseManager } from './database.js';
+import { ArticleModel, CreateArticleInput } from './article.js';
+import { FeedModel } from './feed.js';
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';

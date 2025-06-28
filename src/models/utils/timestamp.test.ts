@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { dateToUnixSeconds, nowInUnixSeconds, unixSecondsToDate } from './timestamp';
+import { dateToUnixSeconds, nowInUnixSeconds, unixSecondsToDate } from './timestamp.js';
 
 describe('timestamp utilities', () => {
   describe('dateToUnixSeconds', () => {

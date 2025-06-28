@@ -1,7 +1,7 @@
-import { DatabaseManager } from './database';
-import { Feed, CreateFeedInput } from './types';
-import { UniqueConstraintError } from './errors';
-import { dateToUnixSeconds, nowInUnixSeconds, unixSecondsToDate } from './utils/timestamp';
+import { DatabaseManager } from './database.js';
+import { Feed, CreateFeedInput } from './types.js';
+import { UniqueConstraintError } from './errors.js';
+import { dateToUnixSeconds, nowInUnixSeconds, unixSecondsToDate } from './utils/timestamp.js';
 
 export class FeedModel {
   private db: DatabaseManager;
