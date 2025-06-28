@@ -78,9 +78,9 @@ export function ArticleList({
     );
   }
 
-  const unreadArticles = articles.filter(article => !article.is_read);
-  const unreadCount = unreadArticles.length;
-  const currentUnreadIndex = unreadArticles.findIndex(article => article.id === selectedArticle?.id);
+  // articlesは既に未読記事のみ
+  const unreadCount = articles.length;
+  const currentUnreadIndex = articles.findIndex(article => article.id === selectedArticle?.id);
   const unreadPosition = currentUnreadIndex !== -1 ? currentUnreadIndex + 1 : 0;
 
   return (
@@ -94,9 +94,9 @@ export function ArticleList({
             j/k:記事選択 a:次のサイト s:前のサイト l/Enter:ブラウザで開く
           </Text>
           <Text color="gray">
-            {selectedArticle?.is_read 
-              ? `既読 (未読${unreadCount}件)` 
-              : `${unreadPosition}/${unreadCount}件`}
+            {unreadPosition > 0 
+              ? `${unreadPosition}/${unreadCount}件` 
+              : `未読${unreadCount}件`}
           </Text>
         </Box>
         <Text color="gray" dimColor>

@@ -19,6 +19,7 @@ export function App() {
   const [feeds, setFeeds] = useState<FeedWithUnreadCount[]>([]);
   const [articles, setArticles] = useState<Article[]>([]);
   const [selectedFeedIndex, setSelectedFeedIndex] = useState(0);
+  const [selectedFeedId, setSelectedFeedId] = useState<number | null>(null);
   const [selectedArticleIndex, setSelectedArticleIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>('');
@@ -47,13 +48,33 @@ export function App() {
         return { ...feed, unreadCount };
       });
 
-      setFeeds(feedsWithUnreadCount);
+      // 未読件数でソート：未読あり → 未読なし
+      const sortedFeeds = feedsWithUnreadCount.sort((a, b) => {
+        // 未読件数が多い順、同じ場合は元の順序を維持
+        if (a.unreadCount > 0 && b.unreadCount === 0) return -1;
+        if (a.unreadCount === 0 && b.unreadCount > 0) return 1;
+        if (a.unreadCount > 0 && b.unreadCount > 0) return b.unreadCount - a.unreadCount;
+        return 0; // 両方とも未読なしの場合は元の順序
+      });
+
+      setFeeds(sortedFeeds);
+      
+      // ソート後に選択中のフィードのインデックスを更新
+      if (selectedFeedId) {
+        const newIndex = sortedFeeds.findIndex(feed => feed.id === selectedFeedId);
+        if (newIndex !== -1) {
+          setSelectedFeedIndex(newIndex);
+        }
+      } else if (sortedFeeds.length > 0) {
+        // 初回読み込み時は最初のフィードを選択
+        setSelectedFeedId(sortedFeeds[0].id);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'フィードの読み込みに失敗しました');
     } finally {
       setIsLoading(false);
     }
-  }, [feedService]);
+  }, [feedService, selectedFeedId]);
 
   const loadArticles = useCallback(
     (feedId: number) => {
@@ -61,8 +82,10 @@ export function App() {
         setIsLoading(true);
         setError('');
 
-        const feedArticles = feedService.getArticles({ feed_id: feedId, limit: 100 });
-        setArticles(feedArticles);
+        const allArticles = feedService.getArticles({ feed_id: feedId, limit: 100 });
+        // 未読記事のみをフィルタリング
+        const unreadArticles = allArticles.filter(article => !article.is_read);
+        setArticles(unreadArticles);
         setSelectedArticleIndex(0);
       } catch (err) {
         setError(err instanceof Error ? err.message : '記事の読み込みに失敗しました');
@@ -97,15 +120,23 @@ export function App() {
     if (currentArticle && currentArticle.id && !currentArticle.is_read) {
       try {
         feedService.markArticleAsRead(currentArticle.id);
+        // 既読化した記事をリストから除外
+        const updatedArticles = articles.filter(article => article.id !== currentArticle.id);
+        setArticles(updatedArticles);
+        // インデックスを調整
+        setSelectedArticleIndex(Math.min(selectedArticleIndex, updatedArticles.length - 1));
       } catch (err) {
         console.error('記事の既読化に失敗しました:', err);
       }
     }
 
     setSelectedFeedIndex(index);
+    if (feeds[index]) {
+      setSelectedFeedId(feeds[index].id);
+    }
     setSelectedArticleIndex(0); // 記事選択をリセット
     // loadArticlesはuseEffectで自動的に呼ばれる
-  }, [articles, selectedArticleIndex, feedService]);
+  }, [articles, selectedArticleIndex, feedService, feeds]);
 
   const handleArticleSelect = useCallback(() => {
     const selectedArticle = articles[selectedArticleIndex];
