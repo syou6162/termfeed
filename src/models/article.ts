@@ -154,7 +154,7 @@ export class ArticleModel {
       return this.findById(id);
     }
 
-    updateFields.push('updated_at = datetime("now")');
+    updateFields.push("updated_at = datetime('now')");
     updateValues.push(id);
 
     const stmt = this.db.getDb().prepare(`
