@@ -64,9 +64,21 @@ describe('convertHtmlToText', () => {
     expect(result).toBe('First paragraph\n\nSecond paragraph');
   });
 
+  it('単体pタグの処理', () => {
+    const html = '<p>Paragraph</p>';
+    const result = convertHtmlToText(html);
+    expect(result).toBe('\n\nParagraph\n\n');
+  });
+
   it('divタグの処理', () => {
     const html = '<div>First section</div><div>Second section</div>';
     expect(convertHtmlToText(html)).toBe('First section\n\nSecond section');
+  });
+
+  it('単体divタグの処理', () => {
+    const html = '<div>Division</div>';
+    const result = convertHtmlToText(html);
+    expect(result).toBe('\n\nDivision\n\n');
   });
 
   it('リストアイテムの処理（箇条書き記号付き）', () => {
@@ -171,7 +183,7 @@ describe('convertHtmlToText', () => {
 
   it('改行を含むパラグラフの処理', () => {
     const html = '<p>First line\nSecond line\nThird line</p>';
-    expect(convertHtmlToText(html)).toBe('First line\n\nSecond line\n\nThird line');
+    expect(convertHtmlToText(html)).toBe('\n\nFirst line\n\nSecond line\n\nThird line\n\n');
   });
 
   it('blockquoteタグの処理', () => {
@@ -215,7 +227,7 @@ describe('formatSummary', () => {
 
   it('HTMLを変換して切り詰める', () => {
     const html = '<p>This is a long paragraph with HTML tags</p>';
-    expect(formatSummary(html, 20)).toBe('This is a long pa...');
+    expect(formatSummary(html, 20)).toBe('\n\nThis is a long ...');
   });
 
   it('デフォルトの最大長（150文字）', () => {

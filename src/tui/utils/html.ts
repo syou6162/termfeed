@@ -3,12 +3,23 @@ export function convertHtmlToText(html: string): string {
     return '';
   }
 
-  // H2, H3タグかどうかを検出
+  // H2, H3, p, divタグかどうかを検出
   const hasH2 = /<h2\b[^>]*>/.test(html);
   const hasH3 = /<h3\b[^>]*>/.test(html);
+  const hasP = /<p\b[^>]*>/.test(html);
+  const hasDiv = /<div\b[^>]*>/.test(html);
   const isHeadingOnly =
     (hasH2 || hasH3) &&
     !/<(?!\/?(h[23])\b)[^>]+>/.test(html.replace(/<h[23][^>]*>.*?<\/h[23]>/gi, ''));
+  // 単一のp、divタグかどうかを検出（より厳密に）
+  const isPOnly =
+    hasP &&
+    (html.match(/<p\b[^>]*>/g) || []).length === 1 &&
+    !/<(?!\/?(p)\b)[^>]+>/.test(html.replace(/<p[^>]*>.*?<\/p>/gi, ''));
+  const isDivOnly =
+    hasDiv &&
+    (html.match(/<div\b[^>]*>/g) || []).length === 1 &&
+    !/<(?!\/?(div)\b)[^>]+>/.test(html.replace(/<div[^>]*>.*?<\/div>/gi, ''));
 
   let result = html
     .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
@@ -59,8 +70,14 @@ export function convertHtmlToText(html: string): string {
     // 前後の空白を削除（ただし見出しのみの場合は改行を保持）
     .trim();
 
-  // 見出しのみの場合は改行を保持
+  // 見出し、p、divのみの場合は改行を保持
   if (isHeadingOnly && result.match(/^(■|▶)/)) {
+    return '\n\n' + result + '\n\n';
+  }
+  if (isPOnly && !result.match(/^(■|▶|●)/)) {
+    return '\n\n' + result + '\n\n';
+  }
+  if (isDivOnly && !result.match(/^(■|▶|●)/)) {
     return '\n\n' + result + '\n\n';
   }
 
