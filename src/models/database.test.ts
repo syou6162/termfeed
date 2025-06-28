@@ -30,42 +30,44 @@ describe('DatabaseManager', () => {
 
   it('should run migration successfully', () => {
     expect(() => dbManager.migrate()).not.toThrow();
-    
+
     // テーブルが作成されたことを確認
-    const tables = dbManager.getDb()
-      .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name IN ('feeds', 'articles')")
+    const tables = dbManager
+      .getDb()
+      .prepare(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('feeds', 'articles')"
+      )
       .all();
-    
+
     expect(tables).toHaveLength(2);
-    expect(tables.map((t: any) => t.name)).toContain('feeds');
-    expect(tables.map((t: any) => t.name)).toContain('articles');
+    expect(tables.map((t) => (t as { name: string }).name)).toContain('feeds');
+    expect(tables.map((t) => (t as { name: string }).name)).toContain('articles');
   });
 
   it('should have correct default values for boolean fields', () => {
     dbManager.migrate();
-    
+
     // フィードを挿入
-    const insertFeed = dbManager.getDb().prepare(
-      'INSERT INTO feeds (url, title) VALUES (?, ?)'
-    );
+    const insertFeed = dbManager.getDb().prepare('INSERT INTO feeds (url, title) VALUES (?, ?)');
     const feedInfo = insertFeed.run('https://example.com/rss', 'Test Feed');
-    
+
     // 記事を挿入（is_read, is_favoriteを指定しない）
-    const insertArticle = dbManager.getDb().prepare(
-      'INSERT INTO articles (feed_id, title, url, published_at) VALUES (?, ?, ?, ?)'
-    );
+    const insertArticle = dbManager
+      .getDb()
+      .prepare('INSERT INTO articles (feed_id, title, url, published_at) VALUES (?, ?, ?, ?)');
     insertArticle.run(
       feedInfo.lastInsertRowid,
       'Test Article',
       'https://example.com/article',
       new Date().toISOString()
     );
-    
+
     // デフォルト値を確認
-    const article = dbManager.getDb()
+    const article = dbManager
+      .getDb()
       .prepare('SELECT is_read, is_favorite FROM articles WHERE id = 1')
-      .get() as any;
-    
+      .get() as { is_read: number; is_favorite: number };
+
     expect(article.is_read).toBe(0); // SQLiteでは FALSE は 0 として保存される
     expect(article.is_favorite).toBe(0);
   });
