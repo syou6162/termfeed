@@ -28,11 +28,11 @@ export function App() {
     const databaseManager = createDatabaseManager();
     // マイグレーションを実行
     databaseManager.migrate();
-    
+
     const feedModel = new FeedModel(databaseManager);
     const articleModel = new ArticleModel(databaseManager);
     const feedService = new FeedService(feedModel, articleModel);
-    
+
     return { feedService };
   }, []);
 
@@ -94,18 +94,14 @@ export function App() {
   const handleFeedSelectionChange = useCallback((index: number) => {
     setSelectedFeedIndex(index);
     setSelectedArticleIndex(0); // 記事選択をリセット
-    const selectedFeed = feeds[index];
-    if (selectedFeed?.id) {
-      loadArticles(selectedFeed.id);
-    }
-  }, [feeds, loadArticles]);
-
+    // loadArticlesはuseEffectで自動的に呼ばれる
+  }, []);
 
   const handleArticleSelect = useCallback(() => {
     const selectedArticle = articles[selectedArticleIndex];
     if (selectedArticle?.url) {
       // ブラウザでURLを開く（実装は環境に依存）
-      console.log(`Opening: ${selectedArticle.url}`);
+      // console.log(`Opening: ${selectedArticle.url}`);
     }
   }, [articles, selectedArticleIndex]);
 
@@ -206,22 +202,18 @@ export function App() {
     );
   }
 
-  const selectedFeed = feeds[selectedFeedIndex];
   const selectedArticle = articles[selectedArticleIndex];
 
   return (
     <TwoPaneLayout
       leftWidth={20}
       rightWidth={80}
-      leftPane={
-        <FeedList feeds={feeds} selectedIndex={selectedFeedIndex} />
-      }
+      leftPane={<FeedList feeds={feeds} selectedIndex={selectedFeedIndex} />}
       rightPane={
         <ArticleList
           articles={articles}
           selectedIndex={selectedArticleIndex}
           selectedArticle={selectedArticle}
-          feedTitle={selectedFeed?.title}
         />
       }
     />

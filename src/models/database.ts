@@ -36,19 +36,19 @@ export class DatabaseManager {
     if (!fs.existsSync(schemaPath)) {
       schemaPath = path.join(__dirname, '..', '..', 'src', 'models', 'schema.sql');
     }
-    
+
     const schema = fs.readFileSync(schemaPath, 'utf8');
-    
+
     // SQLファイルを個別のステートメントに分割して実行
     const statements = schema
       .split(';')
-      .map(stmt => stmt.trim())
-      .filter(stmt => stmt.length > 0);
-    
+      .map((stmt) => stmt.trim())
+      .filter((stmt) => stmt.length > 0);
+
     for (const statement of statements) {
       this.db.exec(statement);
     }
-    
+
     console.log('Database migration completed successfully');
   }
 
