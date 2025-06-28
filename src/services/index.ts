@@ -13,6 +13,10 @@ export type {
   AddFeedResult,
   CrawlerOptions,
   ServiceError,
+  FeedUpdateSuccess,
+  FeedUpdateFailure,
+  FeedUpdateOutcome,
+  UpdateAllFeedsResult,
 } from './types.js';
 
 // Custom Errors

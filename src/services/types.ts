@@ -49,3 +49,28 @@ export type ServiceError = {
   message: string;
   originalError?: Error;
 };
+
+export type FeedUpdateSuccess = {
+  status: 'success';
+  feedId: number;
+  result: FeedUpdateResult;
+};
+
+export type FeedUpdateFailure = {
+  status: 'failure';
+  feedId: number;
+  feedUrl: string;
+  error: Error;
+};
+
+export type FeedUpdateOutcome = FeedUpdateSuccess | FeedUpdateFailure;
+
+export type UpdateAllFeedsResult = {
+  successful: FeedUpdateSuccess[];
+  failed: FeedUpdateFailure[];
+  summary: {
+    totalFeeds: number;
+    successCount: number;
+    failureCount: number;
+  };
+};

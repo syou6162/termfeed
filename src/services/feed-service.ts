@@ -2,7 +2,14 @@ import { FeedModel } from '../models/feed.js';
 import { ArticleModel } from '../models/article.js';
 import { RSSCrawler } from './rss-crawler.js';
 import type { Feed, Article, CreateFeedInput } from '../models/types.js';
-import type { CrawlResult, FeedUpdateResult, AddFeedResult } from './types.js';
+import type {
+  CrawlResult,
+  FeedUpdateResult,
+  AddFeedResult,
+  UpdateAllFeedsResult,
+  FeedUpdateSuccess,
+  FeedUpdateFailure,
+} from './types.js';
 import { DuplicateFeedError, FeedNotFoundError, FeedManagementError } from './errors.js';
 
 export type { FeedUpdateResult, AddFeedResult };
@@ -132,22 +139,41 @@ export class FeedService {
     };
   }
 
-  async updateAllFeeds(): Promise<FeedUpdateResult[]> {
+  async updateAllFeeds(): Promise<UpdateAllFeedsResult> {
     const feeds = this.feedModel.findAll();
-    const results: FeedUpdateResult[] = [];
+    const successful: FeedUpdateSuccess[] = [];
+    const failed: FeedUpdateFailure[] = [];
 
     for (const feed of feeds) {
       try {
         const result = await this.updateFeed(feed.id!);
-        results.push(result);
+        successful.push({
+          status: 'success',
+          feedId: feed.id!,
+          result,
+        });
       } catch (error) {
+        failed.push({
+          status: 'failure',
+          feedId: feed.id!,
+          feedUrl: feed.url,
+          error: error instanceof Error ? error : new Error('Unknown error'),
+        });
         console.error(
           `Failed to update feed ${feed.id}: ${error instanceof Error ? error.message : 'Unknown error'}`
         );
       }
     }
 
-    return results;
+    return {
+      successful,
+      failed,
+      summary: {
+        totalFeeds: feeds.length,
+        successCount: successful.length,
+        failureCount: failed.length,
+      },
+    };
   }
 
   markArticleAsRead(articleId: number): boolean {

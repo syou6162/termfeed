@@ -303,9 +303,13 @@ describe('FeedService', () => {
 
       const results = await feedService.updateAllFeeds();
 
-      expect(results).toHaveLength(2);
-      expect(results[0].feedId).toBe(feed1.id);
-      expect(results[1].feedId).toBe(feed2.id);
+      expect(results.summary.totalFeeds).toBe(2);
+      expect(results.summary.successCount).toBe(2);
+      expect(results.summary.failureCount).toBe(0);
+      expect(results.successful).toHaveLength(2);
+      expect(results.failed).toHaveLength(0);
+      expect(results.successful[0].feedId).toBe(feed1.id);
+      expect(results.successful[1].feedId).toBe(feed2.id);
     });
 
     it('一部のフィード更新に失敗してもエラーにならない', async () => {
@@ -337,7 +341,54 @@ describe('FeedService', () => {
 
       const results = await feedService.updateAllFeeds();
 
-      expect(results).toHaveLength(1); // 成功した1つのみ
+      expect(results.summary.totalFeeds).toBe(2);
+      expect(results.summary.successCount).toBe(1);
+      expect(results.summary.failureCount).toBe(1);
+      expect(results.successful).toHaveLength(1);
+      expect(results.failed).toHaveLength(1);
+
+      // 成功したフィードの確認
+      expect(results.successful[0].status).toBe('success');
+      expect(results.successful[0].feedId).toBe(2);
+
+      // 失敗したフィードの確認
+      expect(results.failed[0].status).toBe('failure');
+      expect(results.failed[0].feedId).toBe(1);
+      expect(results.failed[0].feedUrl).toBe('https://example.com/rss1.xml');
+      expect(results.failed[0].error.message).toBe('Failed to update feed: Network error');
+    });
+
+    it('全フィード更新が失敗した場合の詳細な結果を返す', async () => {
+      // フィードを作成
+      feedModel.create({
+        url: 'https://example.com/rss1.xml',
+        title: 'Feed 1',
+        description: 'Description 1',
+      });
+
+      feedModel.create({
+        url: 'https://example.com/rss2.xml',
+        title: 'Feed 2',
+        description: 'Description 2',
+      });
+
+      // 全ての更新が失敗
+      vi.mocked(mockCrawler.crawl).mockRejectedValue(new Error('Network timeout'));
+
+      const results = await feedService.updateAllFeeds();
+
+      expect(results.summary.totalFeeds).toBe(2);
+      expect(results.summary.successCount).toBe(0);
+      expect(results.summary.failureCount).toBe(2);
+      expect(results.successful).toHaveLength(0);
+      expect(results.failed).toHaveLength(2);
+
+      // 失敗した全フィードの詳細確認
+      results.failed.forEach((failure) => {
+        expect(failure.status).toBe('failure');
+        expect(failure.error.message).toBe('Failed to update feed: Network timeout');
+        expect(failure.feedUrl).toMatch(/^https:\/\/example\.com\/rss[12]\.xml$/);
+      });
     });
   });
 
