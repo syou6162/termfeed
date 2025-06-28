@@ -2,6 +2,7 @@ import Parser from 'rss-parser';
 import axios from 'axios';
 import type { Article, Feed } from '../models/types.js';
 import type { RSSItem, CrawlResult, CrawlerOptions } from './types.js';
+import { RSSFetchError, RSSParseError } from './errors.js';
 
 export type { RSSItem, CrawlResult, CrawlerOptions };
 
@@ -40,18 +41,19 @@ export class RSSCrawler {
     } catch (error) {
       if (axios.isAxiosError(error)) {
         if (error.code === 'ECONNABORTED') {
-          throw new Error(`Request timeout: ${url}`);
+          throw new RSSFetchError(`Request timeout`, url, { cause: error });
         }
         if (error.response?.status === 404) {
-          throw new Error(`Feed not found: ${url}`);
+          throw new RSSFetchError(`Feed not found`, url, { cause: error });
         }
         if (error.response?.status && error.response.status >= 400) {
-          throw new Error(`HTTP error ${error.response.status}: ${url}`);
+          throw new RSSFetchError(`HTTP error ${error.response.status}`, url, { cause: error });
         }
-        throw new Error(`Network error: ${error.message}`);
+        throw new RSSFetchError(`Network error: ${error.message}`, url, { cause: error });
       }
-      throw new Error(
+      throw new RSSParseError(
         `Failed to parse RSS feed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        url,
         { cause: error }
       );
     }

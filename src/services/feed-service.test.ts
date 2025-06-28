@@ -6,6 +6,7 @@ import { FeedModel } from '../models/feed.js';
 import { ArticleModel } from '../models/article.js';
 import { FeedService } from './feed-service.js';
 import { RSSCrawler } from './rss-crawler.js';
+import { DuplicateFeedError, FeedNotFoundError } from './errors.js';
 
 describe('FeedService', () => {
   let db: DatabaseManager;
@@ -88,7 +89,7 @@ describe('FeedService', () => {
 
       // 同じURLでもう一度追加を試みる
       await expect(feedService.addFeed('https://example.com/rss.xml')).rejects.toThrow(
-        'Feed already exists'
+        DuplicateFeedError
       );
     });
 
@@ -170,7 +171,7 @@ describe('FeedService', () => {
     });
 
     it('存在しないフィードIDでエラーを投げる', () => {
-      expect(() => feedService.removeFeed(999)).toThrow('Feed not found: 999');
+      expect(() => feedService.removeFeed(999)).toThrow(FeedNotFoundError);
     });
   });
 
@@ -269,7 +270,7 @@ describe('FeedService', () => {
     });
 
     it('存在しないフィードIDでエラーを投げる', async () => {
-      await expect(feedService.updateFeed(999)).rejects.toThrow('Feed not found: 999');
+      await expect(feedService.updateFeed(999)).rejects.toThrow(FeedNotFoundError);
     });
   });
 

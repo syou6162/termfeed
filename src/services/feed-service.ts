@@ -3,6 +3,7 @@ import { ArticleModel } from '../models/article.js';
 import { RSSCrawler } from './rss-crawler.js';
 import type { Feed, Article, CreateFeedInput } from '../models/types.js';
 import type { CrawlResult, FeedUpdateResult, AddFeedResult } from './types.js';
+import { DuplicateFeedError, FeedNotFoundError, FeedManagementError } from './errors.js';
 
 export type { FeedUpdateResult, AddFeedResult };
 
@@ -20,15 +21,16 @@ export class FeedService {
   async addFeed(url: string): Promise<AddFeedResult> {
     const existingFeed = this.feedModel.findByUrl(url);
     if (existingFeed) {
-      throw new Error(`Feed already exists: ${url}`);
+      throw new DuplicateFeedError(url);
     }
 
     let crawlResult: CrawlResult;
     try {
       crawlResult = await this.crawler.crawl(url);
     } catch (error) {
-      throw new Error(
+      throw new FeedManagementError(
         `Failed to fetch feed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        undefined,
         { cause: error }
       );
     }
@@ -41,7 +43,7 @@ export class FeedService {
 
     const feed = this.feedModel.create(createFeedInput);
     if (!feed) {
-      throw new Error('Failed to create feed');
+      throw new FeedManagementError('Failed to create feed');
     }
 
     let articlesCount = 0;
@@ -66,7 +68,7 @@ export class FeedService {
   removeFeed(feedId: number): boolean {
     const feed = this.feedModel.findById(feedId);
     if (!feed) {
-      throw new Error(`Feed not found: ${feedId}`);
+      throw new FeedNotFoundError(feedId);
     }
 
     this.articleModel.deleteByFeedId(feedId);
@@ -76,15 +78,16 @@ export class FeedService {
   async updateFeed(feedId: number): Promise<FeedUpdateResult> {
     const feed = this.feedModel.findById(feedId);
     if (!feed) {
-      throw new Error(`Feed not found: ${feedId}`);
+      throw new FeedNotFoundError(feedId);
     }
 
     let crawlResult: CrawlResult;
     try {
       crawlResult = await this.crawler.crawl(feed.url);
     } catch (error) {
-      throw new Error(
+      throw new FeedManagementError(
         `Failed to update feed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        feedId,
         { cause: error }
       );
     }

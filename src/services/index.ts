@@ -14,3 +14,12 @@ export type {
   CrawlerOptions,
   ServiceError,
 } from './types.js';
+
+// Custom Errors
+export {
+  RSSFetchError,
+  RSSParseError,
+  FeedManagementError,
+  DuplicateFeedError,
+  FeedNotFoundError,
+} from './errors.js';
