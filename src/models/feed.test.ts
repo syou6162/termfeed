@@ -39,7 +39,7 @@ describe('FeedModel', () => {
       const feedInput: CreateFeedInput = {
         url: 'https://example.com/feed.xml',
         title: 'Example Feed',
-        description: 'This is an example feed'
+        description: 'This is an example feed',
       };
 
       const feed = feedModel.create(feedInput);
@@ -55,7 +55,7 @@ describe('FeedModel', () => {
     it('descriptionなしでフィードを作成できる', () => {
       const feedInput: CreateFeedInput = {
         url: 'https://example.com/feed2.xml',
-        title: 'Another Feed'
+        title: 'Another Feed',
       };
 
       const feed = feedModel.create(feedInput);
@@ -71,7 +71,7 @@ describe('FeedModel', () => {
     it('IDでフィードを取得できる', () => {
       const feedInput: CreateFeedInput = {
         url: 'https://example.com/feed.xml',
-        title: 'Example Feed'
+        title: 'Example Feed',
       };
 
       const created = feedModel.create(feedInput);
@@ -93,7 +93,7 @@ describe('FeedModel', () => {
     it('URLでフィードを取得できる', () => {
       const feedInput: CreateFeedInput = {
         url: 'https://example.com/unique-feed.xml',
-        title: 'Unique Feed'
+        title: 'Unique Feed',
       };
 
       feedModel.create(feedInput);
@@ -115,20 +115,20 @@ describe('FeedModel', () => {
       const feeds: CreateFeedInput[] = [
         { url: 'https://example1.com/feed.xml', title: 'Feed 1' },
         { url: 'https://example2.com/feed.xml', title: 'Feed 2' },
-        { url: 'https://example3.com/feed.xml', title: 'Feed 3' }
+        { url: 'https://example3.com/feed.xml', title: 'Feed 3' },
       ];
 
       // 順序を保証するために少し間隔をあけて作成
       for (const feed of feeds) {
         feedModel.create(feed);
-        await new Promise(resolve => setTimeout(resolve, 10));
+        await new Promise((resolve) => setTimeout(resolve, 10));
       }
 
       const allFeeds = feedModel.findAll();
       expect(allFeeds).toHaveLength(3);
-      
+
       // URLで各フィードが含まれているか確認
-      const urls = allFeeds.map(f => f.url);
+      const urls = allFeeds.map((f) => f.url);
       expect(urls).toContain('https://example1.com/feed.xml');
       expect(urls).toContain('https://example2.com/feed.xml');
       expect(urls).toContain('https://example3.com/feed.xml');
@@ -145,13 +145,13 @@ describe('FeedModel', () => {
       const feedInput: CreateFeedInput = {
         url: 'https://example.com/feed.xml',
         title: 'Original Title',
-        description: 'Original Description'
+        description: 'Original Description',
       };
 
       const created = feedModel.create(feedInput);
       const updated = feedModel.update(created.id!, {
         title: 'Updated Title',
-        description: 'Updated Description'
+        description: 'Updated Description',
       });
 
       expect(updated).not.toBeNull();
@@ -168,7 +168,7 @@ describe('FeedModel', () => {
     it('更新フィールドがない場合は元のフィードを返す', () => {
       const feedInput: CreateFeedInput = {
         url: 'https://example.com/feed.xml',
-        title: 'Original Title'
+        title: 'Original Title',
       };
 
       const created = feedModel.create(feedInput);
@@ -183,7 +183,7 @@ describe('FeedModel', () => {
     it('フィードを削除できる', () => {
       const feedInput: CreateFeedInput = {
         url: 'https://example.com/feed.xml',
-        title: 'To Be Deleted'
+        title: 'To Be Deleted',
       };
 
       const created = feedModel.create(feedInput);
@@ -205,7 +205,7 @@ describe('FeedModel', () => {
     it('最終更新日時を更新できる', () => {
       const feedInput: CreateFeedInput = {
         url: 'https://example.com/feed.xml',
-        title: 'Test Feed'
+        title: 'Test Feed',
       };
 
       const created = feedModel.create(feedInput);

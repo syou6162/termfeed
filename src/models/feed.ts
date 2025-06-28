@@ -13,14 +13,14 @@ export class FeedModel {
       INSERT INTO feeds (url, title, description, last_updated_at)
       VALUES (?, ?, ?, datetime('now'))
     `);
-    
+
     const result = stmt.run(feed.url, feed.title, feed.description || null);
-    
+
     return {
       id: result.lastInsertRowid as number,
       ...feed,
       last_updated_at: new Date(),
-      created_at: new Date()
+      created_at: new Date(),
     };
   }
 
@@ -28,7 +28,7 @@ export class FeedModel {
     const stmt = this.db.getDb().prepare(`
       SELECT * FROM feeds WHERE id = ?
     `);
-    
+
     const row = stmt.get(id) as Feed | undefined;
     return row || null;
   }
@@ -37,7 +37,7 @@ export class FeedModel {
     const stmt = this.db.getDb().prepare(`
       SELECT * FROM feeds WHERE url = ?
     `);
-    
+
     const row = stmt.get(url) as Feed | undefined;
     return row || null;
   }
@@ -46,7 +46,7 @@ export class FeedModel {
     const stmt = this.db.getDb().prepare(`
       SELECT * FROM feeds ORDER BY created_at DESC
     `);
-    
+
     return stmt.all() as Feed[];
   }
 
@@ -54,28 +54,28 @@ export class FeedModel {
     const allowedFields = ['title', 'description', 'last_updated_at'];
     const updateFields: string[] = [];
     const updateValues: unknown[] = [];
-    
+
     for (const field of allowedFields) {
       if (field in updates) {
         updateFields.push(`${field} = ?`);
         updateValues.push(updates[field as keyof Feed]);
       }
     }
-    
+
     if (updateFields.length === 0) {
       return this.findById(id);
     }
-    
+
     updateValues.push(id);
-    
+
     const stmt = this.db.getDb().prepare(`
       UPDATE feeds 
       SET ${updateFields.join(', ')}
       WHERE id = ?
     `);
-    
+
     stmt.run(...updateValues);
-    
+
     return this.findById(id);
   }
 
@@ -83,7 +83,7 @@ export class FeedModel {
     const stmt = this.db.getDb().prepare(`
       DELETE FROM feeds WHERE id = ?
     `);
-    
+
     const result = stmt.run(id);
     return result.changes > 0;
   }
@@ -94,7 +94,7 @@ export class FeedModel {
       SET last_updated_at = datetime('now')
       WHERE id = ?
     `);
-    
+
     stmt.run(id);
   }
 }
