@@ -1,39 +1,16 @@
 import Parser from 'rss-parser';
 import axios from 'axios';
 import type { Article, Feed } from '../models/types.js';
+import type { RSSItem, CrawlResult, CrawlerOptions } from './types.js';
 
-export type RSSItem = {
-  title?: string;
-  link?: string;
-  content?: string;
-  contentSnippet?: string;
-  creator?: string;
-  pubDate?: string;
-  isoDate?: string;
-  enclosure?: {
-    url: string;
-  };
-  guid?: string;
-};
-
-export type RSSFeed = {
-  title?: string;
-  description?: string;
-  link?: string;
-  items: RSSItem[];
-};
-
-export type CrawlResult = {
-  feed: Omit<Feed, 'id' | 'created_at'>;
-  articles: Omit<Article, 'id' | 'feed_id' | 'created_at' | 'updated_at'>[];
-};
+export type { RSSItem, CrawlResult, CrawlerOptions };
 
 export class RSSCrawler {
   private parser: Parser;
   private readonly timeout: number;
   private readonly userAgent: string;
 
-  constructor(options: { timeout?: number; userAgent?: string } = {}) {
+  constructor(options: CrawlerOptions = {}) {
     this.parser = new Parser({
       customFields: {
         item: ['media:thumbnail', 'media:content', 'enclosure'],

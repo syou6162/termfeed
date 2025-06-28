@@ -1,19 +1,10 @@
 import { FeedModel } from '../models/feed.js';
 import { ArticleModel } from '../models/article.js';
-import { RSSCrawler, type CrawlResult } from './rss-crawler.js';
+import { RSSCrawler } from './rss-crawler.js';
 import type { Feed, Article, CreateFeedInput } from '../models/types.js';
+import type { CrawlResult, FeedUpdateResult, AddFeedResult } from './types.js';
 
-export type FeedUpdateResult = {
-  feedId: number;
-  newArticlesCount: number;
-  updatedArticlesCount: number;
-  totalArticlesCount: number;
-};
-
-export type AddFeedResult = {
-  feed: Feed;
-  articlesCount: number;
-};
+export type { FeedUpdateResult, AddFeedResult };
 
 export class FeedService {
   private feedModel: FeedModel;
