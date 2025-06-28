@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander';
+import { fileURLToPath } from 'url';
 import {
   createAddCommand,
   createArticlesCommand,
@@ -26,6 +27,6 @@ program.addCommand(createListCommand());
 program.addCommand(createRmCommand());
 
 // Main CLI entry point
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
   program.parse();
 }
