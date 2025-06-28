@@ -9,11 +9,7 @@ describe('SelectableList Component', () => {
 
   it('should render all items', () => {
     const { lastFrame } = render(
-      <SelectableList
-        items={items}
-        selectedIndex={0}
-        renderItem={renderItem}
-      />
+      <SelectableList items={items} selectedIndex={0} renderItem={renderItem} />
     );
 
     const frame = lastFrame();
@@ -24,11 +20,7 @@ describe('SelectableList Component', () => {
 
   it('should show selection indicator', () => {
     const { lastFrame } = render(
-      <SelectableList
-        items={items}
-        selectedIndex={1}
-        renderItem={renderItem}
-      />
+      <SelectableList items={items} selectedIndex={1} renderItem={renderItem} />
     );
 
     const frame = lastFrame();
@@ -52,12 +44,7 @@ describe('SelectableList Component', () => {
 
   it('should not highlight when inactive', () => {
     const { lastFrame } = render(
-      <SelectableList
-        items={items}
-        selectedIndex={0}
-        renderItem={renderItem}
-        isActive={false}
-      />
+      <SelectableList items={items} selectedIndex={0} renderItem={renderItem} isActive={false} />
     );
 
     const frame = lastFrame();
@@ -70,14 +57,10 @@ describe('SelectableList Component', () => {
       { id: 1, name: 'First' },
       { id: 2, name: 'Second' },
     ];
-    const customRender = (item: typeof customItems[0]) => `${item.id}: ${item.name}`;
+    const customRender = (item: (typeof customItems)[0]) => `${item.id}: ${item.name}`;
 
     const { lastFrame } = render(
-      <SelectableList
-        items={customItems}
-        selectedIndex={0}
-        renderItem={customRender}
-      />
+      <SelectableList items={customItems} selectedIndex={0} renderItem={customRender} />
     );
 
     const frame = lastFrame();
