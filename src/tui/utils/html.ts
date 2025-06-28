@@ -11,15 +11,10 @@ export function convertHtmlToText(html: string): string {
   const isHeadingOnly =
     (hasH2 || hasH3) &&
     !/<(?!\/?(h[23])\b)[^>]+>/.test(html.replace(/<h[23][^>]*>.*?<\/h[23]>/gi, ''));
-  // 単一のp、divタグかどうかを検出（より厳密に）
-  const isPOnly =
-    hasP &&
-    (html.match(/<p\b[^>]*>/g) || []).length === 1 &&
-    !/<(?!\/?(p)\b)[^>]+>/.test(html.replace(/<p[^>]*>.*?<\/p>/gi, ''));
+  // p、divタグのみかどうかを検出
+  const isPOnly = hasP && !/<(?!\/?(p)\b)[^>]+>/.test(html.replace(/<p[^>]*>.*?<\/p>/gi, ''));
   const isDivOnly =
-    hasDiv &&
-    (html.match(/<div\b[^>]*>/g) || []).length === 1 &&
-    !/<(?!\/?(div)\b)[^>]+>/.test(html.replace(/<div[^>]*>.*?<\/div>/gi, ''));
+    hasDiv && !/<(?!\/?(div)\b)[^>]+>/.test(html.replace(/<div[^>]*>.*?<\/div>/gi, ''));
 
   let result = html
     .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')

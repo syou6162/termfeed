@@ -61,7 +61,7 @@ describe('convertHtmlToText', () => {
   it('パラグラフタグの処理', () => {
     const html = '<p>First paragraph</p><p>Second paragraph</p>';
     const result = convertHtmlToText(html);
-    expect(result).toBe('First paragraph\n\nSecond paragraph');
+    expect(result).toBe('\n\nFirst paragraph\n\nSecond paragraph\n\n');
   });
 
   it('単体pタグの処理', () => {
@@ -72,7 +72,7 @@ describe('convertHtmlToText', () => {
 
   it('divタグの処理', () => {
     const html = '<div>First section</div><div>Second section</div>';
-    expect(convertHtmlToText(html)).toBe('First section\n\nSecond section');
+    expect(convertHtmlToText(html)).toBe('\n\nFirst section\n\nSecond section\n\n');
   });
 
   it('単体divタグの処理', () => {
@@ -117,7 +117,7 @@ describe('convertHtmlToText', () => {
   it('連続する改行を適切に処理', () => {
     const html = '<p>Text</p><p>More text</p>';
     const result = convertHtmlToText(html);
-    expect(result).toBe('Text\n\nMore text');
+    expect(result).toBe('\n\nText\n\nMore text\n\n');
   });
 
   it('ネストされたリストの処理', () => {
