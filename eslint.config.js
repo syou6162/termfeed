@@ -40,6 +40,13 @@ module.exports = [
     },
   },
   {
+    files: ['**/*.test.ts', '**/*.spec.ts'],
+    rules: {
+      // vitestのvi.mocked()でのモック操作に必要
+      '@typescript-eslint/unbound-method': 'off',
+    },
+  },
+  {
     ignores: ['node_modules/', 'dist/', 'coverage/', '*.config.js'],
   },
 ];

@@ -15,7 +15,10 @@ termfeedは、ターミナルで動作するRSSリーダーです。Vim風のキ
   - `FeedModel`: フィードのCRUD操作
   - `ArticleModel`: 記事のCRUD操作、既読管理、お気に入り機能
 - **src/services/**: ビジネスロジック層（RSSクローラー、フィード管理）
-- **src/cli/**: プレゼンテーション層（CLIコマンド、TUI）
+  - `RSSCrawler`: RSS/Atomフィードの取得・パース（rss-parser使用）
+  - `FeedService`: フィード管理とビジネスロジック（モデル層のラッパー）
+  - カスタムエラークラス: 型安全なエラーハンドリング（RSSFetchError、FeedUpdateError等）
+- **src/cli/**: プレゼンテーション層（CLIコマンド、TUI）- 実装予定
 
 ## 開発コマンド
 
@@ -70,6 +73,20 @@ SQLiteを使用し、以下のスキーマで構成（src/models/schema.sql）�
 - インターフェースではなくタイプ（type）を使用する
 - 主要な型は `src/models/types.ts` に定義
   - `Feed`, `Article`, `CreateFeedInput`, `UpdateArticleInput`
+- サービス層の型は `src/services/types.ts` に定義
+  - `CrawlResult`, `FeedUpdateResult`, `UpdateAllFeedsResult`
+
+## エラーハンドリング
+
+- カスタムエラークラスを使用して型安全なエラーハンドリングを実装
+- 全エラークラスで `message` パラメータを第一引数に統一
+- `this.name = this.constructor.name` でクラス名を自動設定
+- `cause` プロパティでスタックトレースを保持（例: `{ cause: originalError }`）
+- 主要エラー:
+  - `RSSFetchError`: ネットワークエラー、HTTPエラー
+  - `RSSParseError`: XML/フィード解析エラー
+  - `FeedUpdateError`: フィード更新時の包括的エラー
+  - `DuplicateFeedError`, `FeedNotFoundError`: ビジネスロジックエラー
 
 ## テスト戦略
 
@@ -77,6 +94,7 @@ SQLiteを使用し、以下のスキーマで構成（src/models/schema.sql）�
 - 各モデルクラスに対応するテストファイルを作成
 - テスト用データベースは各テストケースで独立して作成・削除
 - 非同期処理のテストではsetTimeoutを避け、同期的にテストを記述
+- モック戦略: axiosをモックして外部依存を排除、カスタムエラークラスで型安全なテスト
 
 ## CI/CD
 
@@ -85,3 +103,11 @@ GitHub Actionsで以下を実行：
 - Test（Vitest）
 - 型チェック（TypeScript）
 - pre-commitフックでlintとtypecheckを実行
+
+## 重要な実装原則
+
+- ESLintルールは必要最小限に抑制（テストファイルでは`@typescript-eslint/unbound-method: 'off'`のみ）
+- マジックナンバーは定数化し、可能な限りライブラリの標準定数を使用（例: `HttpStatusCode.NotFound`）
+- 日時データは全てUNIXタイムスタンプで統一し、変換ユーティリティを使用（`src/models/utils/timestamp.ts`）
+- データベースロジックはアプリケーション側で実装し、DB側の制約のみ使用
+- フィード更新の失敗は個別にキャッチし、全体の処理を継続する設計
