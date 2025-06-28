@@ -1,0 +1,232 @@
+import { FeedModel } from '../models/feed.js';
+import { ArticleModel } from '../models/article.js';
+import { RSSCrawler } from './rss-crawler.js';
+import type { Feed, Article, CreateFeedInput } from '../models/types.js';
+import type {
+  CrawlResult,
+  FeedUpdateResult,
+  AddFeedResult,
+  UpdateAllFeedsResult,
+  FeedUpdateSuccess,
+  FeedUpdateFailure,
+} from './types.js';
+import {
+  DuplicateFeedError,
+  FeedNotFoundError,
+  FeedManagementError,
+  FeedUpdateError,
+} from './errors.js';
+
+export type { FeedUpdateResult, AddFeedResult };
+
+export class FeedService {
+  private feedModel: FeedModel;
+  private articleModel: ArticleModel;
+  private crawler: RSSCrawler;
+
+  constructor(feedModel: FeedModel, articleModel: ArticleModel, crawler?: RSSCrawler) {
+    this.feedModel = feedModel;
+    this.articleModel = articleModel;
+    this.crawler = crawler || new RSSCrawler();
+  }
+
+  async addFeed(url: string): Promise<AddFeedResult> {
+    const existingFeed = this.feedModel.findByUrl(url);
+    if (existingFeed) {
+      throw new DuplicateFeedError(`Feed already exists: ${url}`, url);
+    }
+
+    let crawlResult: CrawlResult;
+    try {
+      crawlResult = await this.crawler.crawl(url);
+    } catch (error) {
+      throw new FeedManagementError(
+        `Failed to fetch feed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        undefined,
+        { cause: error }
+      );
+    }
+
+    const createFeedInput: CreateFeedInput = {
+      url: crawlResult.feed.url,
+      title: crawlResult.feed.title,
+      description: crawlResult.feed.description,
+    };
+
+    const feed = this.feedModel.create(createFeedInput);
+    if (!feed) {
+      throw new FeedManagementError('Failed to create feed');
+    }
+
+    let articlesCount = 0;
+    for (const articleData of crawlResult.articles) {
+      if (!articleData.url) continue;
+
+      const existingArticle = this.articleModel.findByUrl(articleData.url);
+      if (!existingArticle) {
+        const created = this.articleModel.create({
+          ...articleData,
+          feed_id: feed.id!,
+        });
+        if (created) {
+          articlesCount++;
+        }
+      }
+    }
+
+    return { feed, articlesCount };
+  }
+
+  removeFeed(feedId: number): boolean {
+    const feed = this.feedModel.findById(feedId);
+    if (!feed) {
+      throw new FeedNotFoundError(`Feed not found: ${feedId}`, feedId);
+    }
+
+    this.articleModel.deleteByFeedId(feedId);
+    return this.feedModel.delete(feedId);
+  }
+
+  async updateFeed(feedId: number): Promise<FeedUpdateResult> {
+    const feed = this.feedModel.findById(feedId);
+    if (!feed) {
+      throw new FeedNotFoundError(`Feed not found: ${feedId}`, feedId);
+    }
+
+    let crawlResult: CrawlResult;
+    try {
+      crawlResult = await this.crawler.crawl(feed.url);
+    } catch (error) {
+      throw new FeedUpdateError(`Failed to update feed ${feedId}: ${feed.url}`, feedId, feed.url, {
+        cause: error,
+      });
+    }
+
+    this.feedModel.update(feedId, {
+      title: crawlResult.feed.title,
+      description: crawlResult.feed.description,
+    });
+
+    let newArticlesCount = 0;
+    let updatedArticlesCount = 0;
+
+    for (const articleData of crawlResult.articles) {
+      if (!articleData.url) continue;
+
+      const existingArticle = this.articleModel.findByUrl(articleData.url);
+      if (existingArticle) {
+        const updated = this.articleModel.update(existingArticle.id!, {});
+        if (updated) {
+          updatedArticlesCount++;
+        }
+      } else {
+        const created = this.articleModel.create({
+          ...articleData,
+          feed_id: feedId,
+        });
+        if (created) {
+          newArticlesCount++;
+        }
+      }
+    }
+
+    this.feedModel.updateLastUpdatedAt(feedId);
+
+    const totalArticlesCount = this.articleModel.countByFeedId(feedId);
+
+    return {
+      feedId,
+      newArticlesCount,
+      updatedArticlesCount,
+      totalArticlesCount,
+    };
+  }
+
+  async updateAllFeeds(): Promise<UpdateAllFeedsResult> {
+    const feeds = this.feedModel.findAll();
+    const successful: FeedUpdateSuccess[] = [];
+    const failed: FeedUpdateFailure[] = [];
+
+    for (const feed of feeds) {
+      try {
+        const result = await this.updateFeed(feed.id!);
+        successful.push({
+          status: 'success',
+          feedId: feed.id!,
+          result,
+        });
+      } catch (error) {
+        failed.push({
+          status: 'failure',
+          feedId: feed.id!,
+          feedUrl: feed.url,
+          error: error instanceof Error ? error : new Error('Unknown error'),
+        });
+        console.error(
+          `Failed to update feed ${feed.id}: ${error instanceof Error ? error.message : 'Unknown error'}`
+        );
+      }
+    }
+
+    return {
+      successful,
+      failed,
+      summary: {
+        totalFeeds: feeds.length,
+        successCount: successful.length,
+        failureCount: failed.length,
+      },
+    };
+  }
+
+  markArticleAsRead(articleId: number): boolean {
+    return this.articleModel.markAsRead(articleId);
+  }
+
+  markArticleAsUnread(articleId: number): boolean {
+    return this.articleModel.markAsUnread(articleId);
+  }
+
+  toggleArticleFavorite(articleId: number): boolean {
+    return this.articleModel.toggleFavorite(articleId);
+  }
+
+  markAllAsRead(feedId?: number): void {
+    const articles = this.articleModel.findAll({
+      feed_id: feedId,
+      is_read: false,
+    });
+
+    for (const article of articles) {
+      this.articleModel.markAsRead(article.id!);
+    }
+  }
+
+  getUnreadCount(feedId?: number): number {
+    return this.articleModel.countUnread(feedId);
+  }
+
+  getFeedList(): Feed[] {
+    return this.feedModel.findAll();
+  }
+
+  getArticles(
+    options: {
+      feed_id?: number;
+      is_read?: boolean;
+      is_favorite?: boolean;
+      limit?: number;
+      offset?: number;
+    } = {}
+  ): Article[] {
+    return this.articleModel.findAll(options);
+  }
+
+  getFeedById(feedId: number): Feed | null {
+    return this.feedModel.findById(feedId);
+  }
+
+  getArticleById(articleId: number): Article | null {
+    return this.articleModel.findById(articleId);
+  }
+}
