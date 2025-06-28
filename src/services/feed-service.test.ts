@@ -508,5 +508,4 @@ describe('FeedService', () => {
       expect(notFound).toBeNull();
     });
   });
-
 });

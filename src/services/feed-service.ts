@@ -172,7 +172,6 @@ export class FeedService {
     return this.articleModel.countUnread(feedId);
   }
 
-
   getFeedList(): Feed[] {
     return this.feedModel.findAll();
   }
