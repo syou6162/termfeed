@@ -24,7 +24,6 @@ const mockFeedService = {
       is_favorite: false,
       published_at: new Date('2024-01-01'),
       content: 'Test content 1',
-      summary: 'Test summary 1',
       author: 'Test Author',
     },
     {
@@ -35,7 +34,6 @@ const mockFeedService = {
       is_favorite: true,
       published_at: new Date('2024-01-02'),
       content: 'Test content 2',
-      summary: 'Test summary 2',
       author: 'Test Author 2',
     },
   ]),
@@ -87,7 +85,6 @@ describe('App', () => {
         is_favorite: false,
         published_at: new Date('2024-01-01'),
         content: 'Test content 1',
-        summary: 'Test summary 1',
         author: 'Test Author',
       },
       {
@@ -98,7 +95,6 @@ describe('App', () => {
         is_favorite: true,
         published_at: new Date('2024-01-02'),
         content: 'Test content 2',
-        summary: 'Test summary 2',
         author: 'Test Author 2',
       },
     ]);

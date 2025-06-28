@@ -62,7 +62,6 @@ describe('RSSCrawler', () => {
           <entry>
             <title>Atom Test Article</title>
             <link href="https://example.com/atom-article1"/>
-            <summary>Atom test content</summary>
             <published>2025-01-01T00:00:00Z</published>
             <author><name>Atom Author</name></author>
           </entry>
