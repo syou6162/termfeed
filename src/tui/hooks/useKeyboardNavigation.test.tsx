@@ -115,7 +115,7 @@ describe('useKeyboardNavigation', () => {
   });
 
   describe('フィードナビゲーション', () => {
-    it('aキーで次のフィードに移動する', () => {
+    it('sキーで次のフィードに移動する', () => {
       const { stdin } = render(
         <TestComponent
           feedCount={3}
@@ -124,12 +124,26 @@ describe('useKeyboardNavigation', () => {
         />
       );
 
-      stdin.write('a');
+      stdin.write('s');
 
       expect(mockHandlers.onFeedSelectionChange).toHaveBeenCalledWith(2);
     });
 
-    it('sキーで前のフィードに移動する', () => {
+    it('aキーで前のフィードに移動する', () => {
+      const { stdin } = render(
+        <TestComponent
+          feedCount={3}
+          selectedFeedIndex={2}
+          onFeedSelectionChange={mockHandlers.onFeedSelectionChange}
+        />
+      );
+
+      stdin.write('a');
+
+      expect(mockHandlers.onFeedSelectionChange).toHaveBeenCalledWith(1);
+    });
+
+    it('最後のフィードでsキーを押すと最初のフィードに戻る', () => {
       const { stdin } = render(
         <TestComponent
           feedCount={3}
@@ -139,20 +153,6 @@ describe('useKeyboardNavigation', () => {
       );
 
       stdin.write('s');
-
-      expect(mockHandlers.onFeedSelectionChange).toHaveBeenCalledWith(1);
-    });
-
-    it('最後のフィードでaキーを押すと最初のフィードに戻る', () => {
-      const { stdin } = render(
-        <TestComponent
-          feedCount={3}
-          selectedFeedIndex={2}
-          onFeedSelectionChange={mockHandlers.onFeedSelectionChange}
-        />
-      );
-
-      stdin.write('a');
 
       expect(mockHandlers.onFeedSelectionChange).toHaveBeenCalledWith(0);
     });
@@ -215,12 +215,12 @@ describe('useKeyboardNavigation', () => {
       expect(mockHandlers.onArticleSelectionChange).not.toHaveBeenCalled();
     });
 
-    it('フィードがない時はaキーを押しても何も起こらない', () => {
+    it('フィードがない時はsキーを押しても何も起こらない', () => {
       const { stdin } = render(
         <TestComponent feedCount={0} onFeedSelectionChange={mockHandlers.onFeedSelectionChange} />
       );
 
-      stdin.write('a');
+      stdin.write('s');
 
       expect(mockHandlers.onFeedSelectionChange).not.toHaveBeenCalled();
     });

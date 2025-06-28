@@ -1,6 +1,6 @@
 import { Box, Text, useApp } from 'ink';
 import { useCallback, useEffect, useState, useMemo } from 'react';
-import { exec } from 'child_process';
+import { spawn } from 'child_process';
 import type { Article, Feed } from '../models/types.js';
 import { FeedService } from '../services/feed-service.js';
 import { FeedModel } from '../models/feed.js';
@@ -46,8 +46,9 @@ export function App() {
       setError('');
 
       const allFeeds = feedService.getFeedList();
+      const unreadCounts = feedService.getUnreadCountsForAllFeeds();
       const feedsWithUnreadCount = allFeeds.map((feed) => {
-        const unreadCount = feedService.getUnreadCount(feed.id);
+        const unreadCount = feed.id ? (unreadCounts[feed.id] || 0) : 0;
         return { ...feed, unreadCount };
       });
 
@@ -151,25 +152,35 @@ export function App() {
         return;
       }
       
-      // クロスプラットフォーム対応でブラウザを開く
+      // クロスプラットフォーム対応でブラウザを開く（セキュア版）
       let command: string;
+      let args: string[];
       
       if (process.platform === 'darwin') {
         // macOS - バックグラウンドで開く
-        command = `open -g "${url.replace(/"/g, '\\"')}"`;
+        command = 'open';
+        args = ['-g', url];
       } else if (process.platform === 'win32') {
         // Windows - 最小化で開く
-        command = `start /min "" "${url.replace(/"/g, '\\"')}"`;
+        command = 'cmd';
+        args = ['/c', 'start', '/min', url];
       } else {
         // Linux/Unix - バックグラウンドで開く
-        command = `nohup xdg-open "${url.replace(/"/g, '\\"')}" > /dev/null 2>&1 &`;
+        command = 'xdg-open';
+        args = [url];
       }
       
-      exec(command, (error) => {
-        if (error) {
-          console.error('ブラウザの起動に失敗しました:', error.message);
-        }
+      const childProcess = spawn(command, args, { 
+        stdio: 'ignore',
+        detached: true 
       });
+      
+      childProcess.on('error', (error) => {
+        console.error('ブラウザの起動に失敗しました:', error.message);
+      });
+      
+      // プロセスを親から切り離す
+      childProcess.unref();
     }
   }, [articles, selectedArticleIndex]);
 

@@ -229,4 +229,8 @@ export class FeedService {
   getArticleById(articleId: number): Article | null {
     return this.articleModel.findById(articleId);
   }
+
+  getUnreadCountsForAllFeeds(): { [feedId: number]: number } {
+    return this.articleModel.getUnreadCountsByFeedIds();
+  }
 }

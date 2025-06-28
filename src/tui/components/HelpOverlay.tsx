@@ -31,8 +31,8 @@ export function HelpOverlay({ isVisible }: HelpOverlayProps) {
 
       <Box marginTop={1} flexDirection="column">
         <Text bold color="yellow">フィード操作:</Text>
-        <Text>  a         次のフィードに移動</Text>
-        <Text>  s         前のフィードに移動</Text>
+        <Text>  s         次のフィードに移動</Text>
+        <Text>  a         前のフィードに移動</Text>
         <Text>  r         全フィードを更新</Text>
       </Box>
 

@@ -87,8 +87,8 @@ export function useKeyboardNavigation({
         return;
       }
 
-      // フィードナビゲーション (a/s)
-      if (input === 'a') {
+      // フィードナビゲーション (s/a)
+      if (input === 's') {
         if (feedCount > 0) {
           const newIndex = selectedFeedIndex < feedCount - 1 ? selectedFeedIndex + 1 : 0;
           onFeedSelectionChange(newIndex);
@@ -96,7 +96,7 @@ export function useKeyboardNavigation({
         return;
       }
 
-      if (input === 's') {
+      if (input === 'a') {
         if (feedCount > 0) {
           const newIndex = selectedFeedIndex > 0 ? selectedFeedIndex - 1 : feedCount - 1;
           onFeedSelectionChange(newIndex);
