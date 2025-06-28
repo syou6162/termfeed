@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { createDatabaseManager, getDatabasePath } from './utils/database';
+import { createDatabaseManager, getDatabasePath } from './utils/database.js';
 
 function runMigration() {
   console.log('Starting database migration...');
@@ -19,6 +19,6 @@ function runMigration() {
   }
 }
 
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   runMigration();
 }
