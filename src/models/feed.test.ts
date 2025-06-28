@@ -4,6 +4,9 @@ import { FeedModel } from './feed';
 import { CreateFeedInput } from './types';
 import * as fs from 'fs';
 import * as path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 describe('FeedModel', () => {
   let db: DatabaseManager;
