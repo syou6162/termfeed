@@ -3,6 +3,8 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import chalk from 'chalk';
 import { DatabaseManager } from '../../models/database.js';
+import { FeedModel } from '../../models/feed.js';
+import { ArticleModel } from '../../models/article.js';
 import { FeedService } from '../../services/feed-service.js';
 import { OPMLService } from '../../services/opml.js';
 import { DuplicateFeedError } from '../../services/errors.js';
@@ -55,7 +57,9 @@ export const importCommand = new Command('import')
       // データベースとサービスの初期化
       const dbManager = new DatabaseManager();
       dbManager.migrate();
-      const feedService = new FeedService(dbManager);
+      const feedModel = new FeedModel(dbManager);
+      const articleModel = new ArticleModel(dbManager);
+      const feedService = new FeedService(feedModel, articleModel);
 
       // 各URLを追加
       let successCount = 0;
