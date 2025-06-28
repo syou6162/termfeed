@@ -8,6 +8,9 @@ import {
   createUpdateCommand,
   createListCommand,
   createRmCommand,
+  createTuiCommand,
+  exportCommand,
+  importCommand,
 } from './cli/commands/index.js';
 
 export const VERSION = '0.1.0';
@@ -25,6 +28,9 @@ program.addCommand(createArticlesCommand());
 program.addCommand(createUpdateCommand());
 program.addCommand(createListCommand());
 program.addCommand(createRmCommand());
+program.addCommand(createTuiCommand());
+program.addCommand(exportCommand);
+program.addCommand(importCommand);
 
 // Main CLI entry point
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
