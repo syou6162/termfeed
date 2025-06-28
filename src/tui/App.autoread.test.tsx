@@ -136,7 +136,7 @@ describe('App - 自動既読機能', () => {
     expect(mockFeedService.markArticleAsRead).toHaveBeenCalledWith(1);
   });
 
-  it('フィード移動時に既読記事は既読マークしない', () => {
+  it('フィード移動時に既読記事は既読マークしない', async () => {
     // 既読記事のデータをセット
     mockFeedService.getArticles.mockReturnValue([
       {
@@ -154,8 +154,17 @@ describe('App - 自動既読機能', () => {
 
     const { stdin } = render(<App />);
 
+    // 初期化待ち
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    // markArticleAsReadの呼び出し状況をクリア（初期化時の呼び出しを無視）
+    vi.clearAllMocks();
+
     // sキーでフィード移動
     stdin.write('s');
+
+    // 少し待ってから確認
+    await new Promise((resolve) => setTimeout(resolve, 50));
 
     // 既読記事なので markArticleAsRead は呼ばれない
     expect(mockFeedService.markArticleAsRead).not.toHaveBeenCalled();
