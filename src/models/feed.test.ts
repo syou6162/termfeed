@@ -209,7 +209,7 @@ describe('FeedModel', () => {
       };
 
       const created = feedModel.create(feedInput);
-      
+
       // 更新を実行
       feedModel.updateLastUpdatedAt(created.id!);
       const updated = feedModel.findById(created.id!);
