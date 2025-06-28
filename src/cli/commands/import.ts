@@ -14,6 +14,8 @@ export const importCommand = new Command('import')
   .argument('<file>', 'file to import')
   .option('-f, --format <format>', 'import format (opml or text)', 'auto')
   .action(async (file: string, options?: { format?: string }) => {
+    let dbManager: DatabaseManager | null = null;
+
     try {
       const absolutePath = path.resolve(file);
 
@@ -55,7 +57,7 @@ export const importCommand = new Command('import')
       console.log(chalk.blue(`Found ${urls.length} feed URLs to import...`));
 
       // データベースとサービスの初期化
-      const dbManager = new DatabaseManager();
+      dbManager = new DatabaseManager();
       dbManager.migrate();
       const feedModel = new FeedModel(dbManager);
       const articleModel = new ArticleModel(dbManager);
@@ -97,5 +99,9 @@ export const importCommand = new Command('import')
     } catch (error) {
       console.error(chalk.red('Error importing feeds:'), error);
       process.exit(1);
+    } finally {
+      if (dbManager) {
+        dbManager.close();
+      }
     }
   });

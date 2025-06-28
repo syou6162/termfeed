@@ -8,11 +8,12 @@ import { OPMLService, ExportFormat } from '../../services/opml.js';
 
 export const exportCommand = new Command('export')
   .description('Export feed subscriptions to OPML or text file')
-  .argument('[file]', 'output file path (default: termfeed-export.opml)')
+  .argument('[file]', 'output file path (default: subscriptions.opml)')
   .option('-f, --format <format>', 'export format (opml or text)', 'auto')
   .action(async (file?: string, options?: { format?: string }) => {
+    const dbManager = new DatabaseManager();
+
     try {
-      const dbManager = new DatabaseManager();
       dbManager.migrate();
       const feedModel = new FeedModel(dbManager);
 
@@ -57,5 +58,7 @@ export const exportCommand = new Command('export')
     } catch (error) {
       console.error(chalk.red('Error exporting feeds:'), error);
       process.exit(1);
+    } finally {
+      dbManager.close();
     }
   });
