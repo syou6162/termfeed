@@ -37,11 +37,14 @@
   },
   "dependencies": {
     "@types/better-sqlite3": "^7.6.11",
+    "@types/react": "^19.1.0",
     "axios": "^1.7.9",
     "better-sqlite3": "^12.0.0",
     "chalk": "^5.4.0",
     "commander": "^14.0.0",
-    "ink": "^6.0.0",
+    "ink": "^6.0.1",
+    "ink-testing-library": "^4.0.0",
+    "react": "^19.1.0",
     "rss-parser": "^3.13.0"
   },
   "devDependencies": {
