@@ -27,6 +27,9 @@ export function App() {
   const [error, setError] = useState<string>('');
 
   const databaseManager = new DatabaseManager();
+  // マイグレーションを実行
+  databaseManager.migrate();
+  
   const feedModel = new FeedModel(databaseManager);
   const articleModel = new ArticleModel(databaseManager);
   const feedService = new FeedService(feedModel, articleModel);

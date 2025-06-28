@@ -1,16 +1,13 @@
 import { render } from 'ink';
 import { Command } from 'commander';
 import { App } from '../../tui/App.js';
-import { createDatabaseManager } from '../utils/database.js';
 
 export function createTuiCommand(): Command {
   const tuiCommand = new Command('tui');
 
   tuiCommand.description('TUIモードでRSSリーダーを起動').action(() => {
     try {
-      // データベース初期化とマイグレーション
-      const databaseManager = createDatabaseManager();
-      databaseManager.migrate();
+      // TUIアプリケーション内でマイグレーションが実行される
 
       // TUIアプリケーションを起動
       render(<App />);
