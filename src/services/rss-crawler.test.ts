@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import axios, { AxiosError } from 'axios';
+import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
 import { RSSCrawler } from './rss-crawler.js';
 import { RSSFetchError, RSSParseError } from './errors.js';
 
@@ -40,7 +40,7 @@ describe('RSSCrawler', () => {
         status: 200,
         statusText: 'OK',
         headers: {},
-        config: {},
+        config: {} as InternalAxiosRequestConfig,
       });
 
       const result = await crawler.crawl('https://example.com/rss.xml');
@@ -74,7 +74,7 @@ describe('RSSCrawler', () => {
         status: 200,
         statusText: 'OK',
         headers: {},
-        config: {},
+        config: {} as InternalAxiosRequestConfig,
       });
 
       const result = await crawler.crawl('https://example.com/atom.xml');
@@ -101,7 +101,7 @@ describe('RSSCrawler', () => {
         status: 200,
         statusText: 'OK',
         headers: {},
-        config: {},
+        config: {} as InternalAxiosRequestConfig,
       });
 
       const result = await crawler.crawl('https://example.com/rss.xml');
@@ -130,7 +130,7 @@ describe('RSSCrawler', () => {
         status: 200,
         statusText: 'OK',
         headers: {},
-        config: {},
+        config: {} as InternalAxiosRequestConfig,
       });
 
       const result = await crawler.crawl('https://example.com/rss.xml');
@@ -163,7 +163,7 @@ describe('RSSCrawler', () => {
         status: 200,
         statusText: 'OK',
         headers: {},
-        config: {},
+        config: {} as InternalAxiosRequestConfig,
       });
 
       const result = await crawler.crawl('https://example.com/rss.xml');
@@ -191,7 +191,7 @@ describe('RSSCrawler', () => {
         status: 200,
         statusText: 'OK',
         headers: {},
-        config: {},
+        config: {} as InternalAxiosRequestConfig,
       });
 
       const result = await crawler.crawl('https://example.com/rss.xml');
@@ -218,7 +218,7 @@ describe('RSSCrawler', () => {
         statusText: 'Not Found',
         data: {},
         headers: {},
-        config: {},
+        config: {} as InternalAxiosRequestConfig,
       };
 
       vi.mocked(axios.get).mockRejectedValue(notFoundError);
@@ -235,7 +235,7 @@ describe('RSSCrawler', () => {
         statusText: 'Internal Server Error',
         data: {},
         headers: {},
-        config: {},
+        config: {} as InternalAxiosRequestConfig,
       };
 
       vi.mocked(axios.get).mockRejectedValue(httpError);
@@ -262,7 +262,7 @@ describe('RSSCrawler', () => {
         status: 200,
         statusText: 'OK',
         headers: {},
-        config: {},
+        config: {} as InternalAxiosRequestConfig,
       });
 
       await expect(crawler.crawl('https://example.com/rss.xml')).rejects.toThrow(RSSParseError);
@@ -286,7 +286,7 @@ describe('RSSCrawler', () => {
         status: 200,
         statusText: 'OK',
         headers: {},
-        config: {},
+        config: {} as InternalAxiosRequestConfig,
       });
 
       const result = await crawler.crawl('https://example.com/rss.xml');
@@ -310,7 +310,7 @@ describe('RSSCrawler', () => {
         status: 200,
         statusText: 'OK',
         headers: {},
-        config: {},
+        config: {} as InternalAxiosRequestConfig,
       });
 
       await crawler.crawl('https://example.com/rss.xml');
@@ -345,7 +345,7 @@ describe('RSSCrawler', () => {
         status: 200,
         statusText: 'OK',
         headers: {},
-        config: {},
+        config: {} as InternalAxiosRequestConfig,
       });
 
       await customCrawler.crawl('https://example.com/rss.xml');
@@ -379,7 +379,7 @@ describe('RSSCrawler', () => {
         status: 200,
         statusText: 'OK',
         headers: {},
-        config: {},
+        config: {} as InternalAxiosRequestConfig,
       });
 
       const result = await crawler.crawl('https://example.com/rss.xml');
@@ -406,7 +406,7 @@ describe('RSSCrawler', () => {
         status: 200,
         statusText: 'OK',
         headers: {},
-        config: {},
+        config: {} as InternalAxiosRequestConfig,
       });
 
       const result = await crawler.crawl('https://example.com/rss.xml');
