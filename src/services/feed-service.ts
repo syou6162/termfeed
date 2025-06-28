@@ -28,7 +28,8 @@ export class FeedService {
       crawlResult = await this.crawler.crawl(url);
     } catch (error) {
       throw new Error(
-        `Failed to fetch feed: ${error instanceof Error ? error.message : 'Unknown error'}`
+        `Failed to fetch feed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        { cause: error }
       );
     }
 
@@ -83,7 +84,8 @@ export class FeedService {
       crawlResult = await this.crawler.crawl(feed.url);
     } catch (error) {
       throw new Error(
-        `Failed to update feed: ${error instanceof Error ? error.message : 'Unknown error'}`
+        `Failed to update feed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        { cause: error }
       );
     }
 

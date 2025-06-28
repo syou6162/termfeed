@@ -51,7 +51,8 @@ export class RSSCrawler {
         throw new Error(`Network error: ${error.message}`);
       }
       throw new Error(
-        `Failed to parse RSS feed: ${error instanceof Error ? error.message : 'Unknown error'}`
+        `Failed to parse RSS feed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        { cause: error }
       );
     }
   }
