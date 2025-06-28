@@ -81,7 +81,6 @@ export class RSSCrawler {
       title: item.title || 'Untitled Article',
       url: item.link || item.guid || '',
       content: item.content,
-      summary: item.contentSnippet,
       author: item.creator,
       published_at: this.parseDate(item.isoDate || item.pubDate),
       is_read: false,

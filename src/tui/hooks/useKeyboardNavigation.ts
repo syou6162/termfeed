@@ -23,6 +23,12 @@ type KeyboardNavigationProps = {
   onToggleFavorite?: () => void;
   onToggleHelp?: () => void;
   onQuit?: () => void;
+  onScrollDown?: () => void;
+  onScrollUp?: () => void;
+  onPageDown?: () => void;
+  onPageUp?: () => void;
+  onScrollOffsetChange?: (offset: number) => void;
+  onScrollToEnd?: () => void;
 };
 
 export function useKeyboardNavigation({
@@ -37,6 +43,12 @@ export function useKeyboardNavigation({
   onToggleFavorite,
   onToggleHelp,
   onQuit,
+  onScrollDown,
+  onScrollUp,
+  onPageDown,
+  onPageUp,
+  onScrollOffsetChange,
+  onScrollToEnd,
 }: KeyboardNavigationProps) {
   const handleInput = useCallback(
     (input: string, key: KeyEvent) => {
@@ -67,6 +79,12 @@ export function useKeyboardNavigation({
       // お気に入りトグル
       if (input === 'f') {
         onToggleFavorite?.();
+        return;
+      }
+
+      // スクロール (スペースキー)
+      if (input === ' ') {
+        onPageDown?.();
         return;
       }
 
@@ -104,35 +122,14 @@ export function useKeyboardNavigation({
         return;
       }
 
-      // ページ移動
-      if (key.pageUp || input === 'u') {
-        if (articleCount > 0) {
-          const newIndex = Math.max(0, selectedArticleIndex - 10);
-          onArticleSelectionChange(newIndex);
-        }
-        return;
-      }
-
-      if (key.pageDown || input === 'd') {
-        if (articleCount > 0) {
-          const newIndex = Math.min(articleCount - 1, selectedArticleIndex + 10);
-          onArticleSelectionChange(newIndex);
-        }
-        return;
-      }
-
-      // 先頭・末尾へ移動
+      // 記事内の先頭・末尾へ移動（スクロール）
       if (input === 'g') {
-        if (articleCount > 0) {
-          onArticleSelectionChange(0);
-        }
+        onScrollOffsetChange?.(0);
         return;
       }
 
       if (input === 'G') {
-        if (articleCount > 0) {
-          onArticleSelectionChange(articleCount - 1);
-        }
+        onScrollToEnd?.();
         return;
       }
     },
@@ -148,6 +145,12 @@ export function useKeyboardNavigation({
       onToggleFavorite,
       onToggleHelp,
       onQuit,
+      onScrollDown,
+      onScrollUp,
+      onPageDown,
+      onPageUp,
+      onScrollOffsetChange,
+      onScrollToEnd,
     ]
   );
 

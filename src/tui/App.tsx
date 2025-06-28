@@ -1,4 +1,4 @@
-import { Box, Text, useApp } from 'ink';
+import { Box, Text, useApp, useStdout } from 'ink';
 import { useCallback, useEffect, useState, useMemo } from 'react';
 import { spawn } from 'child_process';
 import type { Article, Feed } from '../models/types.js';
@@ -18,11 +18,13 @@ type FeedWithUnreadCount = Feed & {
 
 export function App() {
   const { exit } = useApp();
+  const { stdout } = useStdout();
   const [feeds, setFeeds] = useState<FeedWithUnreadCount[]>([]);
   const [articles, setArticles] = useState<Article[]>([]);
   const [selectedFeedIndex, setSelectedFeedIndex] = useState(0);
   const [selectedFeedId, setSelectedFeedId] = useState<number | null>(null);
   const [selectedArticleIndex, setSelectedArticleIndex] = useState(0);
+  const [scrollOffset, setScrollOffset] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>('');
   const [showHelp, setShowHelp] = useState(false);
@@ -256,6 +258,36 @@ export function App() {
     exit();
   }, [articles, selectedArticleIndex, feedService, exit]);
 
+  const handleScrollDown = useCallback(() => {
+    setScrollOffset((prev) => prev + 1);
+  }, []);
+
+  const handleScrollUp = useCallback(() => {
+    setScrollOffset((prev) => Math.max(0, prev - 1));
+  }, []);
+
+  const handlePageDown = useCallback(() => {
+    // 実際の表示行数分スクロール
+    const totalHeight = stdout?.rows || 24;
+    const fixedLines = 16; // ArticleListと同じ固定行数
+    const availableLines = Math.max(1, totalHeight - fixedLines);
+    setScrollOffset((prev) => prev + availableLines);
+  }, [stdout]);
+
+  const handlePageUp = useCallback(() => {
+    // 実際の表示行数分スクロール
+    const totalHeight = stdout?.rows || 24;
+    const fixedLines = 16; // ArticleListと同じ固定行数
+    const availableLines = Math.max(1, totalHeight - fixedLines);
+    setScrollOffset((prev) => Math.max(0, prev - availableLines));
+  }, [stdout]);
+
+  const handleScrollToEnd = useCallback(() => {
+    // 記事の最後にジャンプするため、大きな値を設定
+    // ArticleListコンポーネントで実際の最大値に調整される
+    setScrollOffset(999999);
+  }, []);
+
   // キーボードナビゲーション
   useKeyboardNavigation({
     articleCount: articles.length,
@@ -269,6 +301,12 @@ export function App() {
     onToggleFavorite: handleToggleFavorite,
     onToggleHelp: handleToggleHelp,
     onQuit: handleQuit,
+    onScrollDown: handleScrollDown,
+    onScrollUp: handleScrollUp,
+    onPageDown: handlePageDown,
+    onPageUp: handlePageUp,
+    onScrollOffsetChange: setScrollOffset,
+    onScrollToEnd: handleScrollToEnd,
   });
 
   if (isLoading) {
@@ -299,13 +337,18 @@ export function App() {
   }
 
   return (
-    <Box position="relative" width="100%" height="100%">
-      <TwoPaneLayout
-        leftWidth={20}
-        rightWidth={80}
-        leftPane={<FeedList feeds={feeds} selectedIndex={selectedFeedIndex} />}
-        rightPane={<ArticleList articles={articles} selectedArticle={selectedArticle} />}
-      />
-    </Box>
+    <TwoPaneLayout
+      leftWidth={20}
+      rightWidth={80}
+      leftPane={<FeedList feeds={feeds} selectedIndex={selectedFeedIndex} />}
+      rightPane={
+        <ArticleList
+          articles={articles}
+          selectedArticle={selectedArticle}
+          scrollOffset={scrollOffset}
+          onScrollOffsetChange={setScrollOffset}
+        />
+      }
+    />
   );
 }

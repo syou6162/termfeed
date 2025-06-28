@@ -15,7 +15,6 @@ CREATE TABLE IF NOT EXISTS articles (
   title TEXT NOT NULL,
   url TEXT NOT NULL UNIQUE,
   content TEXT,
-  summary TEXT,
   author TEXT,
   published_at INTEGER NOT NULL,
   is_read BOOLEAN NOT NULL DEFAULT FALSE,

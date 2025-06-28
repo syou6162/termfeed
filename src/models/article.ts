@@ -8,7 +8,6 @@ export type CreateArticleInput = {
   title: string;
   url: string;
   content?: string;
-  summary?: string;
   author?: string;
   published_at: Date;
   thumbnail_url?: string;
@@ -36,7 +35,6 @@ export class ArticleModel {
       title: string;
       url: string;
       content?: string;
-      summary?: string;
       author?: string;
       published_at: number;
       is_read: number;
@@ -52,7 +50,6 @@ export class ArticleModel {
       title: data.title,
       url: data.url,
       content: data.content,
-      summary: data.summary,
       author: data.author,
       published_at: unixSecondsToDate(data.published_at),
       is_read: Boolean(data.is_read),
@@ -67,10 +64,10 @@ export class ArticleModel {
     const now = nowInUnixSeconds();
     const stmt = this.db.getDb().prepare(`
       INSERT INTO articles (
-        feed_id, title, url, content, summary, author, 
+        feed_id, title, url, content, author, 
         published_at, is_read, is_favorite, thumbnail_url, created_at, updated_at
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, 0, 0, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, 0, 0, ?, ?, ?)
     `);
 
     try {
@@ -79,7 +76,6 @@ export class ArticleModel {
         article.title,
         article.url,
         article.content || null,
-        article.summary || null,
         article.author || null,
         dateToUnixSeconds(article.published_at),
         article.thumbnail_url || null,

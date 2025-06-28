@@ -56,7 +56,6 @@ describe('FeedService', () => {
             title: 'Test Article',
             url: 'https://example.com/article1',
             content: 'Test content',
-            summary: 'Test summary',
             author: 'Test Author',
             published_at: new Date(),
             is_read: false,
@@ -117,7 +116,6 @@ describe('FeedService', () => {
             title: 'Valid Article',
             url: 'https://example.com/article1',
             content: 'Test content',
-            summary: 'Test summary',
             author: 'Test Author',
             published_at: new Date(),
             is_read: false,
@@ -128,7 +126,6 @@ describe('FeedService', () => {
             title: 'Invalid Article',
             url: '', // 空のURL
             content: 'Test content',
-            summary: 'Test summary',
             author: 'Test Author',
             published_at: new Date(),
             is_read: false,
@@ -161,7 +158,6 @@ describe('FeedService', () => {
         title: 'Test Article',
         url: 'https://example.com/article1',
         content: 'Test content',
-        summary: 'Test summary',
         author: 'Test Author',
         published_at: new Date(),
       });
@@ -199,7 +195,6 @@ describe('FeedService', () => {
             title: 'New Article',
             url: 'https://example.com/new-article',
             content: 'New content',
-            summary: 'New summary',
             author: 'New Author',
             published_at: new Date(),
             is_read: false,
@@ -237,7 +232,6 @@ describe('FeedService', () => {
         title: 'Existing Article',
         url: 'https://example.com/existing-article',
         content: 'Existing content',
-        summary: 'Existing summary',
         author: 'Existing Author',
         published_at: new Date(),
       });
@@ -254,7 +248,6 @@ describe('FeedService', () => {
             title: 'Existing Article Updated',
             url: 'https://example.com/existing-article', // 同じURL
             content: 'Updated content',
-            summary: 'Updated summary',
             author: 'Updated Author',
             published_at: new Date(),
             is_read: false,
@@ -427,7 +420,6 @@ describe('FeedService', () => {
         title: 'Test Article',
         url: 'https://example.com/article1',
         content: 'Test content',
-        summary: 'Test summary',
         author: 'Test Author',
         published_at: new Date(),
       });
@@ -468,7 +460,6 @@ describe('FeedService', () => {
         title: 'Test Article 2',
         url: 'https://example.com/article2',
         content: 'Test content 2',
-        summary: 'Test summary 2',
         author: 'Test Author 2',
         published_at: new Date(),
       });
@@ -521,7 +512,6 @@ describe('FeedService', () => {
         title: 'Test Article 1',
         url: 'https://example.com/article1',
         content: 'Test content 1',
-        summary: 'Test summary 1',
         author: 'Test Author 1',
         published_at: new Date(),
       });
@@ -531,7 +521,6 @@ describe('FeedService', () => {
         title: 'Test Article 2',
         url: 'https://example.com/article2',
         content: 'Test content 2',
-        summary: 'Test summary 2',
         author: 'Test Author 2',
         published_at: new Date(),
       });
@@ -566,7 +555,6 @@ describe('FeedService', () => {
         title: 'Test Article',
         url: 'https://example.com/article1',
         content: 'Test content',
-        summary: 'Test summary',
         author: 'Test Author',
         published_at: new Date(),
       });
