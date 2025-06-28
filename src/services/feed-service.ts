@@ -33,7 +33,7 @@ export class FeedService {
   async addFeed(url: string): Promise<AddFeedResult> {
     const existingFeed = this.feedModel.findByUrl(url);
     if (existingFeed) {
-      throw new DuplicateFeedError(url);
+      throw new DuplicateFeedError(`Feed already exists: ${url}`, url);
     }
 
     let crawlResult: CrawlResult;
@@ -80,7 +80,7 @@ export class FeedService {
   removeFeed(feedId: number): boolean {
     const feed = this.feedModel.findById(feedId);
     if (!feed) {
-      throw new FeedNotFoundError(feedId);
+      throw new FeedNotFoundError(`Feed not found: ${feedId}`, feedId);
     }
 
     this.articleModel.deleteByFeedId(feedId);
@@ -90,14 +90,16 @@ export class FeedService {
   async updateFeed(feedId: number): Promise<FeedUpdateResult> {
     const feed = this.feedModel.findById(feedId);
     if (!feed) {
-      throw new FeedNotFoundError(feedId);
+      throw new FeedNotFoundError(`Feed not found: ${feedId}`, feedId);
     }
 
     let crawlResult: CrawlResult;
     try {
       crawlResult = await this.crawler.crawl(feed.url);
     } catch (error) {
-      throw new FeedUpdateError(feedId, feed.url, { cause: error });
+      throw new FeedUpdateError(`Failed to update feed ${feedId}: ${feed.url}`, feedId, feed.url, {
+        cause: error,
+      });
     }
 
     this.feedModel.update(feedId, {
