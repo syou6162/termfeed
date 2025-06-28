@@ -49,7 +49,7 @@ export class RSSCrawler {
         if (error.response?.status === HttpStatusCode.NotFound) {
           throw new RSSFetchError(`Feed not found`, url, { cause: error });
         }
-        if (error.response?.status && error.response.status >= HttpStatusCode.BadRequest) {
+        if (error.response?.status && error.response.status >= 400) {
           throw new RSSFetchError(`HTTP error ${error.response.status}`, url, { cause: error });
         }
         throw new RSSFetchError(`Network error: ${error.message}`, url, { cause: error });
