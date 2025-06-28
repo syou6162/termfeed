@@ -19,8 +19,10 @@ export class DatabaseManager {
   }
 
   private getDefaultDbPath(): string {
-    const configDir = path.join(os.homedir(), '.termfeed');
-    return path.join(configDir, 'termfeed.db');
+    // XDG Base Directory specificationに従う
+    const xdgDataHome = process.env.XDG_DATA_HOME || path.join(os.homedir(), '.local', 'share');
+    const dataDir = path.join(xdgDataHome, 'termfeed');
+    return path.join(dataDir, 'termfeed.db');
   }
 
   private ensureDbDirectory(): void {
