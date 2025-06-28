@@ -145,7 +145,7 @@ describe('ArticleModel', () => {
   });
 
   describe('findAll', () => {
-    it('すべての記事を取得できる', async () => {
+    it('すべての記事を取得できる', () => {
       const articles: CreateArticleInput[] = [
         {
           feed_id: testFeedId,
@@ -360,7 +360,7 @@ describe('ArticleModel', () => {
 
       // まず既読にする
       articleModel.markAsRead(article.id!);
-      
+
       // 未読に戻す
       const success = articleModel.markAsUnread(article.id!);
       expect(success).toBe(true);
@@ -382,14 +382,14 @@ describe('ArticleModel', () => {
       // お気に入りにする
       let success = articleModel.toggleFavorite(article.id!);
       expect(success).toBe(true);
-      
+
       let updated = articleModel.findById(article.id!);
       expect(updated!.is_favorite).toBe(true);
 
       // お気に入りを解除する
       success = articleModel.toggleFavorite(article.id!);
       expect(success).toBe(true);
-      
+
       updated = articleModel.findById(article.id!);
       expect(updated!.is_favorite).toBe(false);
     });
