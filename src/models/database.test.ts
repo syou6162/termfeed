@@ -48,18 +48,25 @@ describe('DatabaseManager', () => {
     dbManager.migrate();
 
     // フィードを挿入
-    const insertFeed = dbManager.getDb().prepare('INSERT INTO feeds (url, title) VALUES (?, ?)');
-    const feedInfo = insertFeed.run('https://example.com/rss', 'Test Feed');
+    const now = Math.floor(Date.now() / 1000);
+    const insertFeed = dbManager
+      .getDb()
+      .prepare('INSERT INTO feeds (url, title, last_updated_at, created_at) VALUES (?, ?, ?, ?)');
+    const feedInfo = insertFeed.run('https://example.com/rss', 'Test Feed', now, now);
 
     // 記事を挿入（is_read, is_favoriteを指定しない）
     const insertArticle = dbManager
       .getDb()
-      .prepare('INSERT INTO articles (feed_id, title, url, published_at) VALUES (?, ?, ?, ?)');
+      .prepare(
+        'INSERT INTO articles (feed_id, title, url, published_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)'
+      );
     insertArticle.run(
       feedInfo.lastInsertRowid,
       'Test Article',
       'https://example.com/article',
-      new Date().toISOString()
+      now,
+      now,
+      now
     );
 
     // デフォルト値を確認

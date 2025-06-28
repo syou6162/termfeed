@@ -1,6 +1,7 @@
 import { DatabaseManager } from './database';
 import { Article, UpdateArticleInput } from './types';
 import { UniqueConstraintError, ForeignKeyConstraintError } from './errors';
+import { dateToUnixSeconds, nowInUnixSeconds, unixSecondsToDate } from './utils/timestamp';
 
 export type CreateArticleInput = {
   feed_id: number;
@@ -37,12 +38,12 @@ export class ArticleModel {
       content?: string;
       summary?: string;
       author?: string;
-      published_at: string;
+      published_at: number;
       is_read: number;
       is_favorite: number;
       thumbnail_url?: string;
-      created_at?: string;
-      updated_at?: string;
+      created_at?: number;
+      updated_at?: number;
     };
 
     return {
@@ -53,22 +54,23 @@ export class ArticleModel {
       content: data.content,
       summary: data.summary,
       author: data.author,
-      published_at: new Date(data.published_at),
+      published_at: unixSecondsToDate(data.published_at),
       is_read: Boolean(data.is_read),
       is_favorite: Boolean(data.is_favorite),
       thumbnail_url: data.thumbnail_url,
-      created_at: data.created_at ? new Date(data.created_at) : undefined,
-      updated_at: data.updated_at ? new Date(data.updated_at) : undefined,
+      created_at: data.created_at ? unixSecondsToDate(data.created_at) : undefined,
+      updated_at: data.updated_at ? unixSecondsToDate(data.updated_at) : undefined,
     };
   }
 
   public create(article: CreateArticleInput): Article {
+    const now = nowInUnixSeconds();
     const stmt = this.db.getDb().prepare(`
       INSERT INTO articles (
         feed_id, title, url, content, summary, author, 
-        published_at, is_read, is_favorite, thumbnail_url
+        published_at, is_read, is_favorite, thumbnail_url, created_at, updated_at
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, 0, 0, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, 0, 0, ?, ?, ?)
     `);
 
     try {
@@ -79,8 +81,10 @@ export class ArticleModel {
         article.content || null,
         article.summary || null,
         article.author || null,
-        article.published_at.toISOString(),
-        article.thumbnail_url || null
+        dateToUnixSeconds(article.published_at),
+        article.thumbnail_url || null,
+        now,
+        now
       );
 
       return {
@@ -88,8 +92,8 @@ export class ArticleModel {
         ...article,
         is_read: false,
         is_favorite: false,
-        created_at: new Date(),
-        updated_at: new Date(),
+        created_at: unixSecondsToDate(now),
+        updated_at: unixSecondsToDate(now),
       };
     } catch (error) {
       if (error instanceof Error) {
@@ -177,7 +181,8 @@ export class ArticleModel {
       return this.findById(id);
     }
 
-    updateFields.push("updated_at = datetime('now')");
+    updateFields.push('updated_at = ?');
+    updateValues.push(nowInUnixSeconds());
     updateValues.push(id);
 
     const stmt = this.db.getDb().prepare(`
