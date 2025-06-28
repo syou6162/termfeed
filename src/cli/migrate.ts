@@ -2,14 +2,14 @@
 
 import { DatabaseManager } from '../models/database';
 
-async function runMigration() {
+function runMigration() {
   console.log('Starting database migration...');
-  
+
   try {
     const dbManager = new DatabaseManager();
-    await dbManager.migrate();
+    dbManager.migrate();
     dbManager.close();
-    
+
     console.log('✓ Migration completed successfully');
     process.exit(0);
   } catch (error) {

@@ -27,10 +27,10 @@ export class DatabaseManager {
     }
   }
 
-  public async migrate(): Promise<void> {
+  public migrate(): void {
     const schemaPath = path.join(__dirname, 'schema.sql');
     const schema = fs.readFileSync(schemaPath, 'utf-8');
-    
+
     this.db.exec(schema);
     console.log('Database migration completed successfully');
   }
