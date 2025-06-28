@@ -3,56 +3,68 @@ export function convertHtmlToText(html: string): string {
     return '';
   }
 
-  return (
-    html
-      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-      .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
-      // 見出しタグの処理
-      .replace(/<h1\b[^>]*>/gi, '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n')
-      .replace(/<\/h1>/gi, '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n')
-      .replace(/<h2\b[^>]*>/gi, '\n\n■ ')
-      .replace(/<\/h2>/gi, '\n\n')
-      .replace(/<h3\b[^>]*>/gi, '\n\n▶ ')
-      .replace(/<\/h3>/gi, '\n\n')
-      .replace(/<h[4-6]\b[^>]*>/gi, '\n● ')
-      .replace(/<\/h[4-6]>/gi, '\n')
-      // パラグラフの処理（前後に改行）
-      .replace(/<p\b[^>]*>/gi, '\n\n')
-      .replace(/<\/p>/gi, '\n\n')
-      // divの処理（前後に改行）
-      .replace(/<div\b[^>]*>/gi, '\n\n')
-      .replace(/<\/div>/gi, '\n\n')
-      // リストの開始タグ（前に改行）
-      .replace(/<(ul|ol)\b[^>]*>/gi, '\n\n')
-      // リストアイテムの処理（インデント付き）
-      .replace(/<li\b[^>]*>/gi, '  • ')
-      .replace(/<\/li>/gi, '\n')
-      // リスト全体の処理（後に改行）
-      .replace(/<\/(ul|ol)>/gi, '\n\n')
-      // 改行タグ
-      .replace(/<br\s*\/?>/gi, '\n')
-      // blockquoteタグの処理（インデント付き）
-      .replace(/<blockquote[^>]*>/gi, '\n「')
-      .replace(/<\/blockquote>/gi, '」\n')
-      // figureタグやiframeタグの処理（削除）
-      .replace(/<figure[^>]*>[\s\S]*?<\/figure>/gi, '\n')
-      .replace(/<iframe[^>]*>[\s\S]*?<\/iframe>/gi, '\n')
-      // 残りのタグを削除
-      .replace(/<[^>]*>/g, '')
-      // HTMLエンティティのデコード
-      .replace(/&nbsp;/g, ' ')
-      .replace(/&amp;/g, '&')
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
-      .replace(/&quot;/g, '"')
-      .replace(/&#39;/g, "'")
-      .replace(/&#x27;/g, "'")
-      .replace(/&#x2F;/g, '/')
-      // 連続改行を2つに統一（改行の後に空行1つ）
-      .replace(/\n+/g, '\n\n')
-      // 前後の空白を削除
-      .trim()
-  );
+  // H2, H3タグかどうかを検出
+  const hasH2 = /<h2\b[^>]*>/.test(html);
+  const hasH3 = /<h3\b[^>]*>/.test(html);
+  const isHeadingOnly =
+    (hasH2 || hasH3) &&
+    !/<(?!\/?(h[23])\b)[^>]+>/.test(html.replace(/<h[23][^>]*>.*?<\/h[23]>/gi, ''));
+
+  let result = html
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
+    // 見出しタグの処理
+    .replace(/<h1\b[^>]*>/gi, '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n')
+    .replace(/<\/h1>/gi, '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n')
+    .replace(/<h2\b[^>]*>/gi, '\n\n■ ')
+    .replace(/<\/h2>/gi, '\n\n')
+    .replace(/<h3\b[^>]*>/gi, '\n\n▶ ')
+    .replace(/<\/h3>/gi, '\n\n')
+    .replace(/<h[4-6]\b[^>]*>/gi, '\n● ')
+    .replace(/<\/h[4-6]>/gi, '\n')
+    // パラグラフの処理（前後に改行）
+    .replace(/<p\b[^>]*>/gi, '\n\n')
+    .replace(/<\/p>/gi, '\n\n')
+    // divの処理（前後に改行）
+    .replace(/<div\b[^>]*>/gi, '\n\n')
+    .replace(/<\/div>/gi, '\n\n')
+    // リストの開始タグ（前に改行）
+    .replace(/<(ul|ol)\b[^>]*>/gi, '\n\n')
+    // リストアイテムの処理（インデント付き）
+    .replace(/<li\b[^>]*>/gi, '  • ')
+    .replace(/<\/li>/gi, '\n')
+    // リスト全体の処理（後に改行）
+    .replace(/<\/(ul|ol)>/gi, '\n\n')
+    // 改行タグ
+    .replace(/<br\s*\/?>/gi, '\n')
+    // blockquoteタグの処理（インデント付き）
+    .replace(/<blockquote[^>]*>/gi, '\n「')
+    .replace(/<\/blockquote>/gi, '」\n')
+    // figureタグやiframeタグの処理（削除）
+    .replace(/<figure[^>]*>[\s\S]*?<\/figure>/gi, '\n')
+    .replace(/<iframe[^>]*>[\s\S]*?<\/iframe>/gi, '\n')
+    // 残りのタグを削除
+    .replace(/<[^>]*>/g, '')
+    // HTMLエンティティのデコード
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&#x27;/g, "'")
+    .replace(/&#x2F;/g, '/')
+    // 連続改行を2つに統一（改行の後に空行1つ）
+    .replace(/\n+/g, '\n\n')
+    // 前後の空白を削除（ただし見出しのみの場合は改行を保持）
+    .trim();
+
+  // 見出しのみの場合は改行を保持
+  if (isHeadingOnly && result.match(/^(■|▶)/)) {
+    return '\n\n' + result + '\n\n';
+  }
+
+  return result;
 }
 
 export function truncateText(text: string, maxLength: number): string {

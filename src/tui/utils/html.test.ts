@@ -31,19 +31,31 @@ describe('convertHtmlToText', () => {
   it('H2タグの処理', () => {
     const html = '<h2>Subtitle</h2>';
     const result = convertHtmlToText(html);
-    expect(result).toBe('■ Subtitle');
+    expect(result).toBe('\n\n■ Subtitle\n\n');
   });
 
   it('H3タグの処理', () => {
     const html = '<h3>Section</h3>';
     const result = convertHtmlToText(html);
-    expect(result).toBe('▶ Section');
+    expect(result).toBe('\n\n▶ Section\n\n');
   });
 
   it('H4-H6タグの処理', () => {
     const html = '<h4>Subsection</h4>';
     const result = convertHtmlToText(html);
     expect(result).toBe('● Subsection');
+  });
+
+  it('H2タグの前後改行処理', () => {
+    const html = '<p>Before</p><h2>Subtitle</h2><p>After</p>';
+    const result = convertHtmlToText(html);
+    expect(result).toBe('Before\n\n■ Subtitle\n\nAfter');
+  });
+
+  it('H3タグの前後改行処理', () => {
+    const html = '<p>Before</p><h3>Section</h3><p>After</p>';
+    const result = convertHtmlToText(html);
+    expect(result).toBe('Before\n\n▶ Section\n\nAfter');
   });
 
   it('パラグラフタグの処理', () => {
