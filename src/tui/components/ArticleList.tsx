@@ -73,7 +73,7 @@ export function ArticleList({
         </Box>
         <Box marginTop={1}>
           <Text color="gray" dimColor>
-            j/k:記事選択 a:次のサイト s:前のサイト r:更新 q:終了
+            j/k:記事選択 a:次のサイト s:前のサイト f:お気に入り切替 r:更新 q:終了
           </Text>
         </Box>
       </Box>
@@ -93,7 +93,7 @@ export function ArticleList({
           <Text color="gray">{`${selectedIndex + 1}/${articles.length}件`}</Text>
         </Box>
         <Text color="gray" dimColor>
-          m:既読切替 f:お気に入り切替 r:更新 q:終了
+          f:お気に入り切替 r:更新 q:終了
         </Text>
       </Box>
     </Box>

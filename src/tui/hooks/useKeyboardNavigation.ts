@@ -20,7 +20,6 @@ type KeyboardNavigationProps = {
   onFeedSelectionChange: (index: number) => void;
   onSelect?: () => void;
   onRefresh?: () => void;
-  onToggleRead?: () => void;
   onToggleFavorite?: () => void;
   onQuit?: () => void;
 };
@@ -34,7 +33,6 @@ export function useKeyboardNavigation({
   onFeedSelectionChange,
   onSelect,
   onRefresh,
-  onToggleRead,
   onToggleFavorite,
   onQuit,
 }: KeyboardNavigationProps) {
@@ -55,12 +53,6 @@ export function useKeyboardNavigation({
       // 選択・決定
       if (key.return || input === 'l') {
         onSelect?.();
-        return;
-      }
-
-      // 既読トグル
-      if (input === 'm') {
-        onToggleRead?.();
         return;
       }
 
@@ -145,7 +137,6 @@ export function useKeyboardNavigation({
       onFeedSelectionChange,
       onSelect,
       onRefresh,
-      onToggleRead,
       onToggleFavorite,
       onQuit,
     ]

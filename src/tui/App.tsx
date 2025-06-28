@@ -92,10 +92,20 @@ export function App() {
   }, [selectedFeedIndex, feeds, loadFeeds, loadArticles]);
 
   const handleFeedSelectionChange = useCallback((index: number) => {
+    // フィード移動前に現在選択中の記事を既読にする
+    const currentArticle = articles[selectedArticleIndex];
+    if (currentArticle && currentArticle.id && !currentArticle.is_read) {
+      try {
+        feedService.markArticleAsRead(currentArticle.id);
+      } catch (err) {
+        console.error('記事の既読化に失敗しました:', err);
+      }
+    }
+
     setSelectedFeedIndex(index);
     setSelectedArticleIndex(0); // 記事選択をリセット
     // loadArticlesはuseEffectで自動的に呼ばれる
-  }, []);
+  }, [articles, selectedArticleIndex, feedService]);
 
   const handleArticleSelect = useCallback(() => {
     const selectedArticle = articles[selectedArticleIndex];
@@ -105,35 +115,6 @@ export function App() {
     }
   }, [articles, selectedArticleIndex]);
 
-  const handleToggleRead = useCallback(() => {
-    const selectedArticle = articles[selectedArticleIndex];
-    if (selectedArticle?.id) {
-      try {
-        if (selectedArticle.is_read) {
-          feedService.markArticleAsUnread(selectedArticle.id);
-        } else {
-          feedService.markArticleAsRead(selectedArticle.id);
-        }
-
-        // 記事リストと未読カウントを再読み込み
-        const selectedFeed = feeds[selectedFeedIndex];
-        if (selectedFeed?.id) {
-          loadArticles(selectedFeed.id);
-          loadFeeds(); // 未読カウントを更新
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : '既読状態の更新に失敗しました');
-      }
-    }
-  }, [
-    articles,
-    selectedArticleIndex,
-    feeds,
-    selectedFeedIndex,
-    loadArticles,
-    loadFeeds,
-    feedService,
-  ]);
 
   const handleToggleFavorite = useCallback(() => {
     const selectedArticle = articles[selectedArticleIndex];
@@ -163,9 +144,42 @@ export function App() {
     }
   }, [feeds, selectedFeedIndex, loadArticles]);
 
+  // Ctrl+C等での終了時にも既読処理を行う
+  useEffect(() => {
+    const handleExit = () => {
+      const currentArticle = articles[selectedArticleIndex];
+      if (currentArticle && currentArticle.id && !currentArticle.is_read) {
+        try {
+          feedService.markArticleAsRead(currentArticle.id);
+        } catch (err) {
+          console.error('記事の既読化に失敗しました:', err);
+        }
+      }
+    };
+
+    process.on('SIGINT', handleExit);
+    process.on('SIGTERM', handleExit);
+
+    return () => {
+      // クリーンアップ時にも実行
+      handleExit();
+      process.off('SIGINT', handleExit);
+      process.off('SIGTERM', handleExit);
+    };
+  }, [articles, selectedArticleIndex, feedService]);
+
   const handleQuit = useCallback(() => {
+    // TUI終了前に現在選択中の記事を既読にする
+    const currentArticle = articles[selectedArticleIndex];
+    if (currentArticle && currentArticle.id && !currentArticle.is_read) {
+      try {
+        feedService.markArticleAsRead(currentArticle.id);
+      } catch (err) {
+        console.error('記事の既読化に失敗しました:', err);
+      }
+    }
     exit();
-  }, [exit]);
+  }, [articles, selectedArticleIndex, feedService, exit]);
 
   // キーボードナビゲーション
   useKeyboardNavigation({
@@ -177,7 +191,6 @@ export function App() {
     onFeedSelectionChange: handleFeedSelectionChange,
     onSelect: handleArticleSelect,
     onRefresh: () => void updateFeeds(),
-    onToggleRead: handleToggleRead,
     onToggleFavorite: handleToggleFavorite,
     onQuit: handleQuit,
   });
