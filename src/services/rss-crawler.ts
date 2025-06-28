@@ -1,0 +1,136 @@
+import Parser from 'rss-parser';
+import axios from 'axios';
+import type { Article, Feed } from '../models/types.js';
+
+export type RSSItem = {
+  title?: string;
+  link?: string;
+  content?: string;
+  contentSnippet?: string;
+  creator?: string;
+  pubDate?: string;
+  isoDate?: string;
+  enclosure?: {
+    url: string;
+  };
+  guid?: string;
+};
+
+export type RSSFeed = {
+  title?: string;
+  description?: string;
+  link?: string;
+  items: RSSItem[];
+};
+
+export type CrawlResult = {
+  feed: Omit<Feed, 'id' | 'created_at'>;
+  articles: Omit<Article, 'id' | 'feed_id' | 'created_at' | 'updated_at'>[];
+};
+
+export class RSSCrawler {
+  private parser: Parser;
+  private readonly timeout: number;
+  private readonly userAgent: string;
+
+  constructor(options: { timeout?: number; userAgent?: string } = {}) {
+    this.parser = new Parser({
+      customFields: {
+        item: ['media:thumbnail', 'media:content', 'enclosure'],
+      },
+    });
+    this.timeout = options.timeout || 30000;
+    this.userAgent = options.userAgent || 'termfeed/0.1.0';
+  }
+
+  async crawl(url: string): Promise<CrawlResult> {
+    try {
+      const response = await axios.get(url, {
+        timeout: this.timeout,
+        headers: {
+          'User-Agent': this.userAgent,
+          Accept: 'application/rss+xml, application/atom+xml, application/xml, text/xml',
+        },
+        responseType: 'text',
+      });
+
+      const feed = await this.parser.parseString(response.data);
+      
+      return {
+        feed: this.normalizeFeed(feed, url),
+        articles: this.normalizeArticles(feed.items || []),
+      };
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        if (error.code === 'ECONNABORTED') {
+          throw new Error(`Request timeout: ${url}`);
+        }
+        if (error.response?.status === 404) {
+          throw new Error(`Feed not found: ${url}`);
+        }
+        if (error.response?.status && error.response.status >= 400) {
+          throw new Error(`HTTP error ${error.response.status}: ${url}`);
+        }
+        throw new Error(`Network error: ${error.message}`);
+      }
+      throw new Error(`Failed to parse RSS feed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  private normalizeFeed(feed: any, url: string): Omit<Feed, 'id' | 'created_at'> {
+    return {
+      url,
+      title: feed.title || 'Untitled Feed',
+      description: feed.description,
+      last_updated_at: new Date(),
+    };
+  }
+
+  private normalizeArticles(items: RSSItem[]): Omit<Article, 'id' | 'feed_id' | 'created_at' | 'updated_at'>[] {
+    return items.map(item => ({
+      title: item.title || 'Untitled Article',
+      url: item.link || item.guid || '',
+      content: item.content,
+      summary: item.contentSnippet,
+      author: item.creator,
+      published_at: this.parseDate(item.isoDate || item.pubDate),
+      is_read: false,
+      is_favorite: false,
+      thumbnail_url: this.extractThumbnail(item),
+    }));
+  }
+
+  private parseDate(dateString?: string): Date {
+    if (!dateString) {
+      return new Date();
+    }
+
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) {
+      return new Date();
+    }
+
+    return date;
+  }
+
+  private extractThumbnail(item: any): string | undefined {
+    if (item.enclosure?.url && this.isImageUrl(item.enclosure.url)) {
+      return item.enclosure.url;
+    }
+
+    if (item['media:thumbnail']?.url) {
+      return item['media:thumbnail'].url;
+    }
+
+    if (item['media:content']?.url && this.isImageUrl(item['media:content'].url)) {
+      return item['media:content'].url;
+    }
+
+    return undefined;
+  }
+
+  private isImageUrl(url: string): boolean {
+    const imageExtensions = /\.(jpg|jpeg|png|gif|webp|svg)$/i;
+    return imageExtensions.test(url);
+  }
+}
