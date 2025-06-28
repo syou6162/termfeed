@@ -23,21 +23,33 @@ describe('convertHtmlToText', () => {
   it('見出しタグの処理（前後に改行）', () => {
     const html = '<h1>Title</h1>';
     const result = convertHtmlToText(html);
-    expect(result).toContain('Title');
-    expect(result).toContain('━━━');
+    expect(result).toBe(
+      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\nTitle\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
+    );
   });
 
-  it('H2-H6タグの処理', () => {
+  it('H2タグの処理', () => {
     const html = '<h2>Subtitle</h2>';
     const result = convertHtmlToText(html);
-    expect(result).toContain('■ Subtitle');
+    expect(result).toBe('■ Subtitle');
   });
 
-  it('パラグラフタグの処理（閉じタグで改行3つ）', () => {
+  it('H3タグの処理', () => {
+    const html = '<h3>Section</h3>';
+    const result = convertHtmlToText(html);
+    expect(result).toBe('▶ Section');
+  });
+
+  it('H4-H6タグの処理', () => {
+    const html = '<h4>Subsection</h4>';
+    const result = convertHtmlToText(html);
+    expect(result).toBe('● Subsection');
+  });
+
+  it('パラグラフタグの処理', () => {
     const html = '<p>First paragraph</p><p>Second paragraph</p>';
     const result = convertHtmlToText(html);
-    expect(result).toContain('First paragraph');
-    expect(result).toContain('Second paragraph');
+    expect(result).toBe('First paragraph\n\nSecond paragraph');
   });
 
   it('divタグの処理', () => {
@@ -47,15 +59,13 @@ describe('convertHtmlToText', () => {
 
   it('リストアイテムの処理（箇条書き記号付き）', () => {
     const html = '<ul><li>Item 1</li><li>Item 2</li></ul>';
-    // 項目間に改行が入る
     expect(convertHtmlToText(html)).toBe('• Item 1\n\n  • Item 2');
   });
 
   it('改行タグの処理', () => {
     const html = 'Line 1<br>Line 2';
     const result = convertHtmlToText(html);
-    expect(result).toContain('Line 1');
-    expect(result).toContain('Line 2');
+    expect(result).toBe('Line 1\n\nLine 2');
   });
 
   it('HTMLエンティティのデコード', () => {
@@ -75,43 +85,28 @@ describe('convertHtmlToText', () => {
       <p>Another paragraph</p>
     `;
     const result = convertHtmlToText(html);
-
-    // 主要な要素が適切に変換されていることを確認
-    expect(result).toContain('Main Title');
-    expect(result).toContain('This is a paragraph with bold text.');
-    expect(result).toContain('Subtitle');
-    expect(result).toContain('• First item');
-    expect(result).toContain('• Second item');
-    expect(result).toContain('Another paragraph');
-
-    // 見出しの前後に適切な改行があることを確認
-    expect(result).toMatch(/Main Title/);
-    expect(result).toMatch(/Subtitle/);
+    const expected =
+      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\nMain Title\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n      This is a paragraph with bold text.\n\n      \n\n■ Subtitle\n\n      \n\n        \n\n  • First item\n\n        \n\n  • Second item\n\n      \n\n      Another paragraph';
+    expect(result).toBe(expected);
   });
 
   it('連続する改行を適切に処理', () => {
     const html = '<p>Text</p><p>More text</p>';
     const result = convertHtmlToText(html);
-    expect(result).toContain('Text');
-    expect(result).toContain('More text');
+    expect(result).toBe('Text\n\nMore text');
   });
 
   it('ネストされたリストの処理', () => {
     const html =
       '<ul><li>Item 1<ul><li>Nested 1</li><li>Nested 2</li></ul></li><li>Item 2</li></ul>';
     const result = convertHtmlToText(html);
-    expect(result).toContain('• Item 1');
-    expect(result).toContain('• Nested 1');
-    expect(result).toContain('• Nested 2');
-    expect(result).toContain('• Item 2');
+    expect(result).toBe('• Item 1\n\n  • Nested 1\n\n  • Nested 2\n\n  • Item 2');
   });
 
   it('順序付きリスト（ol）の処理', () => {
     const html = '<ol><li>First</li><li>Second</li><li>Third</li></ol>';
     const result = convertHtmlToText(html);
-    expect(result).toContain('• First');
-    expect(result).toContain('• Second');
-    expect(result).toContain('• Third');
+    expect(result).toBe('• First\n\n  • Second\n\n  • Third');
   });
 
   it('インラインタグ（strong, em, a）の削除', () => {
@@ -145,8 +140,8 @@ describe('convertHtmlToText', () => {
 
   it('空のタグの処理', () => {
     const html = '<p></p><div></div><br><p>Content</p>';
-    // 空のp/divタグは改行のみ、brは改行、最後のpは内容+改行
-    // trim()により前後の空白は削除される
+    // 空のp/divタグは改行、brは改行、最後のpは内容+改行
+    // 連続改行は\n\nに統一され、trim()で前後の空白削除
     expect(convertHtmlToText(html)).toBe('Content');
   });
 
@@ -165,6 +160,24 @@ describe('convertHtmlToText', () => {
   it('改行を含むパラグラフの処理', () => {
     const html = '<p>First line\nSecond line\nThird line</p>';
     expect(convertHtmlToText(html)).toBe('First line\n\nSecond line\n\nThird line');
+  });
+
+  it('blockquoteタグの処理', () => {
+    const html = '<blockquote>This is a quote</blockquote>';
+    const result = convertHtmlToText(html);
+    expect(result).toBe('「This is a quote」');
+  });
+
+  it('figureタグの処理（削除）', () => {
+    const html = 'Before <figure><img src="test.jpg"></figure> After';
+    const result = convertHtmlToText(html);
+    expect(result).toBe('Before \n\n After');
+  });
+
+  it('iframeタグの処理（削除）', () => {
+    const html = 'Before <iframe src="test.html"></iframe> After';
+    const result = convertHtmlToText(html);
+    expect(result).toBe('Before \n\n After');
   });
 });
 
