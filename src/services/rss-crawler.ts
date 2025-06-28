@@ -1,10 +1,13 @@
 import Parser from 'rss-parser';
-import axios from 'axios';
+import axios, { HttpStatusCode } from 'axios';
 import type { Article, Feed } from '../models/types.js';
 import type { RSSItem, CrawlResult, CrawlerOptions } from './types.js';
 import { RSSFetchError, RSSParseError } from './errors.js';
 
 export type { RSSItem, CrawlResult, CrawlerOptions };
+
+// 定数定義
+const DEFAULT_TIMEOUT_MS = 30000; // 30秒
 
 export class RSSCrawler {
   private parser: Parser;
@@ -17,7 +20,7 @@ export class RSSCrawler {
         item: ['media:thumbnail', 'media:content', 'enclosure'],
       },
     });
-    this.timeout = options.timeout || 30000;
+    this.timeout = options.timeout || DEFAULT_TIMEOUT_MS;
     this.userAgent = options.userAgent || 'termfeed/0.1.0';
   }
 
@@ -43,10 +46,10 @@ export class RSSCrawler {
         if (error.code === 'ECONNABORTED') {
           throw new RSSFetchError(`Request timeout`, url, { cause: error });
         }
-        if (error.response?.status === 404) {
+        if (error.response?.status === HttpStatusCode.NotFound) {
           throw new RSSFetchError(`Feed not found`, url, { cause: error });
         }
-        if (error.response?.status && error.response.status >= 400) {
+        if (error.response?.status && error.response.status >= HttpStatusCode.BadRequest) {
           throw new RSSFetchError(`HTTP error ${error.response.status}`, url, { cause: error });
         }
         throw new RSSFetchError(`Network error: ${error.message}`, url, { cause: error });
