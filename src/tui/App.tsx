@@ -4,7 +4,7 @@ import type { Article, Feed } from '../models/types.js';
 import { FeedService } from '../services/feed-service.js';
 import { FeedModel } from '../models/feed.js';
 import { ArticleModel } from '../models/article.js';
-import { DatabaseManager } from '../models/database.js';
+import { createDatabaseManager } from '../cli/utils/database.js';
 import { ArticleList } from './components/ArticleList.js';
 import { FeedList } from './components/FeedList.js';
 import { TwoPaneLayout } from './components/TwoPaneLayout.js';
@@ -26,7 +26,7 @@ export function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>('');
 
-  const databaseManager = new DatabaseManager();
+  const databaseManager = createDatabaseManager();
   // マイグレーションを実行
   databaseManager.migrate();
   
