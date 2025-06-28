@@ -111,17 +111,16 @@ describe('FeedModel', () => {
   });
 
   describe('findAll', () => {
-    it('すべてのフィードを取得できる', async () => {
+    it('すべてのフィードを取得できる', () => {
       const feeds: CreateFeedInput[] = [
         { url: 'https://example1.com/feed.xml', title: 'Feed 1' },
         { url: 'https://example2.com/feed.xml', title: 'Feed 2' },
         { url: 'https://example3.com/feed.xml', title: 'Feed 3' },
       ];
 
-      // 順序を保証するために少し間隔をあけて作成
+      // フィードを作成
       for (const feed of feeds) {
         feedModel.create(feed);
-        await new Promise((resolve) => setTimeout(resolve, 10));
       }
 
       const allFeeds = feedModel.findAll();

@@ -1,5 +1,6 @@
 import { DatabaseManager } from './database';
 import { Article, UpdateArticleInput } from './types';
+import { UniqueConstraintError, ForeignKeyConstraintError } from './errors';
 
 export type CreateArticleInput = {
   feed_id: number;
@@ -27,6 +28,40 @@ export class ArticleModel {
     this.db = db;
   }
 
+  private convertRowToArticle(row: unknown): Article {
+    const data = row as {
+      id: number;
+      feed_id: number;
+      title: string;
+      url: string;
+      content?: string;
+      summary?: string;
+      author?: string;
+      published_at: string;
+      is_read: number;
+      is_favorite: number;
+      thumbnail_url?: string;
+      created_at?: string;
+      updated_at?: string;
+    };
+
+    return {
+      id: data.id,
+      feed_id: data.feed_id,
+      title: data.title,
+      url: data.url,
+      content: data.content,
+      summary: data.summary,
+      author: data.author,
+      published_at: new Date(data.published_at),
+      is_read: Boolean(data.is_read),
+      is_favorite: Boolean(data.is_favorite),
+      thumbnail_url: data.thumbnail_url,
+      created_at: data.created_at ? new Date(data.created_at) : undefined,
+      updated_at: data.updated_at ? new Date(data.updated_at) : undefined,
+    };
+  }
+
   public create(article: CreateArticleInput): Article {
     const stmt = this.db.getDb().prepare(`
       INSERT INTO articles (
@@ -36,25 +71,37 @@ export class ArticleModel {
       VALUES (?, ?, ?, ?, ?, ?, ?, 0, 0, ?)
     `);
 
-    const result = stmt.run(
-      article.feed_id,
-      article.title,
-      article.url,
-      article.content || null,
-      article.summary || null,
-      article.author || null,
-      article.published_at.toISOString(),
-      article.thumbnail_url || null
-    );
+    try {
+      const result = stmt.run(
+        article.feed_id,
+        article.title,
+        article.url,
+        article.content || null,
+        article.summary || null,
+        article.author || null,
+        article.published_at.toISOString(),
+        article.thumbnail_url || null
+      );
 
-    return {
-      id: result.lastInsertRowid as number,
-      ...article,
-      is_read: false,
-      is_favorite: false,
-      created_at: new Date(),
-      updated_at: new Date(),
-    };
+      return {
+        id: result.lastInsertRowid as number,
+        ...article,
+        is_read: false,
+        is_favorite: false,
+        created_at: new Date(),
+        updated_at: new Date(),
+      };
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.message.includes('UNIQUE constraint failed: articles.url')) {
+          throw new UniqueConstraintError('URL', article.url);
+        }
+        if (error.message.includes('FOREIGN KEY constraint failed')) {
+          throw new ForeignKeyConstraintError('feed_id', article.feed_id);
+        }
+      }
+      throw error;
+    }
   }
 
   public findById(id: number): Article | null {
@@ -62,17 +109,8 @@ export class ArticleModel {
       SELECT * FROM articles WHERE id = ?
     `);
 
-    const row = stmt.get(id) as Article | undefined;
-    if (row) {
-      // 日付文字列をDateオブジェクトに変換
-      row.published_at = new Date(row.published_at);
-      if (row.created_at) row.created_at = new Date(row.created_at);
-      if (row.updated_at) row.updated_at = new Date(row.updated_at);
-      // SQLiteのBOOLEAN値を真偽値に変換
-      row.is_read = Boolean(row.is_read);
-      row.is_favorite = Boolean(row.is_favorite);
-    }
-    return row || null;
+    const row = stmt.get(id);
+    return row ? this.convertRowToArticle(row) : null;
   }
 
   public findByUrl(url: string): Article | null {
@@ -80,15 +118,8 @@ export class ArticleModel {
       SELECT * FROM articles WHERE url = ?
     `);
 
-    const row = stmt.get(url) as Article | undefined;
-    if (row) {
-      row.published_at = new Date(row.published_at);
-      if (row.created_at) row.created_at = new Date(row.created_at);
-      if (row.updated_at) row.updated_at = new Date(row.updated_at);
-      row.is_read = Boolean(row.is_read);
-      row.is_favorite = Boolean(row.is_favorite);
-    }
-    return row || null;
+    const row = stmt.get(url);
+    return row ? this.convertRowToArticle(row) : null;
   }
 
   public findAll(filter: ArticleFilter = {}): Article[] {
@@ -123,17 +154,9 @@ export class ArticleModel {
     }
 
     const stmt = this.db.getDb().prepare(query);
-    const rows = stmt.all(...params) as Article[];
+    const rows = stmt.all(...params);
 
-    // 日付とブール値の変換
-    return rows.map((row) => ({
-      ...row,
-      published_at: new Date(row.published_at),
-      created_at: row.created_at ? new Date(row.created_at) : undefined,
-      updated_at: row.updated_at ? new Date(row.updated_at) : undefined,
-      is_read: Boolean(row.is_read),
-      is_favorite: Boolean(row.is_favorite),
-    }));
+    return rows.map((row) => this.convertRowToArticle(row));
   }
 
   public update(id: number, updates: UpdateArticleInput): Article | null {

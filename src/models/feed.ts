@@ -1,5 +1,6 @@
 import { DatabaseManager } from './database';
 import { Feed, CreateFeedInput } from './types';
+import { UniqueConstraintError } from './errors';
 
 export class FeedModel {
   private db: DatabaseManager;
@@ -14,14 +15,23 @@ export class FeedModel {
       VALUES (?, ?, ?, datetime('now'))
     `);
 
-    const result = stmt.run(feed.url, feed.title, feed.description || null);
+    try {
+      const result = stmt.run(feed.url, feed.title, feed.description || null);
 
-    return {
-      id: result.lastInsertRowid as number,
-      ...feed,
-      last_updated_at: new Date(),
-      created_at: new Date(),
-    };
+      return {
+        id: result.lastInsertRowid as number,
+        ...feed,
+        last_updated_at: new Date(),
+        created_at: new Date(),
+      };
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.message.includes('UNIQUE constraint failed: feeds.url')) {
+          throw new UniqueConstraintError('URL', feed.url);
+        }
+      }
+      throw error;
+    }
   }
 
   public findById(id: number): Feed | null {
