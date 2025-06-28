@@ -31,11 +31,24 @@ export class DatabaseManager {
   }
 
   public migrate(): void {
-    // 開発環境とビルド後の両方で動作するようにパスを解決
-    const schemaPath = path.join(__dirname, '..', '..', 'src', 'models', 'schema.sql');
-    const schema = fs.readFileSync(schemaPath, 'utf-8');
-
-    this.db.exec(schema);
+    // 開発時とビルド後で異なるパスを試行
+    let schemaPath = path.join(__dirname, 'schema.sql');
+    if (!fs.existsSync(schemaPath)) {
+      schemaPath = path.join(__dirname, '..', '..', 'src', 'models', 'schema.sql');
+    }
+    
+    const schema = fs.readFileSync(schemaPath, 'utf8');
+    
+    // SQLファイルを個別のステートメントに分割して実行
+    const statements = schema
+      .split(';')
+      .map(stmt => stmt.trim())
+      .filter(stmt => stmt.length > 0);
+    
+    for (const statement of statements) {
+      this.db.exec(statement);
+    }
+    
     console.log('Database migration completed successfully');
   }
 

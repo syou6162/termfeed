@@ -8,9 +8,9 @@ export function createTuiCommand(): Command {
 
   tuiCommand.description('TUIモードでRSSリーダーを起動').action(() => {
     try {
-      // データベース初期化
-      createDatabaseManager();
-      console.log('Database migration completed successfully');
+      // データベース初期化とマイグレーション
+      const databaseManager = createDatabaseManager();
+      databaseManager.migrate();
 
       // TUIアプリケーションを起動
       render(<App />);
