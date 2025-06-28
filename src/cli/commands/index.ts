@@ -1,5 +1,6 @@
-export { createAddCommand } from './add';
-export { createArticlesCommand } from './articles';
-export { createUpdateCommand } from './update';
-export { createListCommand } from './feeds';
-export { createRmCommand } from './rm';
+export { createAddCommand } from './add.js';
+export { createArticlesCommand } from './articles.js';
+export { createUpdateCommand } from './update.js';
+export { createListCommand } from './feeds.js';
+export { createRmCommand } from './rm.js';
+export { createTuiCommand } from './tui.js';

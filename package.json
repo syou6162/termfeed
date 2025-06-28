@@ -4,12 +4,12 @@
   "description": "A terminal-based RSS reader with Vim-like keybindings",
   "main": "dist/index.js",
   "bin": {
-    "termfeed": "./dist/cli/index.js"
+    "termfeed": "./dist/index.js"
   },
   "scripts": {
-    "dev": "tsx watch src/cli/index.ts",
+    "dev": "tsx watch src/index.ts",
     "build": "tsc",
-    "start": "node dist/cli/index.js",
+    "start": "node dist/index.js",
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
