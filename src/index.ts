@@ -1,13 +1,14 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander';
+import { fileURLToPath } from 'url';
 import {
   createAddCommand,
   createArticlesCommand,
   createUpdateCommand,
   createListCommand,
   createRmCommand,
-} from './cli/commands';
+} from './cli/commands/index.js';
 
 export const VERSION = '0.1.0';
 
@@ -26,6 +27,6 @@ program.addCommand(createListCommand());
 program.addCommand(createRmCommand());
 
 // Main CLI entry point
-if (require.main === module) {
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
   program.parse();
 }

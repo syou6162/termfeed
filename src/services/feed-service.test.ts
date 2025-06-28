@@ -1,12 +1,15 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import { DatabaseManager } from '../models/database.js';
 import { FeedModel } from '../models/feed.js';
 import { ArticleModel } from '../models/article.js';
 import { FeedService } from './feed-service.js';
 import { RSSCrawler } from './rss-crawler.js';
 import { DuplicateFeedError, FeedNotFoundError, FeedUpdateError } from './errors.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 describe('FeedService', () => {
   let db: DatabaseManager;

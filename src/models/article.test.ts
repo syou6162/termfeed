@@ -1,9 +1,12 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { DatabaseManager } from './database';
-import { ArticleModel, CreateArticleInput } from './article';
-import { FeedModel } from './feed';
+import { DatabaseManager } from './database.js';
+import { ArticleModel, CreateArticleInput } from './article.js';
+import { FeedModel } from './feed.js';
 import * as fs from 'fs';
 import * as path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 describe('ArticleModel', () => {
   let db: DatabaseManager;

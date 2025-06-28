@@ -2,14 +2,15 @@
   "name": "termfeed",
   "version": "0.1.0",
   "description": "A terminal-based RSS reader with Vim-like keybindings",
+  "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "termfeed": "./dist/cli/index.js"
+    "termfeed": "./dist/index.js"
   },
   "scripts": {
-    "dev": "tsx watch src/cli/index.ts",
+    "dev": "tsx src/index.ts",
     "build": "tsc",
-    "start": "node dist/cli/index.js",
+    "start": "node dist/index.js",
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",

@@ -1,4 +1,4 @@
-export * from './types';
-export { DatabaseManager } from './database';
-export { FeedModel } from './feed';
-export { ArticleModel, CreateArticleInput, ArticleFilter } from './article';
+export * from './types.js';
+export { DatabaseManager } from './database.js';
+export { FeedModel } from './feed.js';
+export { ArticleModel, CreateArticleInput, ArticleFilter } from './article.js';

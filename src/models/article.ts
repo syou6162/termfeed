@@ -1,7 +1,7 @@
-import { DatabaseManager } from './database';
-import { Article, UpdateArticleInput } from './types';
-import { UniqueConstraintError, ForeignKeyConstraintError } from './errors';
-import { dateToUnixSeconds, nowInUnixSeconds, unixSecondsToDate } from './utils/timestamp';
+import { DatabaseManager } from './database.js';
+import { Article, UpdateArticleInput } from './types.js';
+import { UniqueConstraintError, ForeignKeyConstraintError } from './errors.js';
+import { dateToUnixSeconds, nowInUnixSeconds, unixSecondsToDate } from './utils/timestamp.js';
 
 export type CreateArticleInput = {
   feed_id: number;
