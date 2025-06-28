@@ -13,70 +13,70 @@ export function createArticlesCommand(): Command {
     .option('-u, --unread', 'Show only unread articles')
     .option('-r, --favorites', 'Show only favorite articles')
     .option('-l, --limit <number>', 'Limit number of articles to show', '20')
-    .action(
-      async (options: { feed?: string; unread?: boolean; favorites?: boolean; limit: string }) => {
-        const dbPath = process.env.TERMFEED_DB || './termfeed.db';
-        const dbManager = new DatabaseManager(dbPath);
-        
-        try {
-          const feedModel = new FeedModel(dbManager);
-          const articleModel = new ArticleModel(dbManager);
-          const feedService = new FeedService(feedModel, articleModel);
-          
-          console.log('Listing articles...');
+    .action((options: { feed?: string; unread?: boolean; favorites?: boolean; limit: string }) => {
+      const dbPath = process.env.TERMFEED_DB || './termfeed.db';
+      const dbManager = new DatabaseManager(dbPath);
 
-          const feedId = options.feed ? parseInt(options.feed, 10) : undefined;
-          const limit = parseInt(options.limit, 10);
+      try {
+        const feedModel = new FeedModel(dbManager);
+        const articleModel = new ArticleModel(dbManager);
+        const feedService = new FeedService(feedModel, articleModel);
 
-          if (options.feed && (isNaN(feedId!) || feedId! <= 0)) {
-            console.error('Invalid feed ID: must be a positive number');
-            process.exit(1);
-          }
+        console.log('Listing articles...');
 
-          if (isNaN(limit) || limit <= 0) {
-            console.error('Invalid limit: must be a positive number');
-            process.exit(1);
-          }
+        const feedId = options.feed ? parseInt(options.feed, 10) : undefined;
+        const limit = parseInt(options.limit, 10);
 
-          const articles = feedService.getArticles({
-            feed_id: feedId,
-            is_read: options.unread ? false : undefined,
-            is_favorite: options.favorites ? true : undefined,
-            limit,
-          });
-
-          if (articles.length === 0) {
-            console.log('No articles found matching the criteria.');
-            return;
-          }
-
-          console.log(`\nFound ${articles.length} articles:\n`);
-
-          for (const article of articles) {
-            const status = [];
-            if (!article.is_read) status.push('UNREAD');
-            if (article.is_favorite) status.push('★');
-
-            console.log(`${article.id}. ${article.title}`);
-            console.log(`   URL: ${article.url}`);
-            console.log(`   Published: ${article.published_at.toISOString().split('T')[0]}`);
-            if (article.author) console.log(`   Author: ${article.author}`);
-            if (status.length > 0) console.log(`   Status: ${status.join(' ')}`);
-            console.log('');
-          }
-
-          // 統計情報を表示
-          const totalCount = feedId ? articleModel.countByFeedId(feedId) : articleModel.countByFeedId(0);
-          const unreadCount = feedService.getUnreadCount(feedId);
-          console.log(`Total: ${totalCount} articles, Unread: ${unreadCount}`);
-        } catch (error) {
-          console.error('Error listing articles:', error);
+        if (options.feed && (isNaN(feedId!) || feedId! <= 0)) {
+          console.error('Invalid feed ID: must be a positive number');
           process.exit(1);
-        } finally {
-          dbManager.close();
         }
+
+        if (isNaN(limit) || limit <= 0) {
+          console.error('Invalid limit: must be a positive number');
+          process.exit(1);
+        }
+
+        const articles = feedService.getArticles({
+          feed_id: feedId,
+          is_read: options.unread ? false : undefined,
+          is_favorite: options.favorites ? true : undefined,
+          limit,
+        });
+
+        if (articles.length === 0) {
+          console.log('No articles found matching the criteria.');
+          return;
+        }
+
+        console.log(`\nFound ${articles.length} articles:\n`);
+
+        for (const article of articles) {
+          const status = [];
+          if (!article.is_read) status.push('UNREAD');
+          if (article.is_favorite) status.push('★');
+
+          console.log(`${article.id}. ${article.title}`);
+          console.log(`   URL: ${article.url}`);
+          console.log(`   Published: ${article.published_at.toISOString().split('T')[0]}`);
+          if (article.author) console.log(`   Author: ${article.author}`);
+          if (status.length > 0) console.log(`   Status: ${status.join(' ')}`);
+          console.log('');
+        }
+
+        // 統計情報を表示
+        const totalCount = feedId
+          ? articleModel.countByFeedId(feedId)
+          : articleModel.countByFeedId(0);
+        const unreadCount = feedService.getUnreadCount(feedId);
+        console.log(`Total: ${totalCount} articles, Unread: ${unreadCount}`);
+      } catch (error) {
+        console.error('Error listing articles:', error);
+        process.exit(1);
+      } finally {
+        dbManager.close();
       }
-    );
+    });
 
   return command;
 }

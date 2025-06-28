@@ -14,7 +14,7 @@ export function createAddCommand(): Command {
     .action(async (url: string) => {
       const dbPath = process.env.TERMFEED_DB || './termfeed.db';
       const dbManager = new DatabaseManager(dbPath);
-      
+
       try {
         dbManager.migrate();
         const feedModel = new FeedModel(dbManager);
@@ -25,7 +25,7 @@ export function createAddCommand(): Command {
 
         // フィード追加
         const result = await feedService.addFeed(url);
-        
+
         console.log(`Feed added successfully!`);
         console.log(`  ID: ${result.feed.id}`);
         console.log(`  Title: ${result.feed.title}`);

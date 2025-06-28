@@ -7,15 +7,15 @@ import { FeedService } from '../../services/feed-service.js';
 export function createListCommand(): Command {
   const command = new Command('list');
 
-  command.description('List all RSS feeds').action(async () => {
+  command.description('List all RSS feeds').action(() => {
     const dbPath = process.env.TERMFEED_DB || './termfeed.db';
     const dbManager = new DatabaseManager(dbPath);
-    
+
     try {
       const feedModel = new FeedModel(dbManager);
       const articleModel = new ArticleModel(dbManager);
       const feedService = new FeedService(feedModel, articleModel);
-      
+
       console.log('Listing all feeds...\n');
       const feeds = feedService.getFeedList();
 
