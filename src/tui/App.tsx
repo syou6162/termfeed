@@ -14,15 +14,12 @@ type FeedWithUnreadCount = Feed & {
   unreadCount: number;
 };
 
-type AppState = 'feeds' | 'articles';
-
 export function App() {
   const { exit } = useApp();
   const [feeds, setFeeds] = useState<FeedWithUnreadCount[]>([]);
   const [articles, setArticles] = useState<Article[]>([]);
   const [selectedFeedIndex, setSelectedFeedIndex] = useState(0);
   const [selectedArticleIndex, setSelectedArticleIndex] = useState(0);
-  const [currentState, setCurrentState] = useState<AppState>('feeds');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>('');
 
@@ -84,7 +81,7 @@ export function App() {
       await feedService.updateAllFeeds();
       loadFeeds();
 
-      if (currentState === 'articles' && feeds[selectedFeedIndex]?.id) {
+      if (feeds[selectedFeedIndex]?.id) {
         loadArticles(feeds[selectedFeedIndex].id);
       }
     } catch (err) {
@@ -92,15 +89,17 @@ export function App() {
     } finally {
       setIsLoading(false);
     }
-  }, [currentState, selectedFeedIndex, feeds, loadFeeds, loadArticles]);
+  }, [selectedFeedIndex, feeds, loadFeeds, loadArticles]);
 
-  const handleFeedSelect = useCallback(() => {
-    const selectedFeed = feeds[selectedFeedIndex];
+  const handleFeedSelectionChange = useCallback((index: number) => {
+    setSelectedFeedIndex(index);
+    setSelectedArticleIndex(0); // 記事選択をリセット
+    const selectedFeed = feeds[index];
     if (selectedFeed?.id) {
-      setCurrentState('articles');
       loadArticles(selectedFeed.id);
     }
-  }, [feeds, selectedFeedIndex, loadArticles]);
+  }, [feeds, loadArticles]);
+
 
   const handleArticleSelect = useCallback(() => {
     const selectedArticle = articles[selectedArticleIndex];
@@ -120,7 +119,7 @@ export function App() {
           feedService.markArticleAsRead(selectedArticle.id);
         }
 
-        // 記事リストを再読み込み
+        // 記事リストと未読カウントを再読み込み
         const selectedFeed = feeds[selectedFeedIndex];
         if (selectedFeed?.id) {
           loadArticles(selectedFeed.id);
@@ -157,34 +156,35 @@ export function App() {
     }
   }, [articles, selectedArticleIndex, feeds, selectedFeedIndex, loadArticles, feedService]);
 
-  const handleBack = useCallback(() => {
-    if (currentState === 'articles') {
-      setCurrentState('feeds');
-      setArticles([]);
+  // 初期化時に最初のフィードの記事を読み込み
+  useEffect(() => {
+    loadFeeds();
+  }, [loadFeeds]);
+
+  useEffect(() => {
+    if (feeds.length > 0 && feeds[selectedFeedIndex]?.id) {
+      loadArticles(feeds[selectedFeedIndex].id);
     }
-  }, [currentState]);
+  }, [feeds, selectedFeedIndex, loadArticles]);
 
   const handleQuit = useCallback(() => {
     exit();
   }, [exit]);
 
-  // フィード画面でのキーボードナビゲーション
+  // キーボードナビゲーション
   useKeyboardNavigation({
-    itemCount: currentState === 'feeds' ? feeds.length : articles.length,
-    selectedIndex: currentState === 'feeds' ? selectedFeedIndex : selectedArticleIndex,
-    onSelectionChange: currentState === 'feeds' ? setSelectedFeedIndex : setSelectedArticleIndex,
-    onSelect: currentState === 'feeds' ? handleFeedSelect : handleArticleSelect,
-    onBack: handleBack,
+    articleCount: articles.length,
+    feedCount: feeds.length,
+    selectedArticleIndex,
+    selectedFeedIndex,
+    onArticleSelectionChange: setSelectedArticleIndex,
+    onFeedSelectionChange: handleFeedSelectionChange,
+    onSelect: handleArticleSelect,
     onRefresh: () => void updateFeeds(),
-    onToggleRead: currentState === 'articles' ? handleToggleRead : undefined,
-    onToggleFavorite: currentState === 'articles' ? handleToggleFavorite : undefined,
+    onToggleRead: handleToggleRead,
+    onToggleFavorite: handleToggleFavorite,
     onQuit: handleQuit,
   });
-
-  // 初期化
-  useEffect(() => {
-    loadFeeds();
-  }, [loadFeeds]);
 
   if (isLoading) {
     return (
@@ -206,34 +206,24 @@ export function App() {
     );
   }
 
-  if (currentState === 'feeds') {
-    return <FeedList feeds={feeds} selectedIndex={selectedFeedIndex} />;
-  }
+  const selectedFeed = feeds[selectedFeedIndex];
+  const selectedArticle = articles[selectedArticleIndex];
 
-  if (currentState === 'articles') {
-    const selectedFeed = feeds[selectedFeedIndex];
-    const selectedArticle = articles[selectedArticleIndex];
-
-    return (
-      <TwoPaneLayout
-        leftPane={
-          <ArticleList
-            articles={articles}
-            selectedIndex={selectedArticleIndex}
-            selectedArticle={selectedArticle}
-            feedTitle={selectedFeed?.title}
-          />
-        }
-        rightPane={
-          <Box padding={1}>
-            <Text color="gray" italic>
-              記事詳細は左ペインに表示されます
-            </Text>
-          </Box>
-        }
-      />
-    );
-  }
-
-  return null;
+  return (
+    <TwoPaneLayout
+      leftWidth={20}
+      rightWidth={80}
+      leftPane={
+        <FeedList feeds={feeds} selectedIndex={selectedFeedIndex} />
+      }
+      rightPane={
+        <ArticleList
+          articles={articles}
+          selectedIndex={selectedArticleIndex}
+          selectedArticle={selectedArticle}
+          feedTitle={selectedFeed?.title}
+        />
+      }
+    />
+  );
 }

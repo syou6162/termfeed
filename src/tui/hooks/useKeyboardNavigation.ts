@@ -12,11 +12,13 @@ type KeyEvent = {
 };
 
 type KeyboardNavigationProps = {
-  itemCount: number;
-  selectedIndex: number;
-  onSelectionChange: (index: number) => void;
+  articleCount: number;
+  feedCount: number;
+  selectedArticleIndex: number;
+  selectedFeedIndex: number;
+  onArticleSelectionChange: (index: number) => void;
+  onFeedSelectionChange: (index: number) => void;
   onSelect?: () => void;
-  onBack?: () => void;
   onRefresh?: () => void;
   onToggleRead?: () => void;
   onToggleFavorite?: () => void;
@@ -24,11 +26,13 @@ type KeyboardNavigationProps = {
 };
 
 export function useKeyboardNavigation({
-  itemCount,
-  selectedIndex,
-  onSelectionChange,
+  articleCount,
+  feedCount,
+  selectedArticleIndex,
+  selectedFeedIndex,
+  onArticleSelectionChange,
+  onFeedSelectionChange,
   onSelect,
-  onBack,
   onRefresh,
   onToggleRead,
   onToggleFavorite,
@@ -39,12 +43,6 @@ export function useKeyboardNavigation({
       // 終了
       if (input === 'q' || (key.ctrl && input === 'c')) {
         onQuit?.();
-        return;
-      }
-
-      // 戻る
-      if (key.escape || input === 'h') {
-        onBack?.();
         return;
       }
 
@@ -72,49 +70,80 @@ export function useKeyboardNavigation({
         return;
       }
 
-      // ナビゲーション
+      // 記事ナビゲーション (j/k)
       if (key.upArrow || input === 'k') {
-        const newIndex = selectedIndex > 0 ? selectedIndex - 1 : itemCount - 1;
-        onSelectionChange(newIndex);
+        if (articleCount > 0) {
+          const newIndex = selectedArticleIndex > 0 ? selectedArticleIndex - 1 : articleCount - 1;
+          onArticleSelectionChange(newIndex);
+        }
         return;
       }
 
       if (key.downArrow || input === 'j') {
-        const newIndex = selectedIndex < itemCount - 1 ? selectedIndex + 1 : 0;
-        onSelectionChange(newIndex);
+        if (articleCount > 0) {
+          const newIndex = selectedArticleIndex < articleCount - 1 ? selectedArticleIndex + 1 : 0;
+          onArticleSelectionChange(newIndex);
+        }
+        return;
+      }
+
+      // フィードナビゲーション (s/a)
+      if (input === 's') {
+        if (feedCount > 0) {
+          const newIndex = selectedFeedIndex < feedCount - 1 ? selectedFeedIndex + 1 : 0;
+          onFeedSelectionChange(newIndex);
+        }
+        return;
+      }
+
+      if (input === 'a') {
+        if (feedCount > 0) {
+          const newIndex = selectedFeedIndex > 0 ? selectedFeedIndex - 1 : feedCount - 1;
+          onFeedSelectionChange(newIndex);
+        }
         return;
       }
 
       // ページ移動
       if (key.pageUp || input === 'u') {
-        const newIndex = Math.max(0, selectedIndex - 10);
-        onSelectionChange(newIndex);
+        if (articleCount > 0) {
+          const newIndex = Math.max(0, selectedArticleIndex - 10);
+          onArticleSelectionChange(newIndex);
+        }
         return;
       }
 
       if (key.pageDown || input === 'd') {
-        const newIndex = Math.min(itemCount - 1, selectedIndex + 10);
-        onSelectionChange(newIndex);
+        if (articleCount > 0) {
+          const newIndex = Math.min(articleCount - 1, selectedArticleIndex + 10);
+          onArticleSelectionChange(newIndex);
+        }
         return;
       }
 
       // 先頭・末尾へ移動
       if (input === 'g') {
-        onSelectionChange(0);
+        if (articleCount > 0) {
+          onArticleSelectionChange(0);
+        }
         return;
       }
 
       if (input === 'G') {
-        onSelectionChange(itemCount - 1);
+        if (articleCount > 0) {
+          onArticleSelectionChange(articleCount - 1);
+        }
         return;
       }
     },
     [
-      itemCount,
-      selectedIndex,
-      onSelectionChange,
+      articleCount,
+      feedCount,
+      selectedArticleIndex,
+      selectedFeedIndex,
+      onArticleSelectionChange,
+      onFeedSelectionChange,
       onSelect,
-      onBack,
       onRefresh,
       onToggleRead,
       onToggleFavorite,
