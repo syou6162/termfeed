@@ -23,6 +23,7 @@ export function App() {
   const [selectedFeedIndex, setSelectedFeedIndex] = useState(0);
   const [selectedFeedId, setSelectedFeedId] = useState<number | null>(null);
   const [selectedArticleIndex, setSelectedArticleIndex] = useState(0);
+  const [scrollOffset, setScrollOffset] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>('');
   const [showHelp, setShowHelp] = useState(false);
@@ -256,6 +257,24 @@ export function App() {
     exit();
   }, [articles, selectedArticleIndex, feedService, exit]);
 
+  const handleScrollDown = useCallback(() => {
+    setScrollOffset((prev) => prev + 1);
+  }, []);
+
+  const handleScrollUp = useCallback(() => {
+    setScrollOffset((prev) => Math.max(0, prev - 1));
+  }, []);
+
+  const handlePageDown = useCallback(() => {
+    // 1画面分スクロール（約20行）
+    setScrollOffset((prev) => prev + 20);
+  }, []);
+
+  const handlePageUp = useCallback(() => {
+    // 1画面分スクロール（約20行）
+    setScrollOffset((prev) => Math.max(0, prev - 20));
+  }, []);
+
   // キーボードナビゲーション
   useKeyboardNavigation({
     articleCount: articles.length,
@@ -269,6 +288,10 @@ export function App() {
     onToggleFavorite: handleToggleFavorite,
     onToggleHelp: handleToggleHelp,
     onQuit: handleQuit,
+    onScrollDown: handleScrollDown,
+    onScrollUp: handleScrollUp,
+    onPageDown: handlePageDown,
+    onPageUp: handlePageUp,
   });
 
   if (isLoading) {
@@ -299,13 +322,18 @@ export function App() {
   }
 
   return (
-    <Box position="relative" width="100%" height="100%">
-      <TwoPaneLayout
-        leftWidth={20}
-        rightWidth={80}
-        leftPane={<FeedList feeds={feeds} selectedIndex={selectedFeedIndex} />}
-        rightPane={<ArticleList articles={articles} selectedArticle={selectedArticle} />}
-      />
-    </Box>
+    <TwoPaneLayout
+      leftWidth={20}
+      rightWidth={80}
+      leftPane={<FeedList feeds={feeds} selectedIndex={selectedFeedIndex} />}
+      rightPane={
+        <ArticleList
+          articles={articles}
+          selectedArticle={selectedArticle}
+          scrollOffset={scrollOffset}
+          onScrollOffsetChange={setScrollOffset}
+        />
+      }
+    />
   );
 }

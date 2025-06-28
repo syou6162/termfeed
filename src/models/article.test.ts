@@ -54,7 +54,6 @@ describe('ArticleModel', () => {
         title: 'Test Article',
         url: 'https://example.com/article/1',
         content: 'This is the content',
-        summary: 'This is a summary',
         author: 'Test Author',
         published_at: new Date('2024-01-01'),
         thumbnail_url: 'https://example.com/thumbnail.jpg',
@@ -67,7 +66,6 @@ describe('ArticleModel', () => {
       expect(article.title).toBe(articleInput.title);
       expect(article.url).toBe(articleInput.url);
       expect(article.content).toBe(articleInput.content);
-      expect(article.summary).toBe(articleInput.summary);
       expect(article.author).toBe(articleInput.author);
       expect(article.published_at).toEqual(articleInput.published_at);
       expect(article.thumbnail_url).toBe(articleInput.thumbnail_url);
@@ -92,7 +90,6 @@ describe('ArticleModel', () => {
       expect(article.title).toBe(articleInput.title);
       expect(article.url).toBe(articleInput.url);
       expect(article.content).toBeUndefined();
-      expect(article.summary).toBeUndefined();
       expect(article.author).toBeUndefined();
       expect(article.thumbnail_url).toBeUndefined();
     });

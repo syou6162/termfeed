@@ -23,6 +23,10 @@ type KeyboardNavigationProps = {
   onToggleFavorite?: () => void;
   onToggleHelp?: () => void;
   onQuit?: () => void;
+  onScrollDown?: () => void;
+  onScrollUp?: () => void;
+  onPageDown?: () => void;
+  onPageUp?: () => void;
 };
 
 export function useKeyboardNavigation({
@@ -37,6 +41,10 @@ export function useKeyboardNavigation({
   onToggleFavorite,
   onToggleHelp,
   onQuit,
+  onScrollDown,
+  onScrollUp,
+  onPageDown,
+  onPageUp,
 }: KeyboardNavigationProps) {
   const handleInput = useCallback(
     (input: string, key: KeyEvent) => {
@@ -67,6 +75,18 @@ export function useKeyboardNavigation({
       // お気に入りトグル
       if (input === 'f') {
         onToggleFavorite?.();
+        return;
+      }
+
+      // スクロール (スペースキー)
+      if (input === ' ') {
+        onPageDown?.();
+        return;
+      }
+
+      // スクロール (Shift+スペース)
+      if (key.pageUp) {
+        onPageUp?.();
         return;
       }
 
@@ -148,6 +168,10 @@ export function useKeyboardNavigation({
       onToggleFavorite,
       onToggleHelp,
       onQuit,
+      onScrollDown,
+      onScrollUp,
+      onPageDown,
+      onPageUp,
     ]
   );
 

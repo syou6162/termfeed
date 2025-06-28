@@ -19,9 +19,7 @@ export function TwoPaneLayout({
       <Box width={`${leftWidth}%`} borderStyle="single" borderRight>
         {leftPane}
       </Box>
-      <Box width={`${rightWidth}%`} borderStyle="single" paddingLeft={1}>
-        {rightPane}
-      </Box>
+      <Box width={`${rightWidth}%`}>{rightPane}</Box>
     </Box>
   );
 }
