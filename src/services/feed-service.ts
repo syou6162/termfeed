@@ -172,25 +172,6 @@ export class FeedService {
     return this.articleModel.countUnread(feedId);
   }
 
-  cleanupOldArticles(days: number): number {
-    const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - days);
-
-    const oldArticles = this.articleModel.findAll({
-      is_read: true,
-      is_favorite: false,
-    });
-
-    let deletedCount = 0;
-    for (const article of oldArticles) {
-      const deleted = this.articleModel.delete(article.id!);
-      if (deleted) {
-        deletedCount++;
-      }
-    }
-
-    return deletedCount;
-  }
 
   getFeedList(): Feed[] {
     return this.feedModel.findAll();

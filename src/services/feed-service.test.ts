@@ -509,47 +509,4 @@ describe('FeedService', () => {
     });
   });
 
-  describe('cleanupOldArticles', () => {
-    it('古い既読記事を削除する', () => {
-      const feed = feedModel.create({
-        url: 'https://example.com/rss.xml',
-        title: 'Test Feed',
-        description: 'Test Description',
-      });
-
-      // 既読記事を作成
-      const article1 = articleModel.create({
-        feed_id: feed.id!,
-        title: 'Old Article',
-        url: 'https://example.com/old-article',
-        content: 'Old content',
-        summary: 'Old summary',
-        author: 'Old Author',
-        published_at: new Date(),
-      });
-
-      // お気に入り記事を作成（削除されないはず）
-      const article2 = articleModel.create({
-        feed_id: feed.id!,
-        title: 'Favorite Article',
-        url: 'https://example.com/favorite-article',
-        content: 'Favorite content',
-        summary: 'Favorite summary',
-        author: 'Favorite Author',
-        published_at: new Date(),
-      });
-
-      // 記事を既読にマーク
-      articleModel.markAsRead(article1.id!);
-      articleModel.markAsRead(article2.id!);
-      // お気に入りにマーク
-      articleModel.toggleFavorite(article2.id!);
-
-      const deletedCount = feedService.cleanupOldArticles(0);
-
-      expect(deletedCount).toBe(1); // 既読でお気に入りでない記事のみ削除
-      expect(articleModel.findById(article1.id!)).toBeNull();
-      expect(articleModel.findById(article2.id!)).not.toBeNull();
-    });
-  });
 });
