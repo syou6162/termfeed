@@ -1,13 +1,13 @@
-export interface Feed {
+export type Feed = {
   id?: number;
   url: string;
   title: string;
   description?: string;
   last_updated_at: Date;
   created_at?: Date;
-}
+};
 
-export interface Article {
+export type Article = {
   id?: number;
   feed_id: number;
   title: string;
@@ -21,15 +21,15 @@ export interface Article {
   thumbnail_url?: string;
   created_at?: Date;
   updated_at?: Date;
-}
+};
 
-export interface CreateFeedInput {
+export type CreateFeedInput = {
   url: string;
   title: string;
   description?: string;
-}
+};
 
-export interface UpdateArticleInput {
+export type UpdateArticleInput = {
   is_read?: boolean;
   is_favorite?: boolean;
-}
+};
