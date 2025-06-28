@@ -2,7 +2,11 @@
  * JavaScriptのDateオブジェクトをSQLite用の秒単位タイムスタンプに変換
  */
 export function dateToUnixSeconds(date: Date): number {
-  return Math.floor(date.getTime() / 1000);
+  const timestamp = date.getTime();
+  if (!Number.isFinite(timestamp)) {
+    throw new Error('Invalid date object');
+  }
+  return Math.floor(timestamp / 1000);
 }
 
 /**
@@ -16,5 +20,15 @@ export function nowInUnixSeconds(): number {
  * SQLiteの秒単位タイムスタンプをJavaScriptのDateオブジェクトに変換
  */
 export function unixSecondsToDate(seconds: number): Date {
-  return new Date(seconds * 1000);
+  if (!Number.isFinite(seconds)) {
+    throw new Error('Invalid timestamp: must be a finite number');
+  }
+  if (seconds < 0) {
+    throw new Error('Invalid timestamp: must not be negative');
+  }
+  const date = new Date(seconds * 1000);
+  if (isNaN(date.getTime())) {
+    throw new Error('Invalid timestamp: unable to create valid Date');
+  }
+  return date;
 }
