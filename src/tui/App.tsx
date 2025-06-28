@@ -225,7 +225,6 @@ export function App() {
       rightPane={
         <ArticleList
           articles={articles}
-          selectedIndex={selectedArticleIndex}
           selectedArticle={selectedArticle}
         />
       }

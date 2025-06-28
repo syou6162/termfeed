@@ -4,13 +4,11 @@ import { formatSummary } from '../utils/html.js';
 
 type ArticleListProps = {
   articles: Article[];
-  selectedIndex: number;
   selectedArticle?: Article;
 };
 
 export function ArticleList({
   articles,
-  selectedIndex,
   selectedArticle,
 }: ArticleListProps) {
   const renderArticleDetail = () => {
@@ -80,6 +78,11 @@ export function ArticleList({
     );
   }
 
+  const unreadArticles = articles.filter(article => !article.is_read);
+  const unreadCount = unreadArticles.length;
+  const currentUnreadIndex = unreadArticles.findIndex(article => article.id === selectedArticle?.id);
+  const unreadPosition = currentUnreadIndex !== -1 ? currentUnreadIndex + 1 : 0;
+
   return (
     <Box flexDirection="column" height="100%" padding={1}>
       <Box height="90%" flexGrow={1}>
@@ -90,7 +93,11 @@ export function ArticleList({
           <Text color="gray" dimColor>
             j/k:記事選択 a:次のサイト s:前のサイト l/Enter:ブラウザで開く
           </Text>
-          <Text color="gray">{`${selectedIndex + 1}/${articles.length}件`}</Text>
+          <Text color="gray">
+            {selectedArticle?.is_read 
+              ? `既読 (未読${unreadCount}件)` 
+              : `${unreadPosition}/${unreadCount}件`}
+          </Text>
         </Box>
         <Text color="gray" dimColor>
           f:お気に入り切替 r:更新 q:終了
