@@ -58,6 +58,13 @@ SQLiteを使用し、以下のスキーマで構成（src/models/schema.sql）�
   - `published_at`, `is_read`, `is_favorite`, `thumbnail_url`, `created_at`, `updated_at`
   - インデックス: feed_id, published_at, is_read, is_favorite
 
+### データベース設計の原則
+
+- データベースはロジックではなく制約のみを持つ
+- デフォルト値の設定、日時の自動更新などのロジックはアプリケーション側（JavaScript/TypeScript）で実装する
+- SQLiteには秒単位のUNIXタイムスタンプを保存し、JavaScript側でミリ秒に変換する
+- トリガーやデフォルト値などのDB側のロジックは使用しない
+
 ## 型定義の規約
 
 - インターフェースではなくタイプ（type）を使用する
