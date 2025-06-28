@@ -1,7 +1,7 @@
 import { Box, Text, useStdout } from 'ink';
 import { useState, useEffect } from 'react';
 import type { Article } from '../../models/types.js';
-import { convertHtmlToText } from '../utils/html.js';
+import { convertHtmlToText, wrapText } from '../utils/html.js';
 
 type ArticleListProps = {
   articles: Article[];
@@ -31,7 +31,8 @@ export function ArticleList({
   useEffect(() => {
     if (selectedArticle?.content) {
       const plainText = convertHtmlToText(selectedArticle.content);
-      const lines = plainText.split('\n');
+      const wrappedText = wrapText(plainText, 60); // 60文字で折り返し
+      const lines = wrappedText.split('\n');
       setContentLines(lines);
       setTotalLines(lines.length);
     } else {

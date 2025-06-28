@@ -50,8 +50,6 @@ export class DatabaseManager {
     for (const statement of statements) {
       this.db.exec(statement);
     }
-
-    console.log('Database migration completed successfully');
   }
 
   public getDb(): Database.Database {
