@@ -74,7 +74,7 @@ export function FeedList({ feeds, selectedIndex }: FeedListProps) {
       </Box>
       <Box marginTop={1}>
         <Text color="gray" dimColor>
-          a/s:フィード選択 j/k:記事選択
+          a:次のサイト s:前のサイト j/k:記事選択
         </Text>
       </Box>
     </Box>
