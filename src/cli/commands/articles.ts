@@ -3,6 +3,7 @@ import { DatabaseManager } from '../../models/database.js';
 import { FeedModel } from '../../models/feed.js';
 import { ArticleModel } from '../../models/article.js';
 import { FeedService } from '../../services/feed-service.js';
+import { parseOptionalPositiveInteger, parsePositiveInteger } from '../utils/validation.js';
 
 export function createArticlesCommand(): Command {
   const command = new Command('articles');
@@ -24,18 +25,8 @@ export function createArticlesCommand(): Command {
 
         console.log('Listing articles...');
 
-        const feedId = options.feed ? parseInt(options.feed, 10) : undefined;
-        const limit = parseInt(options.limit, 10);
-
-        if (options.feed && (isNaN(feedId!) || feedId! <= 0)) {
-          console.error('Invalid feed ID: must be a positive number');
-          process.exit(1);
-        }
-
-        if (isNaN(limit) || limit <= 0) {
-          console.error('Invalid limit: must be a positive number');
-          process.exit(1);
-        }
+        const feedId = parseOptionalPositiveInteger(options.feed, 'feed ID');
+        const limit = parsePositiveInteger(options.limit, 'limit');
 
         const articles = feedService.getArticles({
           feed_id: feedId,
