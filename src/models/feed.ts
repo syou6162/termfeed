@@ -91,10 +91,11 @@ export class FeedModel {
     for (const field of allowedFields) {
       if (field in updates) {
         updateFields.push(`${field} = ?`);
-        if (field === 'last_updated_at' && updates[field] instanceof Date) {
-          updateValues.push(dateToUnixSeconds(updates[field]));
+        const value = updates[field as keyof Feed];
+        if (value instanceof Date) {
+          updateValues.push(dateToUnixSeconds(value));
         } else {
-          updateValues.push(updates[field as keyof Feed]);
+          updateValues.push(value);
         }
       }
     }
