@@ -69,7 +69,7 @@ export function ArticleList({
 
   if (articles.length === 0) {
     return (
-      <Box flexDirection="column" height="100%" padding={1}>
+      <Box flexDirection="column" height="100%" width="100%" padding={1} flexShrink={0}>
         <Box justifyContent="center" alignItems="center" height="95%" flexGrow={1}>
           <Box flexDirection="column" alignItems="center">
             <Text color="gray" italic>
@@ -95,19 +95,30 @@ export function ArticleList({
   // 記事詳細を直接レンダリング（renderArticleDetail関数を使わない）
   if (!selectedArticle) {
     return (
-      <Box flexDirection="column" height="100%" borderStyle="single" borderLeft>
+      <Box
+        flexDirection="column"
+        height="100%"
+        width="100%"
+        borderStyle="single"
+        borderLeft
+        flexShrink={0}
+      >
         <Box flexGrow={1} padding={1} justifyContent="center" alignItems="center">
           <Text color="gray" italic>
             記事を選択してください
           </Text>
         </Box>
-        <Box padding={1} justifyContent="space-between" alignItems="center">
-          <Text color="gray" dimColor>
-            ? でヘルプ表示
-          </Text>
-          <Text color="gray">
-            {unreadPosition > 0 ? `${unreadPosition}/${unreadCount}件` : `未読${unreadCount}件`}
-          </Text>
+        <Box padding={1} flexDirection="row">
+          <Box flexGrow={1}>
+            <Text color="gray" dimColor>
+              ? でヘルプ表示
+            </Text>
+          </Box>
+          <Box>
+            <Text color="gray">
+              {unreadPosition > 0 ? `${unreadPosition}/${unreadCount}件` : `未読${unreadCount}件`}
+            </Text>
+          </Box>
         </Box>
       </Box>
     );
@@ -134,7 +145,14 @@ export function ArticleList({
       : '';
 
   return (
-    <Box flexDirection="column" borderStyle="single" borderLeft height="100%">
+    <Box
+      flexDirection="column"
+      borderStyle="single"
+      borderLeft
+      height="100%"
+      width="100%"
+      flexShrink={0}
+    >
       {/* ヘッダー部分：固定 */}
       <Box paddingTop={1} paddingX={1}>
         <Text bold color="green">

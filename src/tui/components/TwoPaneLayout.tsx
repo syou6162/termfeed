@@ -15,11 +15,13 @@ export function TwoPaneLayout({
   rightWidth = 60,
 }: TwoPaneLayoutProps) {
   return (
-    <Box width="100%" height="100%">
-      <Box width={`${leftWidth}%`} borderStyle="single" borderRight>
+    <Box width="100%" height="100%" flexDirection="row">
+      <Box width={`${leftWidth}%`} borderStyle="single" borderRight flexShrink={0}>
         {leftPane}
       </Box>
-      <Box width={`${rightWidth}%`}>{rightPane}</Box>
+      <Box width={`${rightWidth}%`} flexShrink={0} flexGrow={1}>
+        {rightPane}
+      </Box>
     </Box>
   );
 }
