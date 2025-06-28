@@ -38,14 +38,20 @@
 
 ## フェーズ2: コア機能開発
 
-### モデル層の実装
+### モデル層の実装 ✅ 完了 (2025-06-28)
 
-- [ ] 型定義の作成
-  - [ ] Feed インターフェース
-  - [ ] Article インターフェース
-- [ ] データベース操作の実装
-  - [ ] Feed の CRUD 操作
-  - [ ] Article の CRUD 操作
+- [x] 型定義の作成
+  - [x] Feed タイプ（インターフェースからタイプに変更）
+  - [x] Article タイプ（インターフェースからタイプに変更）
+- [x] データベース操作の実装
+  - [x] Feed の CRUD 操作
+  - [x] Article の CRUD 操作
+  - [x] 既読管理機能（markAsRead/markAsUnread）
+  - [x] お気に入り機能（toggleFavorite）
+  - [x] カウント機能（countByFeedId/countUnread）
+- [x] テストの作成
+  - [x] Feedモデルのテスト（14テスト）
+  - [x] Articleモデルのテスト（23テスト）
 
 ### サービス層の実装
 

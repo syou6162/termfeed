@@ -11,48 +11,70 @@ termfeedは、ターミナルで動作するRSSリーダーです。Vim風のキ
 プロジェクトは3層アーキテクチャで構成されます：
 
 - **src/models/**: データ層（型定義、データベース操作）
+  - `DatabaseManager`: SQLite接続管理とマイグレーション
+  - `FeedModel`: フィードのCRUD操作
+  - `ArticleModel`: 記事のCRUD操作、既読管理、お気に入り機能
 - **src/services/**: ビジネスロジック層（RSSクローラー、フィード管理）
 - **src/cli/**: プレゼンテーション層（CLIコマンド、TUI）
 
-## 技術スタック
-
-- **言語**: TypeScript
-- **TUI**: Ink（ReactベースのターミナルUI）
-- **データベース**: better-sqlite3（同期API）
-- **HTTPクライアント**: axios
-- **テスト**: Jest または Vitest（予定）
-
-## データベース設計
-
-- **feeds**: id, url, title, last_updated_at
-- **articles**: id, feed_id, title, url, content, published_at, is_read, is_favorite, thumbnail_url
-
-## 開発コマンド（実装後に追加予定）
+## 開発コマンド
 
 ```bash
 # 依存関係のインストール
 npm install
 
-# 開発サーバーの起動
+# 開発モード（ファイル監視付き）
 npm run dev
 
 # ビルド
 npm run build
 
 # テスト実行
-npm test
+npm run test:run        # 単発実行
+npm run test           # ウォッチモード
+npm run test:coverage  # カバレッジ付き
 
-# Lintチェック
-npm run lint
+# コード品質チェック
+npm run lint           # ESLintチェック
+npm run lint:fix       # ESLint自動修正
+npm run format         # Prettier フォーマット
+npm run typecheck      # TypeScript型チェック
 
-# 型チェック
-npm run typecheck
+# データベース
+npm run migrate        # マイグレーション実行
+
+# 単体テストの実行例
+npm run test:run src/models/feed.test.ts
 ```
 
-## 主要な機能
+## データベース設計
 
-1. **RSSフィード管理**: フィードの追加・削除・更新
-2. **記事管理**: 既読管理、お気に入り機能
-3. **TUI**: 2ペインレイアウト、Vim風キーバインド（j/k/n/p/v）
-4. **CLI**: コマンドラインからの操作
-5. **MCP Server**: Claude Codeとの連携（将来実装）
+SQLiteを使用し、以下のスキーマで構成（src/models/schema.sql）：
+
+- **feeds**: RSSフィード管理
+  - `id`, `url` (UNIQUE), `title`, `description`, `last_updated_at`, `created_at`
+- **articles**: 記事管理
+  - `id`, `feed_id` (FK), `title`, `url` (UNIQUE), `content`, `summary`, `author`
+  - `published_at`, `is_read`, `is_favorite`, `thumbnail_url`, `created_at`, `updated_at`
+  - インデックス: feed_id, published_at, is_read, is_favorite
+
+## 型定義の規約
+
+- インターフェースではなくタイプ（type）を使用する
+- 主要な型は `src/models/types.ts` に定義
+  - `Feed`, `Article`, `CreateFeedInput`, `UpdateArticleInput`
+
+## テスト戦略
+
+- Vitestを使用
+- 各モデルクラスに対応するテストファイルを作成
+- テスト用データベースは各テストケースで独立して作成・削除
+- 非同期処理のテストではsetTimeoutを避け、同期的にテストを記述
+
+## CI/CD
+
+GitHub Actionsで以下を実行：
+- Lint（ESLint + Prettier）
+- Test（Vitest）
+- 型チェック（TypeScript）
+- pre-commitフックでlintとtypecheckを実行
