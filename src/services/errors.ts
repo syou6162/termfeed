@@ -8,7 +8,7 @@ export class RSSFetchError extends Error {
     options?: ErrorOptions
   ) {
     super(message, options);
-    this.name = 'RSSFetchError';
+    this.name = this.constructor.name;
   }
 }
 
@@ -22,7 +22,7 @@ export class RSSParseError extends Error {
     options?: ErrorOptions
   ) {
     super(message, options);
-    this.name = 'RSSParseError';
+    this.name = this.constructor.name;
   }
 }
 
@@ -36,7 +36,7 @@ export class FeedManagementError extends Error {
     options?: ErrorOptions
   ) {
     super(message, options);
-    this.name = 'FeedManagementError';
+    this.name = this.constructor.name;
   }
 }
 
@@ -49,7 +49,7 @@ export class DuplicateFeedError extends Error {
     options?: ErrorOptions
   ) {
     super(`Feed already exists: ${url}`, options);
-    this.name = 'DuplicateFeedError';
+    this.name = this.constructor.name;
   }
 }
 
@@ -62,7 +62,7 @@ export class FeedNotFoundError extends Error {
     options?: ErrorOptions
   ) {
     super(`Feed not found: ${feedId}`, options);
-    this.name = 'FeedNotFoundError';
+    this.name = this.constructor.name;
   }
 }
 
@@ -76,6 +76,6 @@ export class FeedUpdateError extends Error {
     options?: ErrorOptions
   ) {
     super(`Failed to update feed ${feedId}: ${feedUrl}`, options);
-    this.name = 'FeedUpdateError';
+    this.name = this.constructor.name;
   }
 }
