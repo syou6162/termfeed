@@ -1,9 +1,9 @@
 import { Command } from 'commander';
-import { DatabaseManager } from '../../models/database.js';
 import { FeedModel } from '../../models/feed.js';
 import { ArticleModel } from '../../models/article.js';
 import { FeedService } from '../../services/feed-service.js';
 import { parsePositiveInteger } from '../utils/validation.js';
+import { createDatabaseManager } from '../utils/database.js';
 
 export function createRmCommand(): Command {
   const command = new Command('rm');
@@ -12,8 +12,7 @@ export function createRmCommand(): Command {
     .description('Remove RSS feed by ID')
     .argument('<feedId>', 'Feed ID to remove')
     .action(async (feedId: string) => {
-      const dbPath = process.env.TERMFEED_DB || './termfeed.db';
-      const dbManager = new DatabaseManager(dbPath);
+      const dbManager = createDatabaseManager();
 
       try {
         const id = parsePositiveInteger(feedId, 'feed ID');

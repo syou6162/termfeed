@@ -1,15 +1,14 @@
 import { Command } from 'commander';
-import { DatabaseManager } from '../../models/database.js';
 import { FeedModel } from '../../models/feed.js';
 import { ArticleModel } from '../../models/article.js';
 import { FeedService } from '../../services/feed-service.js';
+import { createDatabaseManager } from '../utils/database.js';
 
 export function createListCommand(): Command {
   const command = new Command('list');
 
   command.description('List all RSS feeds').action(() => {
-    const dbPath = process.env.TERMFEED_DB || './termfeed.db';
-    const dbManager = new DatabaseManager(dbPath);
+    const dbManager = createDatabaseManager();
 
     try {
       const feedModel = new FeedModel(dbManager);

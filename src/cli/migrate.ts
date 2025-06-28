@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 
-import { DatabaseManager } from '../models/database';
+import { createDatabaseManager, getDatabasePath } from './utils/database';
 
 function runMigration() {
   console.log('Starting database migration...');
+  console.log(`Database path: ${getDatabasePath()}`);
 
   try {
-    const dbManager = new DatabaseManager();
+    const dbManager = createDatabaseManager();
     dbManager.migrate();
     dbManager.close();
 

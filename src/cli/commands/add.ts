@@ -1,8 +1,8 @@
 import { Command } from 'commander';
-import { DatabaseManager } from '../../models/database.js';
 import { FeedModel } from '../../models/feed.js';
 import { ArticleModel } from '../../models/article.js';
 import { FeedService } from '../../services/feed-service.js';
+import { createDatabaseManager } from '../utils/database.js';
 
 export function createAddCommand(): Command {
   const command = new Command('add');
@@ -12,8 +12,7 @@ export function createAddCommand(): Command {
     .argument('<url>', 'RSS feed URL to add')
     .option('-t, --title <title>', 'Custom title for the feed')
     .action(async (url: string) => {
-      const dbPath = process.env.TERMFEED_DB || './termfeed.db';
-      const dbManager = new DatabaseManager(dbPath);
+      const dbManager = createDatabaseManager();
 
       try {
         dbManager.migrate();

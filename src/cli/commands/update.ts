@@ -1,9 +1,9 @@
 import { Command } from 'commander';
-import { DatabaseManager } from '../../models/database.js';
 import { FeedModel } from '../../models/feed.js';
 import { ArticleModel } from '../../models/article.js';
 import { FeedService } from '../../services/feed-service.js';
 import { parsePositiveInteger } from '../utils/validation.js';
+import { createDatabaseManager } from '../utils/database.js';
 
 export function createUpdateCommand(): Command {
   const command = new Command('update');
@@ -13,8 +13,7 @@ export function createUpdateCommand(): Command {
     .option('-f, --feed <feedId>', 'Update specific feed ID only')
     .option('-a, --all', 'Update all feeds (default)')
     .action(async (options: { feed?: string; all?: boolean }) => {
-      const dbPath = process.env.TERMFEED_DB || './termfeed.db';
-      const dbManager = new DatabaseManager(dbPath);
+      const dbManager = createDatabaseManager();
 
       try {
         const feedModel = new FeedModel(dbManager);

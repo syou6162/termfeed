@@ -1,9 +1,9 @@
 import { Command } from 'commander';
-import { DatabaseManager } from '../../models/database.js';
 import { FeedModel } from '../../models/feed.js';
 import { ArticleModel } from '../../models/article.js';
 import { FeedService } from '../../services/feed-service.js';
 import { parseOptionalPositiveInteger, parsePositiveInteger } from '../utils/validation.js';
+import { createDatabaseManager } from '../utils/database.js';
 
 export function createArticlesCommand(): Command {
   const command = new Command('articles');
@@ -15,8 +15,7 @@ export function createArticlesCommand(): Command {
     .option('-r, --favorites', 'Show only favorite articles')
     .option('-l, --limit <number>', 'Limit number of articles to show', '20')
     .action((options: { feed?: string; unread?: boolean; favorites?: boolean; limit: string }) => {
-      const dbPath = process.env.TERMFEED_DB || './termfeed.db';
-      const dbManager = new DatabaseManager(dbPath);
+      const dbManager = createDatabaseManager();
 
       try {
         const feedModel = new FeedModel(dbManager);
