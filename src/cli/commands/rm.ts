@@ -11,8 +11,8 @@ export function createRmCommand(): Command {
     .action(async (feedId: string) => {
       try {
         const id = parseInt(feedId, 10);
-        if (isNaN(id)) {
-          console.error('Invalid feed ID: must be a number');
+        if (isNaN(id) || id <= 0) {
+          console.error('Invalid feed ID: must be a positive number');
           process.exit(1);
         }
 

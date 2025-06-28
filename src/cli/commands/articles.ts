@@ -19,8 +19,8 @@ export function createArticlesCommand(): Command {
           const feedId = options.feed ? parseInt(options.feed, 10) : undefined;
           const limit = parseInt(options.limit, 10);
 
-          if (options.feed && isNaN(feedId!)) {
-            console.error('Invalid feed ID: must be a number');
+          if (options.feed && (isNaN(feedId!) || feedId! <= 0)) {
+            console.error('Invalid feed ID: must be a positive number');
             process.exit(1);
           }
 

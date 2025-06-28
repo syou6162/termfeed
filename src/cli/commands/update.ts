@@ -13,8 +13,8 @@ export function createUpdateCommand(): Command {
       try {
         if (options.feed) {
           const feedId = parseInt(options.feed, 10);
-          if (isNaN(feedId)) {
-            console.error('Invalid feed ID: must be a number');
+          if (isNaN(feedId) || feedId <= 0) {
+            console.error('Invalid feed ID: must be a positive number');
             process.exit(1);
           }
 

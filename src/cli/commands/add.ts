@@ -17,8 +17,10 @@ export function createAddCommand(): Command {
         let feedInfo;
         try {
           feedInfo = await feedService.validateFeedUrl(url);
-        } catch {
-          console.error('Invalid RSS feed URL');
+        } catch (error) {
+          console.error(
+            `Invalid RSS feed URL: ${error instanceof Error ? error.message : 'Unknown error'}`
+          );
           process.exit(1);
         }
 
