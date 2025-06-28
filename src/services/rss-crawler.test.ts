@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import axios from 'axios';
+import axios, { type AxiosError } from 'axios';
 import { RSSCrawler } from './rss-crawler.js';
 
 vi.mock('axios');
-const mockedAxios = vi.mocked(axios);
+const mockedAxios = vi.mocked(axios, true);
 
 describe('RSSCrawler', () => {
   let crawler: RSSCrawler;
@@ -152,8 +152,8 @@ describe('RSSCrawler', () => {
     });
 
     it('タイムアウトエラーでエラーを投げる', async () => {
-      const timeoutError = new Error('timeout');
-      timeoutError.code = 'ECONNABORTED';
+      const timeoutError = new Error('timeout') as AxiosError;
+      (timeoutError as any).code = 'ECONNABORTED';
       mockedAxios.isAxiosError.mockReturnValue(true);
       mockedAxios.get.mockRejectedValue(timeoutError);
 
@@ -163,7 +163,7 @@ describe('RSSCrawler', () => {
     it('404エラーでエラーを投げる', async () => {
       const error404 = {
         response: { status: 404 },
-      };
+      } as AxiosError;
       mockedAxios.isAxiosError.mockReturnValue(true);
       mockedAxios.get.mockRejectedValue(error404);
 
@@ -173,7 +173,7 @@ describe('RSSCrawler', () => {
     it('HTTPエラーでエラーを投げる', async () => {
       const error500 = {
         response: { status: 500 },
-      };
+      } as AxiosError;
       mockedAxios.isAxiosError.mockReturnValue(true);
       mockedAxios.get.mockRejectedValue(error500);
 
