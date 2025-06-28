@@ -86,7 +86,7 @@ describe('convertHtmlToText', () => {
     `;
     const result = convertHtmlToText(html);
     const expected =
-      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\nMain Title\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n      This is a paragraph with bold text.\n\n      \n\n■ Subtitle\n\n      \n\n        \n\n  • First item\n\n        \n\n  • Second item\n\n      \n\n      Another paragraph';
+      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\nMain Title\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n      \n\nThis is a paragraph with bold text.\n\n      \n\n■ Subtitle\n\n      \n\n          • First item\n\n          • Second item\n\n      \n\n      \n\nAnother paragraph';
     expect(result).toBe(expected);
   });
 

@@ -10,23 +10,25 @@ export function convertHtmlToText(html: string): string {
       // 見出しタグの処理
       .replace(/<h1\b[^>]*>/gi, '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n')
       .replace(/<\/h1>/gi, '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n')
-      .replace(/<h2\b[^>]*>/gi, '\n■ ')
-      .replace(/<\/h2>/gi, '\n')
-      .replace(/<h3\b[^>]*>/gi, '\n▶ ')
-      .replace(/<\/h3>/gi, '\n')
+      .replace(/<h2\b[^>]*>/gi, '\n\n■ ')
+      .replace(/<\/h2>/gi, '\n\n')
+      .replace(/<h3\b[^>]*>/gi, '\n\n▶ ')
+      .replace(/<\/h3>/gi, '\n\n')
       .replace(/<h[4-6]\b[^>]*>/gi, '\n● ')
       .replace(/<\/h[4-6]>/gi, '\n')
-      // パラグラフの処理（閉じタグで改行1つ）
-      .replace(/<\/p>/gi, '\n')
-      // divの処理（閉じタグで改行1つ）
-      .replace(/<\/div>/gi, '\n')
+      // パラグラフの処理（前後に改行）
+      .replace(/<p\b[^>]*>/gi, '\n\n')
+      .replace(/<\/p>/gi, '\n\n')
+      // divの処理（前後に改行）
+      .replace(/<div\b[^>]*>/gi, '\n\n')
+      .replace(/<\/div>/gi, '\n\n')
       // リストの開始タグ（前に改行）
-      .replace(/<(ul|ol)\b[^>]*>/gi, '\n')
+      .replace(/<(ul|ol)\b[^>]*>/gi, '\n\n')
       // リストアイテムの処理（インデント付き）
-      .replace(/<li\b[^>]*>/gi, '\n  • ')
-      .replace(/<\/li>/gi, '')
+      .replace(/<li\b[^>]*>/gi, '  • ')
+      .replace(/<\/li>/gi, '\n')
       // リスト全体の処理（後に改行）
-      .replace(/<\/(ul|ol)>/gi, '\n')
+      .replace(/<\/(ul|ol)>/gi, '\n\n')
       // 改行タグ
       .replace(/<br\s*\/?>/gi, '\n')
       // blockquoteタグの処理（インデント付き）
