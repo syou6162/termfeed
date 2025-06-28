@@ -3,19 +3,6 @@ export function convertHtmlToText(html: string): string {
     return '';
   }
 
-  // H2, H3, p, divタグかどうかを検出
-  const hasH2 = /<h2\b[^>]*>/.test(html);
-  const hasH3 = /<h3\b[^>]*>/.test(html);
-  const hasP = /<p\b[^>]*>/.test(html);
-  const hasDiv = /<div\b[^>]*>/.test(html);
-  const isHeadingOnly =
-    (hasH2 || hasH3) &&
-    !/<(?!\/?(h[23])\b)[^>]+>/.test(html.replace(/<h[23][^>]*>.*?<\/h[23]>/gi, ''));
-  // p、divタグのみかどうかを検出
-  const isPOnly = hasP && !/<(?!\/?(p)\b)[^>]+>/.test(html.replace(/<p[^>]*>.*?<\/p>/gi, ''));
-  const isDivOnly =
-    hasDiv && !/<(?!\/?(div)\b)[^>]+>/.test(html.replace(/<div[^>]*>.*?<\/div>/gi, ''));
-
   let result = html
     .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
     .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
@@ -61,22 +48,26 @@ export function convertHtmlToText(html: string): string {
     .replace(/&#x27;/g, "'")
     .replace(/&#x2F;/g, '/')
     // 連続改行を2つに統一（改行の後に空行1つ）
-    .replace(/\n+/g, '\n\n')
-    // 前後の空白を削除（ただし見出しのみの場合は改行を保持）
-    .trim();
+    .replace(/\n+/g, '\n\n');
 
-  // 見出し、p、divのみの場合は改行を保持
-  if (isHeadingOnly && result.match(/^(■|▶)/)) {
-    return '\n\n' + result + '\n\n';
-  }
-  if (isPOnly && !result.match(/^(■|▶|●)/)) {
-    return '\n\n' + result + '\n\n';
-  }
-  if (isDivOnly && !result.match(/^(■|▶|●)/)) {
-    return '\n\n' + result + '\n\n';
+  const trimmed = result.trim();
+
+  // 特定の条件で前後改行を復元
+  const htmlClean = html
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '');
+  const hasOnlyH2H3 =
+    /<h[23]\b[^>]*>/.test(htmlClean) &&
+    !/<(?!\/?(h[23])\b)[^>]+>/.test(htmlClean.replace(/<h[23][^>]*>.*?<\/h[23]>/gi, ''));
+  const hasOnlyPDiv =
+    (/<p\b[^>]*>/.test(htmlClean) || /<div\b[^>]*>/.test(htmlClean)) &&
+    !/<(?!\/?(p|div)\b)[^>]+>/.test(htmlClean.replace(/<(p|div)[^>]*>.*?<\/(p|div)>/gi, ''));
+
+  if ((hasOnlyH2H3 && trimmed.match(/^(■|▶)/)) || hasOnlyPDiv) {
+    return '\n\n' + trimmed + '\n\n';
   }
 
-  return result;
+  return trimmed;
 }
 
 export function truncateText(text: string, maxLength: number): string {
