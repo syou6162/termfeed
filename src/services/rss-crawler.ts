@@ -54,8 +54,8 @@ export class RSSCrawler {
         responseType: 'text',
       });
 
-      const feed = await this.parser.parseString(response.data);
-      
+      const feed = await this.parser.parseString(response.data as string);
+
       return {
         feed: this.normalizeFeed(feed, url),
         articles: this.normalizeArticles(feed.items || []),
@@ -73,11 +73,16 @@ export class RSSCrawler {
         }
         throw new Error(`Network error: ${error.message}`);
       }
-      throw new Error(`Failed to parse RSS feed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to parse RSS feed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
-  private normalizeFeed(feed: any, url: string): Omit<Feed, 'id' | 'created_at'> {
+  private normalizeFeed(
+    feed: { title?: string; description?: string },
+    url: string
+  ): Omit<Feed, 'id' | 'created_at'> {
     return {
       url,
       title: feed.title || 'Untitled Feed',
@@ -86,8 +91,10 @@ export class RSSCrawler {
     };
   }
 
-  private normalizeArticles(items: RSSItem[]): Omit<Article, 'id' | 'feed_id' | 'created_at' | 'updated_at'>[] {
-    return items.map(item => ({
+  private normalizeArticles(
+    items: RSSItem[]
+  ): Omit<Article, 'id' | 'feed_id' | 'created_at' | 'updated_at'>[] {
+    return items.map((item) => ({
       title: item.title || 'Untitled Article',
       url: item.link || item.guid || '',
       content: item.content,
@@ -113,17 +120,19 @@ export class RSSCrawler {
     return date;
   }
 
-  private extractThumbnail(item: any): string | undefined {
+  private extractThumbnail(item: RSSItem & Record<string, unknown>): string | undefined {
     if (item.enclosure?.url && this.isImageUrl(item.enclosure.url)) {
       return item.enclosure.url;
     }
 
-    if (item['media:thumbnail']?.url) {
-      return item['media:thumbnail'].url;
+    const mediaThumbnail = item['media:thumbnail'] as { url?: string } | undefined;
+    if (mediaThumbnail?.url) {
+      return mediaThumbnail.url;
     }
 
-    if (item['media:content']?.url && this.isImageUrl(item['media:content'].url)) {
-      return item['media:content'].url;
+    const mediaContent = item['media:content'] as { url?: string } | undefined;
+    if (mediaContent?.url && this.isImageUrl(mediaContent.url)) {
+      return mediaContent.url;
     }
 
     return undefined;
