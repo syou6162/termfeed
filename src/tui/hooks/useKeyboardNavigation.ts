@@ -27,6 +27,8 @@ type KeyboardNavigationProps = {
   onScrollUp?: () => void;
   onPageDown?: () => void;
   onPageUp?: () => void;
+  onScrollOffsetChange?: (offset: number) => void;
+  onScrollToEnd?: () => void;
 };
 
 export function useKeyboardNavigation({
@@ -45,6 +47,8 @@ export function useKeyboardNavigation({
   onScrollUp,
   onPageDown,
   onPageUp,
+  onScrollOffsetChange,
+  onScrollToEnd,
 }: KeyboardNavigationProps) {
   const handleInput = useCallback(
     (input: string, key: KeyEvent) => {
@@ -84,12 +88,6 @@ export function useKeyboardNavigation({
         return;
       }
 
-      // スクロール (Shift+スペース)
-      if (key.pageUp) {
-        onPageUp?.();
-        return;
-      }
-
       // 記事ナビゲーション (j/k)
       if (key.upArrow || input === 'k') {
         if (articleCount > 0) {
@@ -124,35 +122,14 @@ export function useKeyboardNavigation({
         return;
       }
 
-      // ページ移動
-      if (key.pageUp || input === 'u') {
-        if (articleCount > 0) {
-          const newIndex = Math.max(0, selectedArticleIndex - 10);
-          onArticleSelectionChange(newIndex);
-        }
-        return;
-      }
-
-      if (key.pageDown || input === 'd') {
-        if (articleCount > 0) {
-          const newIndex = Math.min(articleCount - 1, selectedArticleIndex + 10);
-          onArticleSelectionChange(newIndex);
-        }
-        return;
-      }
-
-      // 先頭・末尾へ移動
+      // 記事内の先頭・末尾へ移動（スクロール）
       if (input === 'g') {
-        if (articleCount > 0) {
-          onArticleSelectionChange(0);
-        }
+        onScrollOffsetChange?.(0);
         return;
       }
 
       if (input === 'G') {
-        if (articleCount > 0) {
-          onArticleSelectionChange(articleCount - 1);
-        }
+        onScrollToEnd?.();
         return;
       }
     },
@@ -172,6 +149,8 @@ export function useKeyboardNavigation({
       onScrollUp,
       onPageDown,
       onPageUp,
+      onScrollOffsetChange,
+      onScrollToEnd,
     ]
   );
 

@@ -40,6 +40,18 @@ export function ArticleList({
     }
   }, [selectedArticle?.content]);
 
+  // スクロールオフセットを最大値に制限
+  useEffect(() => {
+    const totalHeight = stdout?.rows || 24;
+    const fixedLines = 16;
+    const availableLines = Math.max(1, totalHeight - fixedLines);
+    const maxOffset = Math.max(0, totalLines - availableLines);
+
+    if (scrollOffset > maxOffset) {
+      onScrollOffsetChange(maxOffset);
+    }
+  }, [scrollOffset, totalLines, stdout?.rows, onScrollOffsetChange]);
+
   // ターミナルの高さから表示可能な行数を計算
   const totalHeight = stdout?.rows || 24;
 

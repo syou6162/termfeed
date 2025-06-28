@@ -23,6 +23,9 @@ export function HelpOverlay({ isVisible }: HelpOverlayProps) {
         <Text> k / ↑ 前の記事に移動</Text>
         <Text> v ブラウザで記事を開く</Text>
         <Text> f お気に入り切り替え</Text>
+        <Text> スペース 記事を下にスクロール</Text>
+        <Text> g 記事の先頭へ移動</Text>
+        <Text> G 記事の末尾へ移動</Text>
       </Box>
 
       <Box marginTop={1} flexDirection="column">

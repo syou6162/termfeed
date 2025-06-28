@@ -1,4 +1,4 @@
-import { Box, Text, useApp } from 'ink';
+import { Box, Text, useApp, useStdout } from 'ink';
 import { useCallback, useEffect, useState, useMemo } from 'react';
 import { spawn } from 'child_process';
 import type { Article, Feed } from '../models/types.js';
@@ -18,6 +18,7 @@ type FeedWithUnreadCount = Feed & {
 
 export function App() {
   const { exit } = useApp();
+  const { stdout } = useStdout();
   const [feeds, setFeeds] = useState<FeedWithUnreadCount[]>([]);
   const [articles, setArticles] = useState<Article[]>([]);
   const [selectedFeedIndex, setSelectedFeedIndex] = useState(0);
@@ -266,13 +267,25 @@ export function App() {
   }, []);
 
   const handlePageDown = useCallback(() => {
-    // 1画面分スクロール（約20行）
-    setScrollOffset((prev) => prev + 20);
-  }, []);
+    // 実際の表示行数分スクロール
+    const totalHeight = stdout?.rows || 24;
+    const fixedLines = 16; // ArticleListと同じ固定行数
+    const availableLines = Math.max(1, totalHeight - fixedLines);
+    setScrollOffset((prev) => prev + availableLines);
+  }, [stdout]);
 
   const handlePageUp = useCallback(() => {
-    // 1画面分スクロール（約20行）
-    setScrollOffset((prev) => Math.max(0, prev - 20));
+    // 実際の表示行数分スクロール
+    const totalHeight = stdout?.rows || 24;
+    const fixedLines = 16; // ArticleListと同じ固定行数
+    const availableLines = Math.max(1, totalHeight - fixedLines);
+    setScrollOffset((prev) => Math.max(0, prev - availableLines));
+  }, [stdout]);
+
+  const handleScrollToEnd = useCallback(() => {
+    // 記事の最後にジャンプするため、大きな値を設定
+    // ArticleListコンポーネントで実際の最大値に調整される
+    setScrollOffset(999999);
   }, []);
 
   // キーボードナビゲーション
@@ -292,6 +305,8 @@ export function App() {
     onScrollUp: handleScrollUp,
     onPageDown: handlePageDown,
     onPageUp: handlePageUp,
+    onScrollOffsetChange: setScrollOffset,
+    onScrollToEnd: handleScrollToEnd,
   });
 
   if (isLoading) {
