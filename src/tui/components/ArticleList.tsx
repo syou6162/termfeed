@@ -7,10 +7,7 @@ type ArticleListProps = {
   selectedArticle?: Article;
 };
 
-export function ArticleList({
-  articles,
-  selectedArticle,
-}: ArticleListProps) {
+export function ArticleList({ articles, selectedArticle }: ArticleListProps) {
   const renderArticleDetail = () => {
     if (!selectedArticle) {
       return (
@@ -80,7 +77,7 @@ export function ArticleList({
 
   // articlesは既に未読記事のみ
   const unreadCount = articles.length;
-  const currentUnreadIndex = articles.findIndex(article => article.id === selectedArticle?.id);
+  const currentUnreadIndex = articles.findIndex((article) => article.id === selectedArticle?.id);
   const unreadPosition = currentUnreadIndex !== -1 ? currentUnreadIndex + 1 : 0;
 
   return (
@@ -93,9 +90,7 @@ export function ArticleList({
           ? でヘルプ表示
         </Text>
         <Text color="gray">
-          {unreadPosition > 0 
-            ? `${unreadPosition}/${unreadCount}件` 
-            : `未読${unreadCount}件`}
+          {unreadPosition > 0 ? `${unreadPosition}/${unreadCount}件` : `未読${unreadCount}件`}
         </Text>
       </Box>
     </Box>

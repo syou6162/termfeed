@@ -65,7 +65,9 @@ describe('SelectableList', () => {
   });
 
   it('カスタムレンダリング関数が使用される', () => {
-    const customRender = (item: any) => <Text key={item.id}>Custom: {item.displayText}</Text>;
+    const customRender = (item: { id: number; displayText: string }) => (
+      <Text key={item.id}>Custom: {item.displayText}</Text>
+    );
 
     const { lastFrame } = render(
       <SelectableList items={mockItems} selectedIndex={0} renderItem={customRender} />

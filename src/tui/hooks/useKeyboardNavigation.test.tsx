@@ -175,7 +175,6 @@ describe('useKeyboardNavigation', () => {
       expect(mockHandlers.onToggleHelp).toHaveBeenCalledOnce();
     });
 
-
     it('fキーでお気に入り状態をトグルする', () => {
       const { stdin } = render(<TestComponent onToggleFavorite={mockHandlers.onToggleFavorite} />);
 

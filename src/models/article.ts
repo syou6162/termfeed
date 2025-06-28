@@ -270,15 +270,15 @@ export class ArticleModel {
       WHERE is_read = 0 
       GROUP BY feed_id
     `;
-    
+
     const stmt = this.db.getDb().prepare(query);
     const results = stmt.all() as Array<{ feed_id: number; unread_count: number }>;
-    
+
     const unreadCounts: { [feedId: number]: number } = {};
     for (const row of results) {
       unreadCounts[row.feed_id] = row.unread_count;
     }
-    
+
     return unreadCounts;
   }
 }

@@ -48,7 +48,7 @@ export function App() {
       const allFeeds = feedService.getFeedList();
       const unreadCounts = feedService.getUnreadCountsForAllFeeds();
       const feedsWithUnreadCount = allFeeds.map((feed) => {
-        const unreadCount = feed.id ? (unreadCounts[feed.id] || 0) : 0;
+        const unreadCount = feed.id ? unreadCounts[feed.id] || 0 : 0;
         return { ...feed, unreadCount };
       });
 
@@ -62,10 +62,10 @@ export function App() {
       });
 
       setFeeds(sortedFeeds);
-      
+
       // ソート後に選択中のフィードのインデックスを更新
       if (selectedFeedId) {
-        const newIndex = sortedFeeds.findIndex(feed => feed.id === selectedFeedId);
+        const newIndex = sortedFeeds.findIndex((feed) => feed.id === selectedFeedId);
         if (newIndex !== -1) {
           setSelectedFeedIndex(newIndex);
         }
@@ -88,7 +88,7 @@ export function App() {
 
         const allArticles = feedService.getArticles({ feed_id: feedId, limit: 100 });
         // 未読記事のみをフィルタリング
-        const unreadArticles = allArticles.filter(article => !article.is_read);
+        const unreadArticles = allArticles.filter((article) => !article.is_read);
         setArticles(unreadArticles);
         setSelectedArticleIndex(0);
       } catch (err) {
@@ -118,29 +118,32 @@ export function App() {
     }
   }, [selectedFeedIndex, feeds, loadFeeds, loadArticles]);
 
-  const handleFeedSelectionChange = useCallback((index: number) => {
-    // フィード移動前に現在選択中の記事を既読にする
-    const currentArticle = articles[selectedArticleIndex];
-    if (currentArticle && currentArticle.id && !currentArticle.is_read) {
-      try {
-        feedService.markArticleAsRead(currentArticle.id);
-        // 既読化した記事をリストから除外
-        const updatedArticles = articles.filter(article => article.id !== currentArticle.id);
-        setArticles(updatedArticles);
-        // インデックスを調整
-        setSelectedArticleIndex(Math.min(selectedArticleIndex, updatedArticles.length - 1));
-      } catch (err) {
-        console.error('記事の既読化に失敗しました:', err);
+  const handleFeedSelectionChange = useCallback(
+    (index: number) => {
+      // フィード移動前に現在選択中の記事を既読にする
+      const currentArticle = articles[selectedArticleIndex];
+      if (currentArticle && currentArticle.id && !currentArticle.is_read) {
+        try {
+          feedService.markArticleAsRead(currentArticle.id);
+          // 既読化した記事をリストから除外
+          const updatedArticles = articles.filter((article) => article.id !== currentArticle.id);
+          setArticles(updatedArticles);
+          // インデックスを調整
+          setSelectedArticleIndex(Math.min(selectedArticleIndex, updatedArticles.length - 1));
+        } catch (err) {
+          console.error('記事の既読化に失敗しました:', err);
+        }
       }
-    }
 
-    setSelectedFeedIndex(index);
-    if (feeds[index]?.id) {
-      setSelectedFeedId(feeds[index].id);
-    }
-    setSelectedArticleIndex(0); // 記事選択をリセット
-    // loadArticlesはuseEffectで自動的に呼ばれる
-  }, [articles, selectedArticleIndex, feedService, feeds]);
+      setSelectedFeedIndex(index);
+      if (feeds[index]?.id) {
+        setSelectedFeedId(feeds[index].id);
+      }
+      setSelectedArticleIndex(0); // 記事選択をリセット
+      // loadArticlesはuseEffectで自動的に呼ばれる
+    },
+    [articles, selectedArticleIndex, feedService, feeds]
+  );
 
   const handleArticleSelect = useCallback(() => {
     const selectedArticle = articles[selectedArticleIndex];
@@ -151,11 +154,11 @@ export function App() {
         console.error('無効なURLです:', url);
         return;
       }
-      
+
       // クロスプラットフォーム対応でブラウザを開く（セキュア版）
       let command: string;
       let args: string[];
-      
+
       if (process.platform === 'darwin') {
         // macOS - バックグラウンドで開く
         command = 'open';
@@ -169,21 +172,20 @@ export function App() {
         command = 'xdg-open';
         args = [url];
       }
-      
-      const childProcess = spawn(command, args, { 
+
+      const childProcess = spawn(command, args, {
         stdio: 'ignore',
-        detached: true 
+        detached: true,
       });
-      
+
       childProcess.on('error', (error) => {
         console.error('ブラウザの起動に失敗しました:', error.message);
       });
-      
+
       // プロセスを親から切り離す
       childProcess.unref();
     }
   }, [articles, selectedArticleIndex]);
-
 
   const handleToggleFavorite = useCallback(() => {
     const selectedArticle = articles[selectedArticleIndex];
@@ -238,7 +240,7 @@ export function App() {
   }, [articles, selectedArticleIndex, feedService]);
 
   const handleToggleHelp = useCallback(() => {
-    setShowHelp(prev => !prev);
+    setShowHelp((prev) => !prev);
   }, []);
 
   const handleQuit = useCallback(() => {
@@ -302,12 +304,7 @@ export function App() {
         leftWidth={20}
         rightWidth={80}
         leftPane={<FeedList feeds={feeds} selectedIndex={selectedFeedIndex} />}
-        rightPane={
-          <ArticleList
-            articles={articles}
-            selectedArticle={selectedArticle}
-          />
-        }
+        rightPane={<ArticleList articles={articles} selectedArticle={selectedArticle} />}
       />
     </Box>
   );
