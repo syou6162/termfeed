@@ -213,7 +213,7 @@ describe('ArticleModel', () => {
         published_at: new Date(),
       });
 
-      const article2 = articleModel.create({
+      articleModel.create({
         feed_id: testFeedId,
         title: 'Unread Article',
         url: 'https://example.com/unread-art',
