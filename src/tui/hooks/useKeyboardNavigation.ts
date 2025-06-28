@@ -18,9 +18,10 @@ type KeyboardNavigationProps = {
   selectedFeedIndex: number;
   onArticleSelectionChange: (index: number) => void;
   onFeedSelectionChange: (index: number) => void;
-  onSelect?: () => void;
+  onOpenInBrowser?: () => void;
   onRefresh?: () => void;
   onToggleFavorite?: () => void;
+  onToggleHelp?: () => void;
   onQuit?: () => void;
 };
 
@@ -31,9 +32,10 @@ export function useKeyboardNavigation({
   selectedFeedIndex,
   onArticleSelectionChange,
   onFeedSelectionChange,
-  onSelect,
+  onOpenInBrowser,
   onRefresh,
   onToggleFavorite,
+  onToggleHelp,
   onQuit,
 }: KeyboardNavigationProps) {
   const handleInput = useCallback(
@@ -50,9 +52,15 @@ export function useKeyboardNavigation({
         return;
       }
 
-      // 選択・決定
-      if (key.return || input === 'l') {
-        onSelect?.();
+      // ブラウザで開く
+      if (input === 'v') {
+        onOpenInBrowser?.();
+        return;
+      }
+
+      // ヘルプ表示トグル
+      if (input === '?') {
+        onToggleHelp?.();
         return;
       }
 
@@ -135,9 +143,10 @@ export function useKeyboardNavigation({
       selectedFeedIndex,
       onArticleSelectionChange,
       onFeedSelectionChange,
-      onSelect,
+      onOpenInBrowser,
       onRefresh,
       onToggleFavorite,
+      onToggleHelp,
       onQuit,
     ]
   );

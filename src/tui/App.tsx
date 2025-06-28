@@ -1,5 +1,6 @@
 import { Box, Text, useApp } from 'ink';
 import { useCallback, useEffect, useState, useMemo } from 'react';
+import { exec } from 'child_process';
 import type { Article, Feed } from '../models/types.js';
 import { FeedService } from '../services/feed-service.js';
 import { FeedModel } from '../models/feed.js';
@@ -8,6 +9,7 @@ import { createDatabaseManager } from '../cli/utils/database.js';
 import { ArticleList } from './components/ArticleList.js';
 import { FeedList } from './components/FeedList.js';
 import { TwoPaneLayout } from './components/TwoPaneLayout.js';
+import { HelpOverlay } from './components/HelpOverlay.js';
 import { useKeyboardNavigation } from './hooks/useKeyboardNavigation.js';
 
 type FeedWithUnreadCount = Feed & {
@@ -23,6 +25,7 @@ export function App() {
   const [selectedArticleIndex, setSelectedArticleIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>('');
+  const [showHelp, setShowHelp] = useState(false);
 
   // データベースとサービスを初期化（一度だけ実行）
   const { feedService } = useMemo(() => {
@@ -65,7 +68,7 @@ export function App() {
         if (newIndex !== -1) {
           setSelectedFeedIndex(newIndex);
         }
-      } else if (sortedFeeds.length > 0) {
+      } else if (sortedFeeds.length > 0 && sortedFeeds[0].id) {
         // 初回読み込み時は最初のフィードを選択
         setSelectedFeedId(sortedFeeds[0].id);
       }
@@ -131,7 +134,7 @@ export function App() {
     }
 
     setSelectedFeedIndex(index);
-    if (feeds[index]) {
+    if (feeds[index]?.id) {
       setSelectedFeedId(feeds[index].id);
     }
     setSelectedArticleIndex(0); // 記事選択をリセット
@@ -141,8 +144,32 @@ export function App() {
   const handleArticleSelect = useCallback(() => {
     const selectedArticle = articles[selectedArticleIndex];
     if (selectedArticle?.url) {
-      // ブラウザでURLを開く（実装は環境に依存）
-      // console.log(`Opening: ${selectedArticle.url}`);
+      // URLの安全性チェック
+      const url = selectedArticle.url.trim();
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        console.error('無効なURLです:', url);
+        return;
+      }
+      
+      // クロスプラットフォーム対応でブラウザを開く
+      let command: string;
+      
+      if (process.platform === 'darwin') {
+        // macOS - バックグラウンドで開く
+        command = `open -g "${url.replace(/"/g, '\\"')}"`;
+      } else if (process.platform === 'win32') {
+        // Windows - 最小化で開く
+        command = `start /min "" "${url.replace(/"/g, '\\"')}"`;
+      } else {
+        // Linux/Unix - バックグラウンドで開く
+        command = `nohup xdg-open "${url.replace(/"/g, '\\"')}" > /dev/null 2>&1 &`;
+      }
+      
+      exec(command, (error) => {
+        if (error) {
+          console.error('ブラウザの起動に失敗しました:', error.message);
+        }
+      });
     }
   }, [articles, selectedArticleIndex]);
 
@@ -199,6 +226,10 @@ export function App() {
     };
   }, [articles, selectedArticleIndex, feedService]);
 
+  const handleToggleHelp = useCallback(() => {
+    setShowHelp(prev => !prev);
+  }, []);
+
   const handleQuit = useCallback(() => {
     // TUI終了前に現在選択中の記事を既読にする
     const currentArticle = articles[selectedArticleIndex];
@@ -220,9 +251,10 @@ export function App() {
     selectedFeedIndex,
     onArticleSelectionChange: setSelectedArticleIndex,
     onFeedSelectionChange: handleFeedSelectionChange,
-    onSelect: handleArticleSelect,
+    onOpenInBrowser: handleArticleSelect,
     onRefresh: () => void updateFeeds(),
     onToggleFavorite: handleToggleFavorite,
+    onToggleHelp: handleToggleHelp,
     onQuit: handleQuit,
   });
 
@@ -248,17 +280,24 @@ export function App() {
 
   const selectedArticle = articles[selectedArticleIndex];
 
+  // ヘルプ表示時は通常UIを隠してヘルプのみ表示
+  if (showHelp) {
+    return <HelpOverlay isVisible={true} />;
+  }
+
   return (
-    <TwoPaneLayout
-      leftWidth={20}
-      rightWidth={80}
-      leftPane={<FeedList feeds={feeds} selectedIndex={selectedFeedIndex} />}
-      rightPane={
-        <ArticleList
-          articles={articles}
-          selectedArticle={selectedArticle}
-        />
-      }
-    />
+    <Box position="relative" width="100%" height="100%">
+      <TwoPaneLayout
+        leftWidth={20}
+        rightWidth={80}
+        leftPane={<FeedList feeds={feeds} selectedIndex={selectedFeedIndex} />}
+        rightPane={
+          <ArticleList
+            articles={articles}
+            selectedArticle={selectedArticle}
+          />
+        }
+      />
+    </Box>
   );
 }

@@ -72,11 +72,6 @@ export function FeedList({ feeds, selectedIndex }: FeedListProps) {
           renderItem={renderFeedItem}
         />
       </Box>
-      <Box marginTop={1}>
-        <Text color="gray" dimColor>
-          a:次のサイト s:前のサイト j/k:記事選択
-        </Text>
-      </Box>
     </Box>
   );
 }

@@ -61,17 +61,17 @@ export function ArticleList({
   if (articles.length === 0) {
     return (
       <Box flexDirection="column" height="100%" padding={1}>
-        <Box justifyContent="center" alignItems="center" height="90%" flexGrow={1}>
+        <Box justifyContent="center" alignItems="center" height="95%" flexGrow={1}>
           <Box flexDirection="column" alignItems="center">
             <Text color="gray" italic>
-              記事がありません
+              未読記事がありません
             </Text>
             <Text color="yellow">ヒント: `r` でフィードを更新できます</Text>
           </Box>
         </Box>
-        <Box marginTop={1}>
+        <Box marginTop={1} justifyContent="center">
           <Text color="gray" dimColor>
-            j/k:記事選択 a:次のサイト s:前のサイト f:お気に入り切替 r:更新 q:終了
+            ? でヘルプ表示
           </Text>
         </Box>
       </Box>
@@ -85,22 +85,17 @@ export function ArticleList({
 
   return (
     <Box flexDirection="column" height="100%" padding={1}>
-      <Box height="90%" flexGrow={1}>
+      <Box height="95%" flexGrow={1}>
         {renderArticleDetail()}
       </Box>
-      <Box marginTop={1} flexDirection="column">
-        <Box justifyContent="space-between">
-          <Text color="gray" dimColor>
-            j/k:記事選択 a:次のサイト s:前のサイト l/Enter:ブラウザで開く
-          </Text>
-          <Text color="gray">
-            {unreadPosition > 0 
-              ? `${unreadPosition}/${unreadCount}件` 
-              : `未読${unreadCount}件`}
-          </Text>
-        </Box>
+      <Box marginTop={1} justifyContent="space-between" alignItems="center">
         <Text color="gray" dimColor>
-          f:お気に入り切替 r:更新 q:終了
+          ? でヘルプ表示
+        </Text>
+        <Text color="gray">
+          {unreadPosition > 0 
+            ? `${unreadPosition}/${unreadCount}件` 
+            : `未読${unreadCount}件`}
         </Text>
       </Box>
     </Box>
