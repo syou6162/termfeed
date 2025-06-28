@@ -2,33 +2,39 @@
 
 作成日: 2025-06-28
 
-## フェーズ1: 基礎構築
+## フェーズ1: 基礎構築 ✅ 完了 (2025-06-28)
 
 ### プロジェクトセットアップ
 
-- [ ] プロジェクトの初期化
-  - [ ] package.json の作成
-  - [ ] TypeScript の設定
-  - [ ] ESLint / Prettier の設定
-  - [ ] .gitignore の作成
-  - [ ] テストフレームワークの設定（Jest または Vitest）
-  - [ ] GitHub Actions の設定
-    - [ ] テスト実行のワークフロー
-    - [ ] Lint チェックのワークフロー
+- [x] プロジェクトの初期化
+  - [x] package.json の作成
+  - [x] TypeScript の設定
+  - [x] ESLint / Prettier の設定
+  - [x] .gitignore の作成
+  - [x] テストフレームワークの設定（Jest または Vitest）→ Vitestを採用
+  - [x] GitHub Actions の設定
+    - [x] テスト実行のワークフロー
+    - [x] Lint チェックのワークフロー
+  - [x] pre-commit設定の追加（追加実装）
+  - [x] GitHub Actionsのセキュリティ強化（コミットハッシュ固定）（追加実装）
 
 ### 基本構造の構築
 
-- [ ] ディレクトリ構造の作成
-  - [ ] src/models/ - データ層
-  - [ ] src/services/ - ビジネスロジック層
-  - [ ] src/cli/ - プレゼンテーション層
+- [x] ディレクトリ構造の作成
+  - [x] src/models/ - データ層
+  - [x] src/services/ - ビジネスロジック層
+  - [x] src/cli/ - プレゼンテーション層
+  - [x] src/index.ts - エントリーポイント（追加実装）
 
 ### データベース基盤
 
-- [ ] SQLite データベースのセットアップ
-  - [ ] better-sqlite3 のインストール
-  - [ ] データベーススキーマの定義
-  - [ ] マイグレーションスクリプトの作成
+- [x] SQLite データベースのセットアップ
+  - [x] better-sqlite3 のインストール
+  - [x] データベーススキーマの定義
+  - [x] マイグレーションスクリプトの作成
+  - [x] DatabaseManagerクラスの実装（追加実装）
+  - [x] DatabaseManagerのテストの作成（追加実装）
+  - [x] 型定義の一部作成（Feed, Article インターフェース）（追加実装）
 
 ## フェーズ2: コア機能開発
 
