@@ -1,5 +1,5 @@
 import { Box, Text, useApp } from 'ink';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useMemo } from 'react';
 import type { Article, Feed } from '../models/types.js';
 import { FeedService } from '../services/feed-service.js';
 import { FeedModel } from '../models/feed.js';
@@ -26,13 +26,18 @@ export function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>('');
 
-  const databaseManager = createDatabaseManager();
-  // マイグレーションを実行
-  databaseManager.migrate();
-  
-  const feedModel = new FeedModel(databaseManager);
-  const articleModel = new ArticleModel(databaseManager);
-  const feedService = new FeedService(feedModel, articleModel);
+  // データベースとサービスを初期化（一度だけ実行）
+  const { feedService } = useMemo(() => {
+    const databaseManager = createDatabaseManager();
+    // マイグレーションを実行
+    databaseManager.migrate();
+    
+    const feedModel = new FeedModel(databaseManager);
+    const articleModel = new ArticleModel(databaseManager);
+    const feedService = new FeedService(feedModel, articleModel);
+    
+    return { feedService };
+  }, []);
 
   const loadFeeds = useCallback(() => {
     try {
