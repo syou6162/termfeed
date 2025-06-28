@@ -10,7 +10,12 @@ import type {
   FeedUpdateSuccess,
   FeedUpdateFailure,
 } from './types.js';
-import { DuplicateFeedError, FeedNotFoundError, FeedManagementError } from './errors.js';
+import {
+  DuplicateFeedError,
+  FeedNotFoundError,
+  FeedManagementError,
+  FeedUpdateError,
+} from './errors.js';
 
 export type { FeedUpdateResult, AddFeedResult };
 
@@ -92,11 +97,7 @@ export class FeedService {
     try {
       crawlResult = await this.crawler.crawl(feed.url);
     } catch (error) {
-      throw new FeedManagementError(
-        `Failed to update feed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        feedId,
-        { cause: error }
-      );
+      throw new FeedUpdateError(feedId, feed.url, { cause: error });
     }
 
     this.feedModel.update(feedId, {

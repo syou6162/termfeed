@@ -26,4 +26,5 @@ export {
   FeedManagementError,
   DuplicateFeedError,
   FeedNotFoundError,
+  FeedUpdateError,
 } from './errors.js';

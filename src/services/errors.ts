@@ -65,3 +65,17 @@ export class FeedNotFoundError extends Error {
     this.name = 'FeedNotFoundError';
   }
 }
+
+/**
+ * フィード更新エラークラス
+ */
+export class FeedUpdateError extends Error {
+  constructor(
+    public readonly feedId: number,
+    public readonly feedUrl: string,
+    options?: ErrorOptions
+  ) {
+    super(`Failed to update feed ${feedId}: ${feedUrl}`, options);
+    this.name = 'FeedUpdateError';
+  }
+}

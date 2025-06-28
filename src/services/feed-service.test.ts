@@ -6,7 +6,7 @@ import { FeedModel } from '../models/feed.js';
 import { ArticleModel } from '../models/article.js';
 import { FeedService } from './feed-service.js';
 import { RSSCrawler } from './rss-crawler.js';
-import { DuplicateFeedError, FeedNotFoundError } from './errors.js';
+import { DuplicateFeedError, FeedNotFoundError, FeedUpdateError } from './errors.js';
 
 describe('FeedService', () => {
   let db: DatabaseManager;
@@ -272,6 +272,19 @@ describe('FeedService', () => {
     it('存在しないフィードIDでエラーを投げる', async () => {
       await expect(feedService.updateFeed(999)).rejects.toThrow(FeedNotFoundError);
     });
+
+    it('クローラーエラーでFeedUpdateErrorを投げる', async () => {
+      // フィードを作成
+      const feed = feedModel.create({
+        url: 'https://example.com/rss.xml',
+        title: 'Test Feed',
+        description: 'Test Description',
+      });
+
+      vi.mocked(mockCrawler.crawl).mockRejectedValue(new Error('Network error'));
+
+      await expect(feedService.updateFeed(feed.id!)).rejects.toThrow(FeedUpdateError);
+    });
   });
 
   describe('updateAllFeeds', () => {
@@ -355,7 +368,8 @@ describe('FeedService', () => {
       expect(results.failed[0].status).toBe('failure');
       expect(results.failed[0].feedId).toBe(1);
       expect(results.failed[0].feedUrl).toBe('https://example.com/rss1.xml');
-      expect(results.failed[0].error.message).toBe('Failed to update feed: Network error');
+      expect(results.failed[0].error).toBeInstanceOf(FeedUpdateError);
+      expect(results.failed[0].error.cause).toBeInstanceOf(Error);
     });
 
     it('全フィード更新が失敗した場合の詳細な結果を返す', async () => {
@@ -386,7 +400,8 @@ describe('FeedService', () => {
       // 失敗した全フィードの詳細確認
       results.failed.forEach((failure) => {
         expect(failure.status).toBe('failure');
-        expect(failure.error.message).toBe('Failed to update feed: Network timeout');
+        expect(failure.error).toBeInstanceOf(FeedUpdateError);
+        expect(failure.error.cause).toBeInstanceOf(Error);
         expect(failure.feedUrl).toMatch(/^https:\/\/example\.com\/rss[12]\.xml$/);
       });
     });
