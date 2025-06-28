@@ -4,3 +4,5 @@ export { createUpdateCommand } from './update.js';
 export { createListCommand } from './feeds.js';
 export { createRmCommand } from './rm.js';
 export { createTuiCommand } from './tui.js';
+export { exportCommand } from './export.js';
+export { importCommand } from './import.js';

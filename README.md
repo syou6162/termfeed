@@ -145,6 +145,36 @@ termfeed favorite <ARTICLE_ID>
 termfeed show <ARTICLE_ID>
 ```
 
+#### フィードのエクスポート/インポート
+
+```bash
+# フィードをOPML形式でエクスポート（デフォルト）
+termfeed export
+# -> subscriptions.opml に出力
+
+# ファイル名を指定してエクスポート
+termfeed export my-feeds.opml
+
+# テキスト形式（1行1URL）でエクスポート
+termfeed export feeds.txt --format text
+
+# 拡張子から自動判別（.txt → テキスト形式）
+termfeed export feeds.txt
+
+# OPMLファイルからインポート
+termfeed import subscriptions.opml
+
+# テキストファイルからインポート（1行1URL）
+termfeed import feeds.txt
+
+# フォーマットを明示的に指定
+termfeed import feeds.xml --format opml
+```
+
+**対応フォーマット：**
+- **OPML形式**: 標準的なRSSリーダー間でのデータ移行に使用（.opml, .xml）
+- **テキスト形式**: シンプルな1行1URLのフォーマット。コメント行（#で始まる）対応
+
 ### データベースの場所
 
 SQLiteデータベースはデフォルトで `./termfeed.db` に作成されます。
