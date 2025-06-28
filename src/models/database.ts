@@ -28,7 +28,8 @@ export class DatabaseManager {
   }
 
   public migrate(): void {
-    const schemaPath = path.join(__dirname, 'schema.sql');
+    // 開発環境とビルド後の両方で動作するようにパスを解決
+    const schemaPath = path.join(__dirname, '..', '..', 'src', 'models', 'schema.sql');
     const schema = fs.readFileSync(schemaPath, 'utf-8');
 
     this.db.exec(schema);
