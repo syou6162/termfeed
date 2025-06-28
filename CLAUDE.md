@@ -18,7 +18,9 @@ termfeedは、ターミナルで動作するRSSリーダーです。Vim風のキ
   - `RSSCrawler`: RSS/Atomフィードの取得・パース（rss-parser使用）
   - `FeedService`: フィード管理とビジネスロジック（モデル層のラッパー）
   - カスタムエラークラス: 型安全なエラーハンドリング（RSSFetchError、FeedUpdateError等）
-- **src/cli/**: プレゼンテーション層（CLIコマンド、TUI）- 実装予定
+- **src/cli/**: プレゼンテーション層（CLIコマンド、TUI）
+  - `commands/`: 各CLIサブコマンドの実装（add、list、articles、update、rm）
+  - `utils/validation.ts`: 共通バリデーション関数
 
 ## 開発コマンド
 
@@ -48,6 +50,15 @@ npm run migrate        # マイグレーション実行
 
 # 単体テストの実行例
 npm run test:run src/models/feed.test.ts
+
+# CLIを実行（開発時）
+npm run dev add https://example.com/feed.rss
+npm run dev list
+npm run dev articles --unread
+
+# ビルド後の実行
+npm run build
+npm start add https://example.com/feed.rss
 ```
 
 ## データベース設計
@@ -111,3 +122,21 @@ GitHub Actionsで以下を実行：
 - 日時データは全てUNIXタイムスタンプで統一し、変換ユーティリティを使用（`src/models/utils/timestamp.ts`）
 - データベースロジックはアプリケーション側で実装し、DB側の制約のみ使用
 - フィード更新の失敗は個別にキャッチし、全体の処理を継続する設計
+
+## CLIコマンドの実装パターン
+
+各CLIコマンドは以下のパターンに従う：
+
+1. **Commander.jsでサブコマンドを定義**（`src/cli/commands/*.ts`）
+2. **バリデーション**は共通関数を使用（`src/cli/utils/validation.ts`）
+3. **エラーハンドリング**：
+   - try-catchブロックでエラーメッセージを表示
+   - process.exit(1)でエラー終了
+   - finallyブロックでDatabaseManager.close()を呼ぶ
+4. **非同期処理**：Commander.jsのaction内でasync/awaitを使用
+
+## エントリーポイント
+
+- **メインファイル**: `src/index.ts`（`#!/usr/bin/env node`のシバン付き）
+- **bin設定**: package.jsonで`termfeed`コマンドを`dist/cli/index.js`にマッピング（注: src/index.tsをビルド）
+- **開発時**: `npm run dev`でtsxを使用してTypeScriptを直接実行
