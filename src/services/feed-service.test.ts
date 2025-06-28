@@ -144,7 +144,7 @@ describe('FeedService', () => {
   });
 
   describe('removeFeed', () => {
-    it('フィードとその記事を正常に削除する', async () => {
+    it('フィードとその記事を正常に削除する', () => {
       // フィードを作成
       const feed = feedModel.create({
         url: 'https://example.com/rss.xml',

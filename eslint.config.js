@@ -42,18 +42,8 @@ module.exports = [
   {
     files: ['**/*.test.ts', '**/*.spec.ts'],
     rules: {
-      // テストファイルでのモック操作で必要
+      // vitestのvi.mocked()でのモック操作に必要
       '@typescript-eslint/unbound-method': 'off',
-      
-      // プライベートメソッドテスト用の (instance as any) で必要
-      '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-unsafe-assignment': 'off',
-      '@typescript-eslint/no-unsafe-call': 'off', 
-      '@typescript-eslint/no-unsafe-member-access': 'off',
-      '@typescript-eslint/no-unsafe-argument': 'off',
-      
-      // 一部のテストヘルパー関数でawaitが不要な場合がある
-      '@typescript-eslint/require-await': 'off',
     },
   },
   {
