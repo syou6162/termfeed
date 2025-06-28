@@ -55,9 +55,7 @@ export function createArticlesCommand(): Command {
         }
 
         // 統計情報を表示
-        const totalCount = feedId
-          ? articleModel.countByFeedId(feedId)
-          : articleModel.countByFeedId(0);
+        const totalCount = articleModel.countByFeedId(feedId);
         const unreadCount = feedService.getUnreadCount(feedId);
         console.log(`Total: ${totalCount} articles, Unread: ${unreadCount}`);
       } catch (error) {

@@ -11,7 +11,7 @@ export function createRmCommand(): Command {
   command
     .description('Remove RSS feed by ID')
     .argument('<feedId>', 'Feed ID to remove')
-    .action(async (feedId: string) => {
+    .action((feedId: string) => {
       const dbManager = createDatabaseManager();
 
       try {
@@ -21,7 +21,7 @@ export function createRmCommand(): Command {
         const articleModel = new ArticleModel(dbManager);
         const feedService = new FeedService(feedModel, articleModel);
 
-        const success = await Promise.resolve(feedService.removeFeed(id));
+        const success = feedService.removeFeed(id);
         if (success) {
           console.log(`Feed ID ${id} removed successfully!`);
         }

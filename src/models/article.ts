@@ -232,7 +232,15 @@ export class ArticleModel {
     return updated !== null;
   }
 
-  public countByFeedId(feedId: number): number {
+  public countByFeedId(feedId?: number): number {
+    if (feedId === undefined) {
+      const stmt = this.db.getDb().prepare(`
+        SELECT COUNT(*) as count FROM articles
+      `);
+      const result = stmt.get() as { count: number };
+      return result.count;
+    }
+
     const stmt = this.db.getDb().prepare(`
       SELECT COUNT(*) as count FROM articles WHERE feed_id = ?
     `);
