@@ -1,14 +1,23 @@
 import { Command } from 'commander';
-import { MockFeedService } from '../../services/mocks';
+import { DatabaseManager } from '../../models/database.js';
+import { FeedModel } from '../../models/feed.js';
+import { ArticleModel } from '../../models/article.js';
+import { FeedService } from '../../services/feed-service.js';
 
 export function createListCommand(): Command {
   const command = new Command('list');
-  const feedService = new MockFeedService();
 
   command.description('List all RSS feeds').action(async () => {
+    const dbPath = process.env.TERMFEED_DB || './termfeed.db';
+    const dbManager = new DatabaseManager(dbPath);
+    
     try {
+      const feedModel = new FeedModel(dbManager);
+      const articleModel = new ArticleModel(dbManager);
+      const feedService = new FeedService(feedModel, articleModel);
+      
       console.log('Listing all feeds...\n');
-      const feeds = await feedService.getAllFeeds();
+      const feeds = feedService.getFeedList();
 
       if (feeds.length === 0) {
         console.log('No feeds found. Add a feed with: termfeed add <url>');
@@ -29,6 +38,8 @@ export function createListCommand(): Command {
     } catch (error) {
       console.error('Error listing feeds:', error);
       process.exit(1);
+    } finally {
+      dbManager.close();
     }
   });
 

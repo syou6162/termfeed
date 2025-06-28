@@ -1,47 +1,47 @@
 import { Command } from 'commander';
-import { MockFeedService } from '../../services/mocks';
+import { DatabaseManager } from '../../models/database.js';
+import { FeedModel } from '../../models/feed.js';
+import { ArticleModel } from '../../models/article.js';
+import { FeedService } from '../../services/feed-service.js';
 
 export function createAddCommand(): Command {
   const command = new Command('add');
-  const feedService = new MockFeedService();
 
   command
     .description('Add a new RSS feed')
     .argument('<url>', 'RSS feed URL to add')
     .option('-t, --title <title>', 'Custom title for the feed')
-    .action(async (url: string, options: { title?: string }) => {
+    .action(async (url: string) => {
+      const dbPath = process.env.TERMFEED_DB || './termfeed.db';
+      const dbManager = new DatabaseManager(dbPath);
+      
       try {
+        dbManager.migrate();
+        const feedModel = new FeedModel(dbManager);
+        const articleModel = new ArticleModel(dbManager);
+        const feedService = new FeedService(feedModel, articleModel);
+
         console.log(`Adding feed: ${url}`);
 
-        // URLバリデーション
-        let feedInfo;
-        try {
-          feedInfo = await feedService.validateFeedUrl(url);
-        } catch (error) {
-          console.error(
-            `Invalid RSS feed URL: ${error instanceof Error ? error.message : 'Unknown error'}`
-          );
-          process.exit(1);
-        }
-
-        // タイトルの決定
-        const title = options.title || feedInfo.title;
-        console.log(`Title: ${title}`);
-        if (feedInfo.description) {
-          console.log(`Description: ${feedInfo.description}`);
-        }
-
         // フィード追加
-        const newFeed = await feedService.addFeed({
-          url,
-          title,
-          description: feedInfo.description,
-        });
-
-        console.log(`Feed added successfully! ID: ${newFeed.id}`);
+        const result = await feedService.addFeed(url);
+        
+        console.log(`Feed added successfully!`);
+        console.log(`  ID: ${result.feed.id}`);
+        console.log(`  Title: ${result.feed.title}`);
+        if (result.feed.description) {
+          console.log(`  Description: ${result.feed.description}`);
+        }
+        console.log(`  Articles added: ${result.articlesCount}`);
       } catch (error) {
-        console.error('Error adding feed:', error);
+        if (error instanceof Error) {
+          console.error(`Error adding feed: ${error.message}`);
+        } else {
+          console.error('Error adding feed:', error);
+        }
         process.exit(1);
+      } finally {
+        dbManager.close();
       }
     });
 

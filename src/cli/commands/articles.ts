@@ -1,9 +1,11 @@
 import { Command } from 'commander';
-import { MockArticleService } from '../../services/mocks';
+import { DatabaseManager } from '../../models/database.js';
+import { FeedModel } from '../../models/feed.js';
+import { ArticleModel } from '../../models/article.js';
+import { FeedService } from '../../services/feed-service.js';
 
 export function createArticlesCommand(): Command {
   const command = new Command('articles');
-  const articleService = new MockArticleService();
 
   command
     .description('List articles from feeds')
@@ -13,7 +15,14 @@ export function createArticlesCommand(): Command {
     .option('-l, --limit <number>', 'Limit number of articles to show', '20')
     .action(
       async (options: { feed?: string; unread?: boolean; favorites?: boolean; limit: string }) => {
+        const dbPath = process.env.TERMFEED_DB || './termfeed.db';
+        const dbManager = new DatabaseManager(dbPath);
+        
         try {
+          const feedModel = new FeedModel(dbManager);
+          const articleModel = new ArticleModel(dbManager);
+          const feedService = new FeedService(feedModel, articleModel);
+          
           console.log('Listing articles...');
 
           const feedId = options.feed ? parseInt(options.feed, 10) : undefined;
@@ -29,10 +38,10 @@ export function createArticlesCommand(): Command {
             process.exit(1);
           }
 
-          const articles = await articleService.getArticles({
-            feedId,
-            isRead: options.unread ? false : undefined,
-            isFavorite: options.favorites ? true : undefined,
+          const articles = feedService.getArticles({
+            feed_id: feedId,
+            is_read: options.unread ? false : undefined,
+            is_favorite: options.favorites ? true : undefined,
             limit,
           });
 
@@ -57,12 +66,14 @@ export function createArticlesCommand(): Command {
           }
 
           // 統計情報を表示
-          const totalCount = await articleService.getTotalCount(feedId);
-          const unreadCount = await articleService.getUnreadCount(feedId);
+          const totalCount = feedId ? articleModel.countByFeedId(feedId) : articleModel.countByFeedId(0);
+          const unreadCount = feedService.getUnreadCount(feedId);
           console.log(`Total: ${totalCount} articles, Unread: ${unreadCount}`);
         } catch (error) {
           console.error('Error listing articles:', error);
           process.exit(1);
+        } finally {
+          dbManager.close();
         }
       }
     );
