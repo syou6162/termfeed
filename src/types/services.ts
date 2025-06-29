@@ -6,9 +6,9 @@ import type { UpdateProgressCallback, UpdateCancelledResult } from './options';
 
 // FeedServiceの型定義（実装クラスに基づく）
 export type FeedService = {
-  addFeed(url: string): Promise<AddFeedResult>;
+  addFeed(url: string, abortSignal?: AbortSignal): Promise<AddFeedResult>;
   removeFeed(feedId: number): boolean;
-  updateFeed(feedId: number): Promise<FeedUpdateResult>;
+  updateFeed(feedId: number, abortSignal?: AbortSignal): Promise<FeedUpdateResult>;
   updateAllFeeds(
     progressCallback?: UpdateProgressCallback,
     abortSignal?: AbortSignal
@@ -50,5 +50,5 @@ export type ArticleService = {
 
 // RSSCrawlerの型定義
 export type RSSCrawler = {
-  crawl(url: string): Promise<CrawlResult>;
+  crawl(url: string, abortSignal?: AbortSignal): Promise<CrawlResult>;
 };

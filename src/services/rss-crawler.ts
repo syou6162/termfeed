@@ -23,10 +23,11 @@ export class RSSCrawler {
     this.userAgent = options.userAgent || 'termfeed/0.1.0';
   }
 
-  async crawl(url: string): Promise<CrawlResult> {
+  async crawl(url: string, abortSignal?: AbortSignal): Promise<CrawlResult> {
     try {
       const response = await axios.get(url, {
         timeout: this.timeout,
+        signal: abortSignal,
         headers: {
           'User-Agent': this.userAgent,
           Accept: 'application/rss+xml, application/atom+xml, application/xml, text/xml',
@@ -42,6 +43,9 @@ export class RSSCrawler {
       };
     } catch (error) {
       if (axios.isAxiosError(error)) {
+        if (error.code === 'ERR_CANCELED') {
+          throw new RSSFetchError(`Request cancelled`, url, { cause: error });
+        }
         if (error.code === 'ECONNABORTED') {
           throw new RSSFetchError(`Request timeout`, url, { cause: error });
         }

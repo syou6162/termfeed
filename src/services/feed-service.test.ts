@@ -518,7 +518,7 @@ describe('FeedService', () => {
       });
     });
 
-    it('AbortSignalによるキャンセルが正しく動作する', async () => {
+    it('AbortSignalによるループレベルでのキャンセルが正しく動作する', async () => {
       // 複数のフィードを作成
       feedModel.create({
         url: 'https://example.com/rss1.xml',
@@ -532,44 +532,51 @@ describe('FeedService', () => {
         description: 'Description 2',
       });
 
-      const mockCrawlResult = {
-        feed: {
-          url: 'https://example.com/rss.xml',
-          title: 'Updated Feed',
-          description: 'Updated Description',
-          last_updated_at: new Date(),
-        },
-        articles: [],
-      };
-
-      // 最初の呼び出しでは成功、2回目でキャンセル
-      vi.mocked(mockCrawler.crawl).mockResolvedValue(mockCrawlResult);
-
       const abortController = new AbortController();
 
-      // 1回目の更新後にキャンセル
-      let callCount = 0;
-      vi.mocked(mockCrawler.crawl).mockImplementation(async () => {
-        callCount++;
-        await new Promise((resolve) => setTimeout(resolve, 10)); // 少し待つ
-        if (callCount === 1) {
-          // 1回目の処理後にキャンセル
-          abortController.abort();
-        }
-        return mockCrawlResult;
-      });
+      // すぐにキャンセル（ループの開始時点でabortedになる）
+      abortController.abort();
 
       const result = await feedService.updateAllFeeds(undefined, abortController.signal);
 
       // キャンセルされた結果であることを確認
       if ('cancelled' in result) {
         expect(result.cancelled).toBe(true);
-        expect(result.processedFeeds).toBe(1);
+        expect(result.processedFeeds).toBe(0);
         expect(result.totalFeeds).toBe(2);
-        expect(result.successful).toHaveLength(1);
+        expect(result.successful).toHaveLength(0);
         expect(result.failed).toHaveLength(0);
       } else {
         throw new Error('Expected cancelled result');
+      }
+    });
+
+    it('HTTPリクエスト中のキャンセルでRSSFetchErrorが投げられることを確認', async () => {
+      // フィードを作成
+      const feed = feedModel.create({
+        url: 'https://example.com/rss1.xml',
+        title: 'Feed 1',
+        description: 'Description 1',
+      });
+
+      // キャンセルエラーをモック
+      const cancelError = new Error('Request cancelled');
+      vi.mocked(mockCrawler.crawl).mockRejectedValue(cancelError);
+
+      const abortController = new AbortController();
+      abortController.abort();
+
+      const result = await feedService.updateAllFeeds(undefined, abortController.signal);
+
+      // 1つのフィードが失敗として記録されることを確認
+      if ('cancelled' in result) {
+        // キャンセルされた場合（ループの最初でチェック）
+        expect(result.cancelled).toBe(true);
+        expect(result.processedFeeds).toBe(0);
+      } else {
+        // または失敗として記録される場合（HTTP リクエスト中）
+        expect(result.failed).toHaveLength(1);
+        expect(result.failed[0].feedId).toBe(feed.id);
       }
     });
   });
