@@ -24,7 +24,7 @@ describe('createMcpServer', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     mockArticleModel = {} as ArticleModel;
     mockFeedModel = {} as FeedModel;
   });
