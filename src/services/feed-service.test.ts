@@ -154,7 +154,7 @@ describe('FeedService', () => {
 
       // 記事を作成
       articleModel.create({
-        feed_id: feed.id!,
+        feed_id: feed.id,
         title: 'Test Article',
         url: 'https://example.com/article1',
         content: 'Test content',
@@ -162,11 +162,11 @@ describe('FeedService', () => {
         published_at: new Date(),
       });
 
-      const result = feedService.removeFeed(feed.id!);
+      const result = feedService.removeFeed(feed.id);
 
       expect(result).toBe(true);
-      expect(feedModel.findById(feed.id!)).toBeNull();
-      expect(articleModel.findAll({ feed_id: feed.id! })).toHaveLength(0);
+      expect(feedModel.findById(feed.id)).toBeNull();
+      expect(articleModel.findAll({ feed_id: feed.id })).toHaveLength(0);
     });
 
     it('存在しないフィードIDでエラーを投げる', () => {
@@ -206,14 +206,14 @@ describe('FeedService', () => {
 
       vi.mocked(mockCrawler.crawl).mockResolvedValue(mockCrawlResult);
 
-      const result = await feedService.updateFeed(feed.id!);
+      const result = await feedService.updateFeed(feed.id);
 
       expect(result.feedId).toBe(feed.id);
       expect(result.newArticlesCount).toBe(1);
       expect(result.updatedArticlesCount).toBe(0);
 
       // フィードが更新されていることを確認
-      const updatedFeed = feedModel.findById(feed.id!);
+      const updatedFeed = feedModel.findById(feed.id);
       expect(updatedFeed?.title).toBe('New Title');
       expect(updatedFeed?.description).toBe('New Description');
     });
@@ -228,7 +228,7 @@ describe('FeedService', () => {
 
       // 既存記事を作成
       articleModel.create({
-        feed_id: feed.id!,
+        feed_id: feed.id,
         title: 'Existing Article',
         url: 'https://example.com/existing-article',
         content: 'Existing content',
@@ -259,7 +259,7 @@ describe('FeedService', () => {
 
       vi.mocked(mockCrawler.crawl).mockResolvedValue(mockCrawlResult);
 
-      const result = await feedService.updateFeed(feed.id!);
+      const result = await feedService.updateFeed(feed.id);
 
       expect(result.newArticlesCount).toBe(0);
       expect(result.updatedArticlesCount).toBe(1);
@@ -279,7 +279,7 @@ describe('FeedService', () => {
 
       vi.mocked(mockCrawler.crawl).mockRejectedValue(new Error('Network error'));
 
-      await expect(feedService.updateFeed(feed.id!)).rejects.toThrow(FeedUpdateError);
+      await expect(feedService.updateFeed(feed.id)).rejects.toThrow(FeedUpdateError);
     });
   });
 
@@ -508,7 +508,7 @@ describe('FeedService', () => {
       });
 
       articleModel.create({
-        feed_id: feed.id!,
+        feed_id: feed.id,
         title: 'Test Article 1',
         url: 'https://example.com/article1',
         content: 'Test content 1',
@@ -517,7 +517,7 @@ describe('FeedService', () => {
       });
 
       articleModel.create({
-        feed_id: feed.id!,
+        feed_id: feed.id,
         title: 'Test Article 2',
         url: 'https://example.com/article2',
         content: 'Test content 2',
@@ -525,7 +525,7 @@ describe('FeedService', () => {
         published_at: new Date(),
       });
 
-      const articles = feedService.getArticles({ feed_id: feed.id! });
+      const articles = feedService.getArticles({ feed_id: feed.id });
       expect(articles).toHaveLength(2);
     });
 
@@ -536,7 +536,7 @@ describe('FeedService', () => {
         description: 'Test Description',
       });
 
-      const foundFeed = feedService.getFeedById(feed.id!);
+      const foundFeed = feedService.getFeedById(feed.id);
       expect(foundFeed?.title).toBe('Test Feed');
 
       const notFound = feedService.getFeedById(999);
@@ -551,7 +551,7 @@ describe('FeedService', () => {
       });
 
       const article = articleModel.create({
-        feed_id: feed.id!,
+        feed_id: feed.id,
         title: 'Test Article',
         url: 'https://example.com/article1',
         content: 'Test content',
@@ -559,7 +559,7 @@ describe('FeedService', () => {
         published_at: new Date(),
       });
 
-      const foundArticle = feedService.getArticleById(article.id!);
+      const foundArticle = feedService.getArticleById(article.id);
       expect(foundArticle?.title).toBe('Test Article');
 
       const notFound = feedService.getArticleById(999);
