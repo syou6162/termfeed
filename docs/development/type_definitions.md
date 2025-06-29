@@ -312,6 +312,29 @@ export type ArticleSyncState = { isSyncing: boolean; };
    } satisfies FeedService;
    ```
 
+4. **拡張性の制限**: 
+   - termfeedはライブラリとして提供する予定がない
+   - `interface`の宣言マージによる意図しない拡張を防ぐ
+   - 型定義の完全性を保証し、予期しない拡張による破壊的変更を回避
+   
+   ```typescript
+   // interfaceの場合（意図しない拡張が可能）
+   interface FeedService {
+     addFeed(url: string): Promise<Feed>;
+   }
+   
+   // 別の場所で勝手に拡張される可能性
+   interface FeedService {
+     deleteFeed(id: number): void;  // 意図しない拡張！
+   }
+   
+   // typeの場合（拡張不可）
+   type FeedService = {
+     addFeed(url: string): Promise<Feed>;
+   };
+   // 拡張しようとするとエラー
+   ```
+
 ### 型定義をsrc/types/に集約した理由
 
 1. **単一責任の原則**: 型定義の管理を一元化
