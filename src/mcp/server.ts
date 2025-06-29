@@ -3,6 +3,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { ArticleModel } from '../models/article.js';
 import { FeedModel } from '../models/feed.js';
 import { registerArticleResources } from './resources/articles.js';
+import { registerDynamicArticleResources } from './resources/articles-dynamic.js';
 
 export async function createMcpServer(
   articleModel: ArticleModel,
@@ -15,6 +16,9 @@ export async function createMcpServer(
 
   // Register resources
   registerArticleResources(server, articleModel, feedModel);
+  
+  // 実験: 動的リソースも登録
+  registerDynamicArticleResources(server, articleModel, feedModel);
 
   // Connect using stdio transport
   const transport = new StdioServerTransport();
