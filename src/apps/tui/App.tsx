@@ -318,7 +318,7 @@ export function App() {
 
   if (isLoading) {
     return (
-      <Box justifyContent="center" alignItems="center" height={5}>
+      <Box justifyContent="center" alignItems="center" height="100%">
         <Box flexDirection="column" alignItems="center">
           {updateProgress ? (
             <>
