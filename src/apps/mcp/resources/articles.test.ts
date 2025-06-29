@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { URL } from 'node:url';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { ArticleModel } from '../../models/article.js';
-import { FeedModel } from '../../models/feed.js';
+import { ArticleModel } from '../../../models/article.js';
+import { FeedModel } from '../../../models/feed.js';
 import { registerArticleResources } from './articles.js';
 import type { Article, Feed } from '@/types';
 

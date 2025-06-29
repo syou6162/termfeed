@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createMcpServer } from './server.js';
-import { ArticleModel } from '../models/article.js';
-import { FeedModel } from '../models/feed.js';
+import { ArticleModel } from '../../models/article.js';
+import { FeedModel } from '../../models/feed.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 
 vi.mock('@modelcontextprotocol/sdk/server/stdio.js', () => ({

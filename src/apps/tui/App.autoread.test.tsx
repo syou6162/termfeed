@@ -44,15 +44,15 @@ const mockFeedService = {
   toggleArticleFavorite: vi.fn(),
 };
 
-vi.mock('../services/feed-service.js', () => ({
+vi.mock('../../services/feed-service.js', () => ({
   FeedService: vi.fn(() => mockFeedService),
 }));
 
-vi.mock('../models/feed.js', () => ({
+vi.mock('../../models/feed.js', () => ({
   FeedModel: vi.fn(),
 }));
 
-vi.mock('../models/article.js', () => ({
+vi.mock('../../models/article.js', () => ({
   ArticleModel: vi.fn(),
 }));
 
