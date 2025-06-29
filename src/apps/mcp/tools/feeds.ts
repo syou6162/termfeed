@@ -3,7 +3,7 @@ import { FeedService } from '../../../services/feed-service.js';
 import { RSSCrawler } from '../../../services/rss-crawler.js';
 import { FeedModel } from '../../../models/feed.js';
 import { ArticleModel } from '../../../models/article.js';
-import type { UpdateAllFeedsResult } from '@/types';
+import type { UpdateAllFeedsResult, UpdateCancelledResult } from '@/types';
 
 type ToolResponse = {
   content: Array<{
@@ -15,7 +15,7 @@ type ToolResponse = {
 type UpdateAllFeedsResponse = {
   success: boolean;
   message: string;
-  result?: UpdateAllFeedsResult;
+  result?: UpdateAllFeedsResult | UpdateCancelledResult;
   error?: {
     message: string;
     type: string;
@@ -38,6 +38,24 @@ export function registerFeedTools(
       try {
         const result = await feedService.updateAllFeeds();
 
+        // キャンセルされた場合の処理
+        if ('cancelled' in result) {
+          const response: UpdateAllFeedsResponse = {
+            success: true,
+            message: `Update cancelled after processing ${result.processedFeeds}/${result.totalFeeds} feeds. ${result.successful.length} succeeded, ${result.failed.length} failed`,
+            result,
+          };
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(response, null, 2),
+              },
+            ],
+          };
+        }
+
+        // 通常の完了
         const response: UpdateAllFeedsResponse = {
           success: true,
           message: `Updated ${result.summary.totalFeeds} feeds: ${result.summary.successCount} succeeded, ${result.summary.failureCount} failed`,

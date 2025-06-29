@@ -5,7 +5,7 @@ import { FeedModel } from '../../../models/feed.js';
 import { ArticleModel } from '../../../models/article.js';
 import { FeedService } from '../../../services/feed-service.js';
 import { RSSCrawler } from '../../../services/rss-crawler.js';
-import type { UpdateAllFeedsResult } from '@/types';
+import type { UpdateAllFeedsResult, UpdateCancelledResult } from '@/types';
 
 vi.mock('../../../services/feed-service.js');
 vi.mock('../../../services/rss-crawler.js');
@@ -138,6 +138,49 @@ describe('registerFeedTools', () => {
               success: true,
               message: 'Updated 2 feeds: 1 succeeded, 1 failed',
               result: mockResult,
+            },
+            null,
+            2
+          ),
+        },
+      ],
+    });
+  });
+
+  it('should handle cancelled update', async () => {
+    const mockCancelledResult: UpdateCancelledResult = {
+      cancelled: true,
+      processedFeeds: 1,
+      totalFeeds: 3,
+      successful: [
+        {
+          status: 'success',
+          feedId: 1,
+          result: {
+            feedId: 1,
+            newArticlesCount: 2,
+            updatedArticlesCount: 0,
+            totalArticlesCount: 10,
+          },
+        },
+      ],
+      failed: [],
+    };
+
+    mockUpdateAllFeeds.mockResolvedValue(mockCancelledResult);
+    registerFeedTools(mockServer, mockFeedModel, mockArticleModel);
+
+    const result = await toolHandler();
+
+    expect(result).toEqual({
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(
+            {
+              success: true,
+              message: 'Update cancelled after processing 1/3 feeds. 1 succeeded, 0 failed',
+              result: mockCancelledResult,
             },
             null,
             2
