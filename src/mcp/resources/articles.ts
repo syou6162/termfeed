@@ -14,26 +14,41 @@ export function registerArticleResources(
     const feeds = feedModel.findAll();
     return new Map(feeds.map((f) => [f.id, f]));
   };
-  // Register unread articles resource
+  
+  // Register unread articles resource  
   server.registerResource(
     'unread',
     'articles://unread',
     {
       title: 'Unread Articles',
-      description: 'Get unread articles from your RSS feeds',
+      description: 'Get unread articles from your RSS feeds. Use ?limit=N to specify number of articles (default: 10)',
     },
-    (uri: unknown) => {
-      // URIを安全にURL オブジェクトに変換
-      let url: URL;
-      if (typeof uri === 'string') {
-        url = new URL(uri);
-      } else if (uri instanceof URL) {
-        url = uri;
-      } else {
-        // フォールバック
-        url = new URL('articles://unread');
+    (uri: unknown, params?: Record<string, unknown>) => {
+      // MCPではパラメータが第2引数として渡される可能性がある
+      console.error('DEBUG: uri =', uri);
+      console.error('DEBUG: params =', params);
+      
+      let limit = 10; // デフォルト値
+      
+      // パラメータから limit を取得
+      if (params && typeof params.limit === 'string') {
+        limit = parseInt(params.limit, 10);
+      } else if (params && typeof params.limit === 'number') {
+        limit = params.limit;
       }
-      const limit = parseInt(url.searchParams.get('limit') || '10', 10);
+      
+      // URIからも試す（fallback）
+      if (typeof uri === 'string' && uri.includes('?')) {
+        try {
+          const url = new URL(uri);
+          const urlLimit = url.searchParams.get('limit');
+          if (urlLimit) {
+            limit = parseInt(urlLimit, 10);
+          }
+        } catch (e) {
+          // URL parse error - ignore
+        }
+      }
 
       const articles = articleModel.findAll({ is_read: false, limit });
       const feedMap = getAllFeedsMap();
@@ -51,7 +66,7 @@ export function registerArticleResources(
       return {
         contents: [
           {
-            uri: url.toString(),
+            uri: 'articles://unread',
             mimeType: 'application/json',
             text: JSON.stringify(resources, null, 2),
           },
@@ -97,7 +112,7 @@ export function registerArticleResources(
       return {
         contents: [
           {
-            uri: url.toString(),
+            uri: 'articles://favorites',
             mimeType: 'application/json',
             text: JSON.stringify(resources, null, 2),
           },
