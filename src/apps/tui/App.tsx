@@ -1,7 +1,7 @@
 import { Box, Text, useApp, useStdout } from 'ink';
 import { useCallback, useEffect, useState, useMemo } from 'react';
 import { spawn } from 'child_process';
-import type { Article, Feed } from '@/types';
+import type { Article, Feed, UpdateProgress } from '@/types';
 import { FeedService } from '../../services/feed-service.js';
 import { FeedModel } from '../../models/feed.js';
 import { ArticleModel } from '../../models/article.js';
@@ -28,6 +28,7 @@ export function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>('');
   const [showHelp, setShowHelp] = useState(false);
+  const [updateProgress, setUpdateProgress] = useState<UpdateProgress | null>(null);
 
   // データベースとサービスを初期化（一度だけ実行）
   const { feedService } = useMemo(() => {
@@ -106,8 +107,13 @@ export function App() {
     try {
       setIsLoading(true);
       setError('');
+      setUpdateProgress(null);
 
-      await feedService.updateAllFeeds();
+      await feedService.updateAllFeeds((progress) => {
+        setUpdateProgress(progress);
+      });
+
+      setUpdateProgress(null);
       loadFeeds();
 
       if (feeds[selectedFeedIndex]?.id) {
@@ -117,6 +123,7 @@ export function App() {
       setError(err instanceof Error ? err.message : 'フィードの更新に失敗しました');
     } finally {
       setIsLoading(false);
+      setUpdateProgress(null);
     }
   }, [selectedFeedIndex, feeds, loadFeeds, loadArticles, feedService]);
 
@@ -311,8 +318,20 @@ export function App() {
 
   if (isLoading) {
     return (
-      <Box justifyContent="center" alignItems="center" height={5}>
-        <Text color="yellow">読み込み中...</Text>
+      <Box flexDirection="column" padding={1}>
+        {updateProgress ? (
+          <>
+            <Text color="yellow">
+              フィード更新中 ({updateProgress.currentIndex}/{updateProgress.totalFeeds})
+            </Text>
+            <Text color="gray">現在: {updateProgress.currentFeedTitle}</Text>
+            <Text color="gray" dimColor>
+              {updateProgress.currentFeedUrl}
+            </Text>
+          </>
+        ) : (
+          <Text color="yellow">読み込み中...</Text>
+        )}
       </Box>
     );
   }

@@ -36,3 +36,14 @@ export type FeedUpdateFailure = {
 };
 
 export type FeedUpdateOutcome = FeedUpdateSuccess | FeedUpdateFailure;
+
+// 更新進捗情報
+export type UpdateProgress = {
+  totalFeeds: number;
+  currentIndex: number;
+  currentFeedTitle: string;
+  currentFeedUrl: string;
+};
+
+// 進捗通知用のコールバック
+export type UpdateProgressCallback = (progress: UpdateProgress) => void;

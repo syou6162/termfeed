@@ -2,13 +2,14 @@
 
 import type { Feed, Article } from './domain';
 import type { FeedUpdateResult, AddFeedResult, CrawlResult, UpdateAllFeedsResult } from './dto';
+import type { UpdateProgressCallback } from './options';
 
 // FeedServiceの型定義（実装クラスに基づく）
 export type FeedService = {
   addFeed(url: string): Promise<AddFeedResult>;
   removeFeed(feedId: number): boolean;
   updateFeed(feedId: number): Promise<FeedUpdateResult>;
-  updateAllFeeds(): Promise<UpdateAllFeedsResult>;
+  updateAllFeeds(progressCallback?: UpdateProgressCallback): Promise<UpdateAllFeedsResult>;
   markArticleAsRead(articleId: number): boolean;
   markArticleAsUnread(articleId: number): boolean;
   toggleArticleFavorite(articleId: number): boolean;
