@@ -1,7 +1,7 @@
 import { Box, Text, useApp, useStdout } from 'ink';
 import { useCallback, useEffect, useState, useMemo } from 'react';
 import { spawn } from 'child_process';
-import type { Article, Feed } from '../models/types.js';
+import type { Article, Feed } from '@/types';
 import { FeedService } from '../services/feed-service.js';
 import { FeedModel } from '../models/feed.js';
 import { ArticleModel } from '../models/article.js';

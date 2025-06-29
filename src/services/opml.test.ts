@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { OPMLService } from './opml.js';
-import { Feed } from '../models/types.js';
+import type { Feed } from '@/types';
 
 describe('OPMLService', () => {
   const mockFeeds: Feed[] = [

@@ -1,5 +1,5 @@
 import { Box, Text } from 'ink';
-import type { Feed } from '../../models/types.js';
+import type { Feed } from '@/types';
 import { SelectableList } from './SelectableList.js';
 
 type FeedWithUnreadCount = Feed & {

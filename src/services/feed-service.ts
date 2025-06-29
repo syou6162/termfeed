@@ -1,15 +1,18 @@
 import { FeedModel } from '../models/feed.js';
 import { ArticleModel } from '../models/article.js';
 import { RSSCrawler } from './rss-crawler.js';
-import type { Feed, Article, CreateFeedInput } from '../models/types.js';
 import type {
+  Feed,
+  Article,
+  CreateFeedInput,
   CrawlResult,
   FeedUpdateResult,
   AddFeedResult,
   UpdateAllFeedsResult,
   FeedUpdateSuccess,
   FeedUpdateFailure,
-} from './types.js';
+  FeedService as IFeedService,
+} from '@/types';
 import {
   DuplicateFeedError,
   FeedNotFoundError,
@@ -19,7 +22,7 @@ import {
 
 export type { FeedUpdateResult, AddFeedResult };
 
-export class FeedService {
+export class FeedService implements IFeedService {
   private feedModel: FeedModel;
   private articleModel: ArticleModel;
   private crawler: RSSCrawler;
@@ -66,7 +69,7 @@ export class FeedService {
       if (!existingArticle) {
         const created = this.articleModel.create({
           ...articleData,
-          feed_id: feed.id!,
+          feed_id: feed.id,
         });
         if (created) {
           articlesCount++;
@@ -115,7 +118,7 @@ export class FeedService {
 
       const existingArticle = this.articleModel.findByUrl(articleData.url);
       if (existingArticle) {
-        const updated = this.articleModel.update(existingArticle.id!, {});
+        const updated = this.articleModel.update(existingArticle.id, {});
         if (updated) {
           updatedArticlesCount++;
         }
@@ -149,16 +152,16 @@ export class FeedService {
 
     for (const feed of feeds) {
       try {
-        const result = await this.updateFeed(feed.id!);
+        const result = await this.updateFeed(feed.id);
         successful.push({
           status: 'success',
-          feedId: feed.id!,
+          feedId: feed.id,
           result,
         });
       } catch (error) {
         failed.push({
           status: 'failure',
-          feedId: feed.id!,
+          feedId: feed.id,
           feedUrl: feed.url,
           error: error instanceof Error ? error : new Error('Unknown error'),
         });
@@ -198,7 +201,7 @@ export class FeedService {
     });
 
     for (const article of articles) {
-      this.articleModel.markAsRead(article.id!);
+      this.articleModel.markAsRead(article.id);
     }
   }
 

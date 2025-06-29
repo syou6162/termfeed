@@ -1,5 +1,4 @@
-import { Article } from '../../models/types';
-import { ArticleService } from '../interfaces';
+import type { Article, ArticleService } from '@/types';
 
 export class MockArticleService implements ArticleService {
   private articles: Article[] = [
@@ -43,36 +42,38 @@ export class MockArticleService implements ArticleService {
     },
   ];
 
-  async getArticles(options: {
+  getArticles(options?: {
     feedId?: number;
     isRead?: boolean;
     isFavorite?: boolean;
     limit?: number;
     offset?: number;
-  }): Promise<Article[]> {
-    await new Promise((resolve) => setTimeout(resolve, 5));
+  }): Article[] {
     let filtered = [...this.articles];
 
-    if (options.feedId !== undefined) {
+    if (options?.feedId !== undefined) {
       filtered = filtered.filter((article) => article.feed_id === options.feedId);
     }
-    if (options.isRead !== undefined) {
+    if (options?.isRead !== undefined) {
       filtered = filtered.filter((article) => article.is_read === options.isRead);
     }
-    if (options.isFavorite !== undefined) {
+    if (options?.isFavorite !== undefined) {
       filtered = filtered.filter((article) => article.is_favorite === options.isFavorite);
     }
 
     // ソート: 新しい記事が上に
     filtered.sort((a, b) => b.published_at.getTime() - a.published_at.getTime());
 
-    const offset = options.offset || 0;
-    const limit = options.limit || filtered.length;
+    const offset = options?.offset || 0;
+    const limit = options?.limit || filtered.length;
     return filtered.slice(offset, offset + limit);
   }
 
-  async markAsRead(articleId: number): Promise<boolean> {
-    await new Promise((resolve) => setTimeout(resolve, 5));
+  getArticleById(articleId: number): Article | null {
+    return this.articles.find((a) => a.id === articleId) || null;
+  }
+
+  markAsRead(articleId: number): boolean {
     const article = this.articles.find((a) => a.id === articleId);
     if (!article) return false;
     article.is_read = true;
@@ -80,8 +81,7 @@ export class MockArticleService implements ArticleService {
     return true;
   }
 
-  async markAsUnread(articleId: number): Promise<boolean> {
-    await new Promise((resolve) => setTimeout(resolve, 5));
+  markAsUnread(articleId: number): boolean {
     const article = this.articles.find((a) => a.id === articleId);
     if (!article) return false;
     article.is_read = false;
@@ -89,8 +89,7 @@ export class MockArticleService implements ArticleService {
     return true;
   }
 
-  async toggleFavorite(articleId: number): Promise<boolean> {
-    await new Promise((resolve) => setTimeout(resolve, 5));
+  toggleFavorite(articleId: number): boolean {
     const article = this.articles.find((a) => a.id === articleId);
     if (!article) return false;
     article.is_favorite = !article.is_favorite;
@@ -98,8 +97,7 @@ export class MockArticleService implements ArticleService {
     return true;
   }
 
-  async getUnreadCount(feedId?: number): Promise<number> {
-    await new Promise((resolve) => setTimeout(resolve, 5));
+  getUnreadCount(feedId?: number): number {
     let filtered = this.articles;
     if (feedId !== undefined) {
       filtered = filtered.filter((article) => article.feed_id === feedId);
@@ -107,8 +105,7 @@ export class MockArticleService implements ArticleService {
     return filtered.filter((article) => !article.is_read).length;
   }
 
-  async getTotalCount(feedId?: number): Promise<number> {
-    await new Promise((resolve) => setTimeout(resolve, 5));
+  getTotalCount(feedId?: number): number {
     if (feedId !== undefined) {
       return this.articles.filter((article) => article.feed_id === feedId).length;
     }
