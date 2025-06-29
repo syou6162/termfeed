@@ -1,5 +1,5 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { URL } from 'node:url';
+import { URL, URLSearchParams } from 'node:url';
 import { ArticleModel } from '../../models/article.js';
 import { FeedModel } from '../../models/feed.js';
 import { ArticleResource } from '../types.js';
@@ -14,29 +14,30 @@ export function registerArticleResources(
     const feeds = feedModel.findAll();
     return new Map(feeds.map((f) => [f.id, f]));
   };
-  
-  // Register unread articles resource  
+
+  // Register unread articles resource
   server.registerResource(
     'unread',
     'articles://unread',
     {
       title: 'Unread Articles',
-      description: 'Get unread articles from your RSS feeds. Use ?limit=N to specify number of articles (default: 10)',
+      description:
+        'Get unread articles from your RSS feeds. Use ?limit=N to specify number of articles (default: 10)',
     },
     (uri: unknown, params?: Record<string, unknown>) => {
       // MCPではパラメータが第2引数として渡される可能性がある
       console.error('DEBUG: uri =', uri);
       console.error('DEBUG: params =', params);
-      
+
       let limit = 10; // デフォルト値
-      
+
       // パラメータから limit を取得
       if (params && typeof params.limit === 'string') {
         limit = parseInt(params.limit, 10);
       } else if (params && typeof params.limit === 'number') {
         limit = params.limit;
       }
-      
+
       // URIからも試す（fallback）
       if (typeof uri === 'string' && uri.includes('?')) {
         // クエリパラメータを手動で解析
@@ -86,14 +87,14 @@ export function registerArticleResources(
     },
     (uri: unknown, params?: Record<string, unknown>) => {
       let limit = 10; // デフォルト値
-      
+
       // パラメータから limit を取得
       if (params && typeof params.limit === 'string') {
         limit = parseInt(params.limit, 10);
       } else if (params && typeof params.limit === 'number') {
         limit = params.limit;
       }
-      
+
       // URIからも試す（fallback）
       if (typeof uri === 'string' && uri.includes('?')) {
         const queryStart = uri.indexOf('?');
