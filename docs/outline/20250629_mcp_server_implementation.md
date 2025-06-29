@@ -50,10 +50,12 @@ MCPのResources機能を使用して、以下の読み取り専用リソース�
 ## 実装手順
 
 ### 1. プロジェクト準備
-- [ ] package.jsonに`@modelcontextprotocol/sdk`を追加
-- [ ] 必要な型定義を追加
+- [x] package.jsonに`@modelcontextprotocol/sdk`を追加
+- [x] 必要な型定義を追加
 
 ### 2. ディレクトリ構造
+- [x] src/mcp/ ディレクトリ作成
+- [x] src/mcp/resources/ ディレクトリ作成
 ```
 src/
 ├── mcp/
@@ -70,40 +72,34 @@ src/
 ### 3. 実装詳細
 
 #### MCPサーバー (src/mcp/server.ts)
-```typescript
-// 基本構造
-- McpServerインスタンスの作成
-- リソースの登録
-- StdioServerTransportでの通信設定
-- エラーハンドリング
-```
+- [x] McpServerインスタンスの作成
+- [x] リソースの登録
+- [x] StdioServerTransportでの通信設定
+- [x] エラーハンドリング
 
 #### 記事リソース (src/mcp/resources/articles.ts)
-```typescript
-// 未読記事と お気に入り記事のリソース実装
-- 既存のArticleModelを使用
-- URIパラメータのパース
-- データの取得とフォーマット
-```
+- [x] 未読記事と お気に入り記事のリソース実装
+- [x] 既存のArticleModelを使用
+- [x] URIパラメータのパース
+- [x] データの取得とフォーマット
+- [x] N+1クエリ回避の実装
 
 #### CLIコマンド (src/cli/commands/mcp-server.ts)
-```typescript
-// サブコマンドの実装
-- Commanderでのコマンド登録
-- サーバーの起動
-- シグナルハンドリング（graceful shutdown）
-```
+- [x] サブコマンドの実装
+- [x] Commanderでのコマンド登録
+- [x] サーバーの起動
+- [x] シグナルハンドリング（graceful shutdown）
 
 ### 4. 既存コードとの統合
-- DatabaseManagerを使用してデータベース接続
-- ArticleModelの既存メソッドを活用
-- エラーハンドリングは既存のカスタムエラークラスと統合
+- [x] DatabaseManagerを使用してデータベース接続
+- [x] ArticleModelの既存メソッドを活用
+- [x] CLIコマンドとして統合
 
 ### 5. テスト計画
-- MCPサーバーの起動/停止テスト
-- リソースの取得テスト（モックDB使用）
-- エラーケースのテスト
-- 統合テスト（実際のデータベースでの動作確認）
+- [x] MCPサーバーの起動/停止テスト
+- [x] リソースの取得テスト（モックDB使用）
+- [x] エラーケースのテスト
+- [ ] 統合テスト（実際のデータベースでの動作確認）
 
 ## セキュリティ考慮事項
 - ローカル環境での使用を前提
