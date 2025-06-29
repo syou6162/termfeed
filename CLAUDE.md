@@ -58,6 +58,9 @@ npm run lint:fix       # ESLint自動修正
 npm run format         # Prettier フォーマット
 npm run typecheck      # TypeScript型チェック
 
+# データベースの初期化（初回セットアップ時）
+npm run migrate  # schema.sqlを実行してテーブル作成
+
 # CLIコマンド例（開発時）
 npm run dev add https://example.com/feed.rss
 npm run dev list
@@ -123,3 +126,15 @@ SQLiteを使用（src/models/schema.sql）：
 - **メインファイル**: `src/index.ts`（シバン付き）
 - **bin設定**: package.jsonで`termfeed`を`dist/index.js`にマッピング
 - **開発時実行**: `npm run dev`でtsxを使用
+
+## 注意事項
+
+### 現在の課題
+- CLIコマンドのテストカバレッジが0%（要改善）
+- インターフェース定義が形骸化（FeedServiceがinterfaceをimplementsしていない）
+- App.tsxが大きすぎる（337行）
+
+### データベースファイルパス
+- デフォルト: XDG Base Directory準拠 (`~/.local/share/termfeed/termfeed.db`)
+- 環境変数 `TERMFEED_DB` で変更可能
+- テスト時は一時ファイルを使用（インメモリDBは未実装）
