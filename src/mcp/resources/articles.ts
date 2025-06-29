@@ -39,14 +39,15 @@ export function registerArticleResources(
       
       // URIからも試す（fallback）
       if (typeof uri === 'string' && uri.includes('?')) {
-        try {
-          const url = new URL(uri);
-          const urlLimit = url.searchParams.get('limit');
+        // クエリパラメータを手動で解析
+        const queryStart = uri.indexOf('?');
+        if (queryStart !== -1) {
+          const queryString = uri.substring(queryStart + 1);
+          const params = new URLSearchParams(queryString);
+          const urlLimit = params.get('limit');
           if (urlLimit) {
             limit = parseInt(urlLimit, 10);
           }
-        } catch (e) {
-          // URL parse error - ignore
         }
       }
 
@@ -83,18 +84,28 @@ export function registerArticleResources(
       title: 'Favorite Articles',
       description: 'Get your favorite articles',
     },
-    (uri: unknown) => {
-      // URIを安全にURL オブジェクトに変換
-      let url: URL;
-      if (typeof uri === 'string') {
-        url = new URL(uri);
-      } else if (uri instanceof URL) {
-        url = uri;
-      } else {
-        // フォールバック
-        url = new URL('articles://favorites');
+    (uri: unknown, params?: Record<string, unknown>) => {
+      let limit = 10; // デフォルト値
+      
+      // パラメータから limit を取得
+      if (params && typeof params.limit === 'string') {
+        limit = parseInt(params.limit, 10);
+      } else if (params && typeof params.limit === 'number') {
+        limit = params.limit;
       }
-      const limit = parseInt(url.searchParams.get('limit') || '10', 10);
+      
+      // URIからも試す（fallback）
+      if (typeof uri === 'string' && uri.includes('?')) {
+        const queryStart = uri.indexOf('?');
+        if (queryStart !== -1) {
+          const queryString = uri.substring(queryStart + 1);
+          const urlParams = new URLSearchParams(queryString);
+          const urlLimit = urlParams.get('limit');
+          if (urlLimit) {
+            limit = parseInt(urlLimit, 10);
+          }
+        }
+      }
 
       const articles = articleModel.findAll({ is_favorite: true, limit });
       const feedMap = getAllFeedsMap();
