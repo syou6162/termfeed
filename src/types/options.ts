@@ -1,0 +1,48 @@
+// オプション型の定義
+
+export type ArticleQueryOptions = {
+  feedId?: number;
+  isRead?: boolean;
+  isFavorite?: boolean;
+  limit?: number;
+  offset?: number;
+  orderBy?: 'published_at' | 'created_at' | 'updated_at';
+  order?: 'asc' | 'desc';
+};
+
+export type CrawlerOptions = {
+  timeout?: number;
+  userAgent?: string;
+};
+
+export type ServiceError = {
+  code: string;
+  message: string;
+  originalError?: Error;
+};
+
+// 更新結果の判別共用体型
+export type FeedUpdateSuccess = {
+  status: 'success';
+  feedId: number;
+  result: import('./dto').FeedUpdateResult;
+};
+
+export type FeedUpdateFailure = {
+  status: 'failure';
+  feedId: number;
+  feedUrl: string;
+  error: Error;
+};
+
+export type FeedUpdateOutcome = FeedUpdateSuccess | FeedUpdateFailure;
+
+export type UpdateAllFeedsResult = {
+  successful: FeedUpdateSuccess[];
+  failed: FeedUpdateFailure[];
+  summary: {
+    totalFeeds: number;
+    successCount: number;
+    failureCount: number;
+  };
+};
