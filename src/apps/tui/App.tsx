@@ -1,7 +1,7 @@
 import { Box, Text, useApp, useStdout } from 'ink';
 import { useCallback, useEffect, useState, useMemo } from 'react';
 import { spawn } from 'child_process';
-import type { Article, Feed, UpdateProgress } from '@/types';
+import type { Article, Feed, UpdateProgress, FeedUpdateFailure } from '@/types';
 import { FeedService } from '../../services/feed-service.js';
 import { FeedModel } from '../../models/feed.js';
 import { ArticleModel } from '../../models/article.js';
@@ -29,6 +29,9 @@ export function App() {
   const [error, setError] = useState<string>('');
   const [showHelp, setShowHelp] = useState(false);
   const [updateProgress, setUpdateProgress] = useState<UpdateProgress | null>(null);
+  const [abortController, setAbortController] = useState<AbortController | null>(null);
+  const [failedFeeds, setFailedFeeds] = useState<FeedUpdateFailure[]>([]);
+  const [showFailedFeeds, setShowFailedFeeds] = useState(false);
 
   // データベースとサービスを初期化（一度だけ実行）
   const { feedService } = useMemo(() => {
@@ -108,16 +111,34 @@ export function App() {
       setIsLoading(true);
       setError('');
       setUpdateProgress(null);
+      setFailedFeeds([]);
+      setShowFailedFeeds(false);
+
+      // AbortControllerを作成
+      const controller = new AbortController();
+      setAbortController(controller);
 
       const result = await feedService.updateAllFeeds((progress) => {
         setUpdateProgress(progress);
-      });
+      }, controller.signal);
 
-      // 更新完了後、成功/失敗の結果を表示
-      if (result.failed.length > 0) {
+      // キャンセルされた場合
+      if ('cancelled' in result) {
+        const cancelledResult = result;
         setError(
-          `フィード更新が一部失敗しました (成功: ${result.summary.successCount}件, 失敗: ${result.summary.failureCount}件)`
+          `更新がキャンセルされました (${cancelledResult.processedFeeds}/${cancelledResult.totalFeeds}件処理済み)`
         );
+        if (cancelledResult.failed.length > 0) {
+          setFailedFeeds(cancelledResult.failed);
+        }
+      } else {
+        // 通常の完了
+        if (result.failed.length > 0) {
+          setError(
+            `フィード更新が一部失敗しました (成功: ${result.summary.successCount}件, 失敗: ${result.summary.failureCount}件)`
+          );
+          setFailedFeeds(result.failed);
+        }
       }
 
       setUpdateProgress(null);
@@ -132,6 +153,7 @@ export function App() {
       // 進捗表示はuseEffectで管理
     } finally {
       setIsLoading(false);
+      setAbortController(null);
     }
   }, [selectedFeedIndex, feeds, loadFeeds, loadArticles, feedService]);
 
@@ -275,6 +297,16 @@ export function App() {
     setShowHelp((prev) => !prev);
   }, []);
 
+  const handleCancelUpdate = useCallback(() => {
+    if (abortController) {
+      abortController.abort();
+    }
+  }, [abortController]);
+
+  const handleToggleFailedFeeds = useCallback(() => {
+    setShowFailedFeeds((prev) => !prev);
+  }, []);
+
   const handleQuit = useCallback(() => {
     // TUI終了前に現在選択中の記事を既読にする
     const currentArticle = articles[selectedArticleIndex];
@@ -337,6 +369,8 @@ export function App() {
     onPageUp: handlePageUp,
     onScrollOffsetChange: setScrollOffset,
     onScrollToEnd: handleScrollToEnd,
+    onCancel: handleCancelUpdate,
+    onToggleFailedFeeds: handleToggleFailedFeeds,
   });
 
   if (isLoading) {
@@ -352,6 +386,9 @@ export function App() {
               <Text color="gray" dimColor>
                 {updateProgress.currentFeedUrl}
               </Text>
+              <Box marginTop={1}>
+                <Text color="cyan">ESC: キャンセル</Text>
+              </Box>
             </>
           ) : (
             <Text color="yellow">読み込み中...</Text>
@@ -368,7 +405,24 @@ export function App() {
           エラーが発生しました
         </Text>
         <Text color="red">{error}</Text>
-        <Text color="gray">r: 再試行 | q: 終了</Text>
+        <Text color="gray">
+          r: 再試行 | {failedFeeds.length > 0 ? 'e: エラー詳細 | ' : ''}q: 終了
+        </Text>
+        {showFailedFeeds && failedFeeds.length > 0 && (
+          <Box marginTop={1} flexDirection="column">
+            <Text bold color="yellow">
+              失敗したフィード:
+            </Text>
+            {failedFeeds.map((failed, index) => (
+              <Box key={index} flexDirection="column" marginLeft={2}>
+                <Text color="red">• {failed.feedUrl}</Text>
+                <Text color="gray" dimColor>
+                  エラー: {failed.error.message}
+                </Text>
+              </Box>
+            ))}
+          </Box>
+        )}
       </Box>
     );
   }

@@ -30,10 +30,20 @@ export function createUpdateCommand(): Command {
           console.log('Updating all feeds...');
           const result = await feedService.updateAllFeeds();
 
-          console.log('\nUpdate summary:');
-          console.log(`- Total feeds: ${result.summary.totalFeeds}`);
-          console.log(`- Successful: ${result.summary.successCount}`);
-          console.log(`- Failed: ${result.summary.failureCount}`);
+          // キャンセルされた場合の処理
+          if ('cancelled' in result) {
+            console.log(
+              `\nUpdate cancelled after processing ${result.processedFeeds}/${result.totalFeeds} feeds.`
+            );
+            console.log(`- Successful: ${result.successful.length}`);
+            console.log(`- Failed: ${result.failed.length}`);
+          } else {
+            // 通常の完了
+            console.log('\nUpdate summary:');
+            console.log(`- Total feeds: ${result.summary.totalFeeds}`);
+            console.log(`- Successful: ${result.summary.successCount}`);
+            console.log(`- Failed: ${result.summary.failureCount}`);
+          }
 
           if (result.failed.length > 0) {
             console.log('\nFailed feeds:');

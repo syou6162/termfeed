@@ -47,3 +47,12 @@ export type UpdateProgress = {
 
 // 進捗通知用のコールバック
 export type UpdateProgressCallback = (progress: UpdateProgress) => void;
+
+// 更新キャンセル結果
+export type UpdateCancelledResult = {
+  cancelled: true;
+  processedFeeds: number;
+  totalFeeds: number;
+  successful: FeedUpdateSuccess[];
+  failed: FeedUpdateFailure[];
+};

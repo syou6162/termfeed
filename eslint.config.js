@@ -23,6 +23,8 @@ export default [
         module: 'readonly',
         setTimeout: 'readonly',
         clearTimeout: 'readonly',
+        AbortController: 'readonly',
+        AbortSignal: 'readonly',
       },
     },
     plugins: {

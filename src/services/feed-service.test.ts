@@ -313,6 +313,10 @@ describe('FeedService', () => {
 
       const results = await feedService.updateAllFeeds();
 
+      if ('cancelled' in results) {
+        throw new Error('Expected successful result, not cancelled');
+      }
+
       expect(results.summary.totalFeeds).toBe(2);
       expect(results.summary.successCount).toBe(2);
       expect(results.summary.failureCount).toBe(0);
@@ -350,6 +354,10 @@ describe('FeedService', () => {
         });
 
       const results = await feedService.updateAllFeeds();
+
+      if ('cancelled' in results) {
+        throw new Error('Expected successful result, not cancelled');
+      }
 
       expect(results.summary.totalFeeds).toBe(2);
       expect(results.summary.successCount).toBe(1);
@@ -491,6 +499,10 @@ describe('FeedService', () => {
 
       const results = await feedService.updateAllFeeds();
 
+      if ('cancelled' in results) {
+        throw new Error('Expected successful result, not cancelled');
+      }
+
       expect(results.summary.totalFeeds).toBe(2);
       expect(results.summary.successCount).toBe(0);
       expect(results.summary.failureCount).toBe(2);
@@ -504,6 +516,61 @@ describe('FeedService', () => {
         expect(failure.error.cause).toBeInstanceOf(Error);
         expect(failure.feedUrl).toMatch(/^https:\/\/example\.com\/rss[12]\.xml$/);
       });
+    });
+
+    it('AbortSignalによるキャンセルが正しく動作する', async () => {
+      // 複数のフィードを作成
+      feedModel.create({
+        url: 'https://example.com/rss1.xml',
+        title: 'Feed 1',
+        description: 'Description 1',
+      });
+
+      feedModel.create({
+        url: 'https://example.com/rss2.xml',
+        title: 'Feed 2',
+        description: 'Description 2',
+      });
+
+      const mockCrawlResult = {
+        feed: {
+          url: 'https://example.com/rss.xml',
+          title: 'Updated Feed',
+          description: 'Updated Description',
+          last_updated_at: new Date(),
+        },
+        articles: [],
+      };
+
+      // 最初の呼び出しでは成功、2回目でキャンセル
+      vi.mocked(mockCrawler.crawl).mockResolvedValue(mockCrawlResult);
+
+      const abortController = new AbortController();
+
+      // 1回目の更新後にキャンセル
+      let callCount = 0;
+      vi.mocked(mockCrawler.crawl).mockImplementation(async () => {
+        callCount++;
+        await new Promise((resolve) => setTimeout(resolve, 10)); // 少し待つ
+        if (callCount === 1) {
+          // 1回目の処理後にキャンセル
+          abortController.abort();
+        }
+        return mockCrawlResult;
+      });
+
+      const result = await feedService.updateAllFeeds(undefined, abortController.signal);
+
+      // キャンセルされた結果であることを確認
+      if ('cancelled' in result) {
+        expect(result.cancelled).toBe(true);
+        expect(result.processedFeeds).toBe(1);
+        expect(result.totalFeeds).toBe(2);
+        expect(result.successful).toHaveLength(1);
+        expect(result.failed).toHaveLength(0);
+      } else {
+        throw new Error('Expected cancelled result');
+      }
     });
   });
 

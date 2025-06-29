@@ -13,6 +13,7 @@ import type {
   FeedUpdateFailure,
   FeedService as IFeedService,
   UpdateProgressCallback,
+  UpdateCancelledResult,
 } from '@/types';
 import {
   DuplicateFeedError,
@@ -146,13 +147,27 @@ export class FeedService implements IFeedService {
     };
   }
 
-  async updateAllFeeds(progressCallback?: UpdateProgressCallback): Promise<UpdateAllFeedsResult> {
+  async updateAllFeeds(
+    progressCallback?: UpdateProgressCallback,
+    abortSignal?: AbortSignal
+  ): Promise<UpdateAllFeedsResult | UpdateCancelledResult> {
     const feeds = this.feedModel.findAll();
     const successful: FeedUpdateSuccess[] = [];
     const failed: FeedUpdateFailure[] = [];
 
     for (let i = 0; i < feeds.length; i++) {
       const feed = feeds[i];
+
+      // キャンセルチェック
+      if (abortSignal?.aborted) {
+        return {
+          cancelled: true,
+          processedFeeds: i,
+          totalFeeds: feeds.length,
+          successful,
+          failed,
+        };
+      }
 
       // 進捗を通知
       if (progressCallback) {

@@ -29,6 +29,8 @@ type KeyboardNavigationProps = {
   onPageUp?: () => void;
   onScrollOffsetChange?: (offset: number) => void;
   onScrollToEnd?: () => void;
+  onCancel?: () => void;
+  onToggleFailedFeeds?: () => void;
 };
 
 export function useKeyboardNavigation({
@@ -49,6 +51,8 @@ export function useKeyboardNavigation({
   onPageUp,
   onScrollOffsetChange,
   onScrollToEnd,
+  onCancel,
+  onToggleFailedFeeds,
 }: KeyboardNavigationProps) {
   const handleInput = useCallback(
     (input: string, key: KeyEvent) => {
@@ -73,6 +77,18 @@ export function useKeyboardNavigation({
       // ヘルプ表示トグル
       if (input === '?') {
         onToggleHelp?.();
+        return;
+      }
+
+      // キャンセル (ESC)
+      if (key.escape) {
+        onCancel?.();
+        return;
+      }
+
+      // エラー詳細表示トグル (e)
+      if (input === 'e') {
+        onToggleFailedFeeds?.();
         return;
       }
 
@@ -151,6 +167,8 @@ export function useKeyboardNavigation({
       onPageUp,
       onScrollOffsetChange,
       onScrollToEnd,
+      onCancel,
+      onToggleFailedFeeds,
     ]
   );
 
