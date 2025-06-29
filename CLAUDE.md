@@ -28,13 +28,13 @@ termfeedは、ターミナルで動作するRSSリーダーです。Vim風のキ
 - **カスタムエラークラス**: 型安全なエラーハンドリング
   - RSSFetchError, RSSParseError, FeedUpdateError, DuplicateFeedError, FeedNotFoundError
 
-### プレゼンテーション層
-- **src/cli/commands/**: 各CLIサブコマンドの実装（add、list、articles、update、rm、tui、export、import）
-- **src/tui/**: ターミナルUI実装（Ink/React）
+### プレゼンテーション層 (src/apps/)
+- **src/apps/cli/commands/**: 各CLIサブコマンドの実装（add、list、articles、update、rm、tui、export、import）
+- **src/apps/tui/**: ターミナルUI実装（Ink/React）
   - `App.tsx`: メインコンポーネント、自動既読機能実装
   - `components/`: ArticleList, FeedList, TwoPaneLayout, HelpOverlay
   - `hooks/useKeyboardNavigation.ts`: キーバインド処理
-- **src/mcp/**: Model Context Protocolサーバー実装
+- **src/apps/mcp/**: Model Context Protocolサーバー実装
   - AI連携用のリソースプロバイダー
 
 ### 型定義 (src/types/)

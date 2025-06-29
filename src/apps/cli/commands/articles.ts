@@ -1,7 +1,7 @@
 import { Command } from 'commander';
-import { FeedModel } from '../../models/feed.js';
-import { ArticleModel } from '../../models/article.js';
-import { FeedService } from '../../services/feed-service.js';
+import { FeedModel } from '../../../models/feed.js';
+import { ArticleModel } from '../../../models/article.js';
+import { FeedService } from '../../../services/feed-service.js';
 import { parseOptionalPositiveInteger, parsePositiveInteger } from '../utils/validation.js';
 import { createDatabaseManager } from '../utils/database.js';
 
