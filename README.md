@@ -193,18 +193,14 @@ termfeed mcp-server
 
 #### Claude Codeでの使用方法
 
-Claude Codeの設定ファイル `~/.config/claude/claude_desktop_config.json` に以下を追加：
+Claude CodeにMCPサーバーとして登録：
 
-```json
-{
-  "mcpServers": {
-    "termfeed": {
-      "command": "termfeed",
-      "args": ["mcp-server"],
-      "env": {}
-    }
-  }
-}
+```bash
+# 開発版を登録（リポジトリのパスを指定）
+claude mcp add --scope user termfeed -- npx tsx /path/to/termfeed/src/index.ts mcp-server
+
+# ビルド版/インストール版を登録
+claude mcp add --scope user termfeed -- termfeed mcp-server
 ```
 
 #### 利用可能なリソース
