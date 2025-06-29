@@ -17,21 +17,33 @@ termfeedは、ターミナルで動作するRSSリーダーです。Vim風のキ
 - **FeedModel**: フィードのCRUD操作
 - **ArticleModel**: 記事のCRUD操作、既読管理、お気に入り機能
   - `getUnreadCountsByFeedIds()`: N+1クエリ回避のバッチ処理メソッド
-- **型定義**: `types.ts`にFeed, Articleなどの主要型を定義
+  - `count()`: 記事の総数を取得
 
 ### ビジネスロジック層 (src/services/)
 - **RSSCrawler**: RSS/Atomフィードの取得・パース（rss-parser使用）
-- **FeedService**: フィード管理とビジネスロジック（モデル層のラッパー）
+- **FeedService**: フィード管理とビジネスロジック
+  - `implements IFeedService`で型安全性を保証
   - `getUnreadCountsForAllFeeds()`: 全フィードの未読件数を一括取得
+- **ArticleService**: 記事管理のビジネスロジック（ArticleModelのラッパー）
 - **カスタムエラークラス**: 型安全なエラーハンドリング
   - RSSFetchError, RSSParseError, FeedUpdateError, DuplicateFeedError, FeedNotFoundError
 
 ### プレゼンテーション層
-- **src/cli/commands/**: 各CLIサブコマンドの実装（add、list、articles、update、rm、tui）
+- **src/cli/commands/**: 各CLIサブコマンドの実装（add、list、articles、update、rm、tui、export、import）
 - **src/tui/**: ターミナルUI実装（Ink/React）
   - `App.tsx`: メインコンポーネント、自動既読機能実装
   - `components/`: ArticleList, FeedList, TwoPaneLayout, HelpOverlay
   - `hooks/useKeyboardNavigation.ts`: キーバインド処理
+- **src/mcp/**: Model Context Protocolサーバー実装
+  - AI連携用のリソースプロバイダー
+
+### 型定義 (src/types/)
+すべての型定義を集約管理：
+- **domain.ts**: DBエンティティ（Feed, Article）
+- **dto.ts**: データ転送オブジェクト（RSSItem, CrawlResult）
+- **options.ts**: 関数引数・設定（ArticleQueryOptions, ServiceError）
+- **services.ts**: サービス層のインターフェース
+- 詳細は [src/types/README.md](src/types/README.md) 参照
 
 ## 開発コマンド
 
@@ -66,6 +78,9 @@ npm run dev add https://example.com/feed.rss
 npm run dev list
 npm run dev articles --unread
 npm run dev tui  # TUIモード
+npm run dev export feeds.opml
+npm run dev import feeds.txt
+npm run dev mcp-server  # MCPサーバー起動
 ```
 
 ## TUIアーキテクチャ
@@ -131,7 +146,6 @@ SQLiteを使用（src/models/schema.sql）：
 
 ### 現在の課題
 - CLIコマンドのテストカバレッジが0%（要改善）
-- インターフェース定義が形骸化（FeedServiceがinterfaceをimplementsしていない）
 - App.tsxが大きすぎる（337行）
 
 ### データベースファイルパス

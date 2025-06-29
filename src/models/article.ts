@@ -1,5 +1,5 @@
 import { DatabaseManager } from './database.js';
-import { Article, UpdateArticleInput } from './types.js';
+import type { Article, UpdateArticleInput } from '@/types';
 import { UniqueConstraintError, ForeignKeyConstraintError } from './errors.js';
 import { dateToUnixSeconds, nowInUnixSeconds, unixSecondsToDate } from './utils/timestamp.js';
 
@@ -40,8 +40,8 @@ export class ArticleModel {
       is_read: number;
       is_favorite: number;
       thumbnail_url?: string;
-      created_at?: number;
-      updated_at?: number;
+      created_at: number;
+      updated_at: number;
     };
 
     return {
@@ -55,8 +55,8 @@ export class ArticleModel {
       is_read: Boolean(data.is_read),
       is_favorite: Boolean(data.is_favorite),
       thumbnail_url: data.thumbnail_url,
-      created_at: data.created_at ? unixSecondsToDate(data.created_at) : undefined,
-      updated_at: data.updated_at ? unixSecondsToDate(data.updated_at) : undefined,
+      created_at: unixSecondsToDate(data.created_at),
+      updated_at: unixSecondsToDate(data.updated_at),
     };
   }
 
@@ -242,6 +242,20 @@ export class ArticleModel {
     `);
 
     const result = stmt.get(feedId) as { count: number };
+    return result.count;
+  }
+
+  public count(feedId?: number): number {
+    let query = 'SELECT COUNT(*) as count FROM articles';
+    const params: unknown[] = [];
+
+    if (feedId !== undefined) {
+      query += ' WHERE feed_id = ?';
+      params.push(feedId);
+    }
+
+    const stmt = this.db.getDb().prepare(query);
+    const result = stmt.get(...params) as { count: number };
     return result.count;
   }
 

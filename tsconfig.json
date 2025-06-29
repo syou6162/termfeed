@@ -22,7 +22,9 @@
     "allowSyntheticDefaultImports": true,
     "jsx": "react-jsx",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@/types": ["./src/types/index"],
+      "@/types/*": ["./src/types/*"]
     }
   },
   "include": ["src/**/*"],

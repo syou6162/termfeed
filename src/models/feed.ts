@@ -1,5 +1,5 @@
 import { DatabaseManager } from './database.js';
-import { Feed, CreateFeedInput } from './types.js';
+import type { Feed, CreateFeedInput } from '@/types';
 import { UniqueConstraintError } from './errors.js';
 import { dateToUnixSeconds, nowInUnixSeconds, unixSecondsToDate } from './utils/timestamp.js';
 
