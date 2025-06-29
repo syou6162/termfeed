@@ -33,7 +33,7 @@ export function registerArticleResources(
         // フォールバック
         url = new URL('articles://unread');
       }
-      const limit = parseInt(url.searchParams.get('limit') || '50', 10);
+      const limit = parseInt(url.searchParams.get('limit') || '10', 10);
 
       const articles = articleModel.findAll({ is_read: false, limit });
       const feedMap = getAllFeedsMap();
@@ -41,7 +41,7 @@ export function registerArticleResources(
       const resources: ArticleResource[] = articles.map((article) => ({
         title: article.title,
         url: article.url,
-        content: article.content || null,
+        content: article.content ? article.content.substring(0, 500) + '...' : null,
         publishedAt: new Date(article.published_at).toISOString(),
         feedTitle: feedMap.get(article.feed_id)?.title || 'Unknown Feed',
         author: article.author || null,
@@ -78,7 +78,7 @@ export function registerArticleResources(
         // フォールバック
         url = new URL('articles://favorites');
       }
-      const limit = parseInt(url.searchParams.get('limit') || '50', 10);
+      const limit = parseInt(url.searchParams.get('limit') || '10', 10);
 
       const articles = articleModel.findAll({ is_favorite: true, limit });
       const feedMap = getAllFeedsMap();
@@ -86,7 +86,7 @@ export function registerArticleResources(
       const resources: ArticleResource[] = articles.map((article) => ({
         title: article.title,
         url: article.url,
-        content: article.content || null,
+        content: article.content ? article.content.substring(0, 500) + '...' : null,
         publishedAt: new Date(article.published_at).toISOString(),
         feedTitle: feedMap.get(article.feed_id)?.title || 'Unknown Feed',
         author: article.author || null,
