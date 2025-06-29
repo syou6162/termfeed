@@ -13,6 +13,7 @@ interface RegisteredResource {
 }
 
 interface ArticleResourceJSON {
+  id: number;
   title: string;
   url: string;
   content: string | null;
@@ -98,9 +99,10 @@ describe('registerArticleResources', () => {
       const contents = JSON.parse(result?.contents[0].text ?? '[]') as ArticleResourceJSON[];
       expect(contents).toHaveLength(1);
       expect(contents[0]).toMatchObject({
+        id: 1,
         title: 'Article 1',
         url: 'https://example.com/1',
-        content: 'Content 1',
+        content: 'Content 1...',
         feedTitle: 'Example Feed',
         author: 'Author 1',
       });
@@ -182,9 +184,10 @@ describe('registerArticleResources', () => {
 
       const contents = JSON.parse(result?.contents[0].text ?? '[]') as ArticleResourceJSON[];
       expect(contents[0]).toMatchObject({
+        id: 1,
         title: 'Favorite Article',
         url: 'https://example.com/fav',
-        content: 'Favorite content',
+        content: 'Favorite content...',
         feedTitle: 'Example Feed',
       });
     });
@@ -200,7 +203,7 @@ describe('registerArticleResources', () => {
       const unreadResource = registeredResources.get('unread');
       unreadResource?.handler(new URL('articles://unread'));
 
-      expect(mockArticleModel.findAll).toHaveBeenCalledWith({ is_read: false, limit: 50 });
+      expect(mockArticleModel.findAll).toHaveBeenCalledWith({ is_read: false, limit: 10 });
     });
   });
 });
