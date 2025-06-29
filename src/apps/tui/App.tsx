@@ -318,20 +318,22 @@ export function App() {
 
   if (isLoading) {
     return (
-      <Box flexDirection="column" padding={1}>
-        {updateProgress ? (
-          <>
-            <Text color="yellow">
-              フィード更新中 ({updateProgress.currentIndex}/{updateProgress.totalFeeds})
-            </Text>
-            <Text color="gray">現在: {updateProgress.currentFeedTitle}</Text>
-            <Text color="gray" dimColor>
-              {updateProgress.currentFeedUrl}
-            </Text>
-          </>
-        ) : (
-          <Text color="yellow">読み込み中...</Text>
-        )}
+      <Box justifyContent="center" alignItems="center" height={5}>
+        <Box flexDirection="column" alignItems="center">
+          {updateProgress ? (
+            <>
+              <Text color="yellow">
+                フィード更新中 ({updateProgress.currentIndex}/{updateProgress.totalFeeds})
+              </Text>
+              <Text color="gray">現在: {updateProgress.currentFeedTitle}</Text>
+              <Text color="gray" dimColor>
+                {updateProgress.currentFeedUrl}
+              </Text>
+            </>
+          ) : (
+            <Text color="yellow">読み込み中...</Text>
+          )}
+        </Box>
       </Box>
     );
   }
