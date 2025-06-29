@@ -1,5 +1,4 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { URL, URLSearchParams } from 'node:url';
 import { ArticleModel } from '../../models/article.js';
 import { FeedModel } from '../../models/feed.js';
 import { ArticleResource } from '../types.js';
@@ -21,39 +20,10 @@ export function registerArticleResources(
     'articles://unread',
     {
       title: 'Unread Articles',
-      description:
-        'Get unread articles from your RSS feeds. Use ?limit=N to specify number of articles (default: 10)',
+      description: 'Get unread articles from your RSS feeds (default: 10 items)',
     },
-    (uri: unknown, params?: Record<string, unknown>) => {
-      let limit = 10; // デフォルト値
-
-      // パラメータから limit を取得
-      if (params && typeof params.limit === 'string') {
-        limit = parseInt(params.limit, 10);
-      } else if (params && typeof params.limit === 'number') {
-        limit = params.limit;
-      }
-
-      // URIからも試す（fallback）
-      if (uri instanceof URL) {
-        const urlLimit = uri.searchParams.get('limit');
-        if (urlLimit) {
-          limit = parseInt(urlLimit, 10);
-        }
-      } else if (typeof uri === 'string' && uri.includes('?')) {
-        // クエリパラメータを手動で解析
-        const queryStart = uri.indexOf('?');
-        if (queryStart !== -1) {
-          const queryString = uri.substring(queryStart + 1);
-          const params = new URLSearchParams(queryString);
-          const urlLimit = params.get('limit');
-          if (urlLimit) {
-            limit = parseInt(urlLimit, 10);
-          }
-        }
-      }
-
-      const articles = articleModel.findAll({ is_read: false, limit });
+    () => {
+      const articles = articleModel.findAll({ is_read: false, limit: 10 });
       const feedMap = getAllFeedsMap();
 
       const resources: ArticleResource[] = articles.map((article) => ({
@@ -84,37 +54,10 @@ export function registerArticleResources(
     'articles://favorites',
     {
       title: 'Favorite Articles',
-      description: 'Get your favorite articles',
+      description: 'Get your favorite articles (default: 10 items)',
     },
-    (uri: unknown, params?: Record<string, unknown>) => {
-      let limit = 10; // デフォルト値
-
-      // パラメータから limit を取得
-      if (params && typeof params.limit === 'string') {
-        limit = parseInt(params.limit, 10);
-      } else if (params && typeof params.limit === 'number') {
-        limit = params.limit;
-      }
-
-      // URIからも試す（fallback）
-      if (uri instanceof URL) {
-        const urlLimit = uri.searchParams.get('limit');
-        if (urlLimit) {
-          limit = parseInt(urlLimit, 10);
-        }
-      } else if (typeof uri === 'string' && uri.includes('?')) {
-        const queryStart = uri.indexOf('?');
-        if (queryStart !== -1) {
-          const queryString = uri.substring(queryStart + 1);
-          const urlParams = new URLSearchParams(queryString);
-          const urlLimit = urlParams.get('limit');
-          if (urlLimit) {
-            limit = parseInt(urlLimit, 10);
-          }
-        }
-      }
-
-      const articles = articleModel.findAll({ is_favorite: true, limit });
+    () => {
+      const articles = articleModel.findAll({ is_favorite: true, limit: 10 });
       const feedMap = getAllFeedsMap();
 
       const resources: ArticleResource[] = articles.map((article) => ({
@@ -153,9 +96,6 @@ export function registerArticleResources(
       if (typeof uri === 'string') {
         const match = uri.match(/articles:\/\/article\/(\d+)/);
         articleId = match ? parseInt(match[1], 10) : 0;
-      } else if (uri instanceof URL) {
-        const pathParts = uri.pathname.split('/');
-        articleId = parseInt(pathParts[pathParts.length - 1] || '0', 10);
       } else {
         articleId = 0;
       }

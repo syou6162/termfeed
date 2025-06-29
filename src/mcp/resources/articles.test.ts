@@ -55,8 +55,7 @@ describe('registerArticleResources', () => {
         'articles://unread',
         {
           title: 'Unread Articles',
-          description:
-            'Get unread articles from your RSS feeds. Use ?limit=N to specify number of articles (default: 10)',
+          description: 'Get unread articles from your RSS feeds (default: 10 items)',
         },
         expect.any(Function)
       );
@@ -92,7 +91,7 @@ describe('registerArticleResources', () => {
       registerArticleResources(mockServer, mockArticleModel, mockFeedModel);
 
       const unreadResource = registeredResources.get('unread');
-      const result = unreadResource?.handler(new URL('articles://unread?limit=10'));
+      const result = unreadResource?.handler(new URL('articles://unread'));
 
       expect(mockArticleModel.findAll).toHaveBeenCalledWith({ is_read: false, limit: 10 });
       expect(mockFeedModel.findAll).toHaveBeenCalled();
@@ -144,7 +143,7 @@ describe('registerArticleResources', () => {
         'articles://favorites',
         {
           title: 'Favorite Articles',
-          description: 'Get your favorite articles',
+          description: 'Get your favorite articles (default: 10 items)',
         },
         expect.any(Function)
       );
@@ -179,9 +178,9 @@ describe('registerArticleResources', () => {
       registerArticleResources(mockServer, mockArticleModel, mockFeedModel);
 
       const favResource = registeredResources.get('favorites');
-      const result = favResource?.handler(new URL('articles://favorites?limit=20'));
+      const result = favResource?.handler(new URL('articles://favorites'));
 
-      expect(mockArticleModel.findAll).toHaveBeenCalledWith({ is_favorite: true, limit: 20 });
+      expect(mockArticleModel.findAll).toHaveBeenCalledWith({ is_favorite: true, limit: 10 });
 
       const contents = JSON.parse(result?.contents[0].text ?? '[]') as ArticleResourceJSON[];
       expect(contents[0]).toMatchObject({

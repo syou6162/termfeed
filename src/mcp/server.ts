@@ -3,7 +3,6 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { ArticleModel } from '../models/article.js';
 import { FeedModel } from '../models/feed.js';
 import { registerArticleResources } from './resources/articles.js';
-import { registerArticlePresets } from './resources/articles-presets.js';
 
 export async function createMcpServer(
   articleModel: ArticleModel,
@@ -16,7 +15,6 @@ export async function createMcpServer(
 
   // Register resources
   registerArticleResources(server, articleModel, feedModel);
-  registerArticlePresets(server, articleModel, feedModel);
 
   // Connect using stdio transport
   const transport = new StdioServerTransport();
