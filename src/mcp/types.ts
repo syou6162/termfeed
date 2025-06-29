@@ -7,7 +7,3 @@ export interface ArticleResource {
   feedTitle: string;
   author: string | null;
 }
-
-export interface ResourceQueryParams {
-  limit?: number;
-}
