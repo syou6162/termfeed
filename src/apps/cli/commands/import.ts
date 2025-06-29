@@ -2,12 +2,12 @@ import { Command } from 'commander';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import chalk from 'chalk';
-import { DatabaseManager } from '../../models/database.js';
-import { FeedModel } from '../../models/feed.js';
-import { ArticleModel } from '../../models/article.js';
-import { FeedService } from '../../services/feed-service.js';
-import { OPMLService } from '../../services/opml.js';
-import { DuplicateFeedError } from '../../services/errors.js';
+import { DatabaseManager } from '../../../models/database.js';
+import { FeedModel } from '../../../models/feed.js';
+import { ArticleModel } from '../../../models/article.js';
+import { FeedService } from '../../../services/feed-service.js';
+import { OPMLService } from '../../../services/opml.js';
+import { DuplicateFeedError } from '../../../services/errors.js';
 import { createDatabaseManager } from '../utils/database.js';
 
 export const importCommand = new Command('import')

@@ -1,4 +1,4 @@
-import { DatabaseManager } from '../../models/database.js';
+import { DatabaseManager } from '../../../models/database.js';
 import * as path from 'path';
 import * as os from 'os';
 

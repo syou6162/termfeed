@@ -1,8 +1,8 @@
 import { Command } from 'commander';
 import { createMcpServer } from '../../mcp/server.js';
 import { createDatabaseManager } from '../utils/database.js';
-import { FeedModel } from '../../models/feed.js';
-import { ArticleModel } from '../../models/article.js';
+import { FeedModel } from '../../../models/feed.js';
+import { ArticleModel } from '../../../models/article.js';
 
 export function createMcpServerCommand(): Command {
   const command = new Command('mcp-server');

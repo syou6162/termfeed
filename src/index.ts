@@ -12,7 +12,7 @@ import {
   exportCommand,
   importCommand,
   createMcpServerCommand,
-} from './cli/commands/index.js';
+} from './apps/cli/commands/index.js';
 
 export const VERSION = '0.1.0';
 

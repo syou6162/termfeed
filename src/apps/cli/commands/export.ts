@@ -2,8 +2,8 @@ import { Command } from 'commander';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import chalk from 'chalk';
-import { FeedModel } from '../../models/feed.js';
-import { OPMLService, ExportFormat } from '../../services/opml.js';
+import { FeedModel } from '../../../models/feed.js';
+import { OPMLService, ExportFormat } from '../../../services/opml.js';
 import { createDatabaseManager } from '../utils/database.js';
 
 export const exportCommand = new Command('export')

@@ -18,7 +18,7 @@
     "lint:fix": "eslint src --fix",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,md}\"",
     "typecheck": "tsc --noEmit",
-    "migrate": "tsx src/cli/migrate.ts",
+    "migrate": "tsx src/apps/cli/migrate.ts",
     "prepare": "npm run build"
   },
   "keywords": [
