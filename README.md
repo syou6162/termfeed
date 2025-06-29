@@ -98,31 +98,17 @@ termfeed add <RSS_URL>
 # 例：はてなブックマークの人気エントリーを追加
 termfeed add https://b.hatena.ne.jp/hotentry.rss
 
-# フィード一覧を表示
-termfeed list
-
 # フィードを削除
 termfeed rm <FEED_ID>
+
+# フィード一覧を確認（エクスポート機能を使用）
+termfeed export -  # 標準出力に表示
 ```
 
 #### 記事の閲覧
 
-```bash
-# すべての記事を表示（最新10件）
-termfeed articles
-
-# 特定のフィードの記事を表示
-termfeed articles --feed <FEED_ID>
-
-# 未読記事のみ表示
-termfeed articles --unread
-
-# お気に入り記事のみ表示
-termfeed articles --favorites
-
-# 表示件数を指定
-termfeed articles --limit 20
-```
+**TUIモード（`termfeed tui`）を使用してください。**
+TUIでは未読記事の閲覧、お気に入り管理、ブラウザで開くなどの機能がインタラクティブに利用できます。
 
 #### フィードの更新
 
