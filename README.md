@@ -193,11 +193,15 @@ claude mcp add --scope user termfeed -- termfeed mcp-server
 
 Claude Code内で以下のようにtermfeedのデータにアクセスできます：
 
+**リソース（データ読み取り）:**
 ```
 @termfeed:articles://unread          # 未読記事10件（デフォルト）
 @termfeed:articles://favorites       # お気に入り記事10件
 @termfeed:articles://article/123     # 記事ID 123の詳細（全文）
 ```
+
+**ツール（操作実行）:**
+- `update_all_feeds`: 全フィードを更新して新しい記事を取得
 
 #### 使用例
 

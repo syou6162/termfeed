@@ -14,6 +14,7 @@ vi.mock('@modelcontextprotocol/sdk/server/mcp.js', () => ({
   McpServer: vi.fn().mockImplementation(() => ({
     connect: vi.fn(),
     registerResource: vi.fn(),
+    tool: vi.fn(),
     close: vi.fn(),
   })),
 }));
@@ -35,6 +36,7 @@ describe('createMcpServer', () => {
     expect(server).toBeDefined();
     expect(server.connect).toHaveBeenCalled();
     expect(server.registerResource).toHaveBeenCalled();
+    expect(server.tool).toHaveBeenCalled();
   });
 
   it('should use stdio transport', async () => {
