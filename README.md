@@ -23,14 +23,19 @@ termfeedは、ターミナル内で完全に動作するローカルRSSリーダ
 ### 💾 データ管理
 - ローカルSQLiteで記事、既読状態、お気に入りを管理
 - 完全ローカル動作で外部サービスに依存しない設計
-- MCP Server化によりClaude Codeからの問い合わせ対応
+
+### 🤖 MCP（Model Context Protocol）対応
+- Claude CodeなどのAIエージェントから記事データにアクセス可能
+- RESTful APIではなくMCP経由でデータ提供
+- リアルタイムな記事分析・要約が可能
 
 ## 技術スタック
 
 - TypeScript
 - Ink（ReactベースのターミナルUI）
-- better-sqlite3
-- axios
+- better-sqlite3（SQLiteデータベース）
+- axios（HTTP通信）
+- @modelcontextprotocol/sdk（MCP連携）
 
 ## インストール
 
@@ -174,6 +179,58 @@ termfeed import feeds.xml --format opml
 **対応フォーマット：**
 - **OPML形式**: 標準的なRSSリーダー間でのデータ移行に使用（.opml, .xml）
 - **テキスト形式**: シンプルな1行1URLのフォーマット。コメント行（#で始まる）対応
+
+### MCPサーバー（AIエージェント連携）
+
+termfeedはMCP（Model Context Protocol）サーバーとして動作し、Claude CodeなどのAIエージェントから記事データにアクセスできます。
+
+#### MCPサーバーの起動
+
+```bash
+# MCPサーバーとして起動（stdio通信）
+termfeed mcp-server
+```
+
+#### Claude Codeでの使用方法
+
+Claude Codeの設定ファイル `~/.config/claude/claude_desktop_config.json` に以下を追加：
+
+```json
+{
+  "mcpServers": {
+    "termfeed": {
+      "command": "termfeed",
+      "args": ["mcp-server"],
+      "env": {}
+    }
+  }
+}
+```
+
+#### 利用可能なリソース
+
+Claude Code内で以下のようにtermfeedのデータにアクセスできます：
+
+```
+@termfeed:articles://unread          # 未読記事10件（デフォルト）
+@termfeed:articles://favorites       # お気に入り記事10件
+@termfeed:articles://article/123     # 記事ID 123の詳細（全文）
+```
+
+#### 使用例
+
+Claude Codeでの自然言語クエリ例：
+
+- 「termfeedの未読記事を要約して」
+- 「お気に入りの記事からトレンドを分析して」  
+- 「記事ID 456の内容を教えて」
+
+#### MCPの利点
+
+- **リアルタイム**: 最新の記事データに即座にアクセス
+- **構造化**: JSON形式でメタデータも含む詳細情報
+- **セキュア**: ローカル通信のみ、外部APIなし
+- **効率的**: 必要なデータのみを動的に取得
 
 ### データベースの場所
 
