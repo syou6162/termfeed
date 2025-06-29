@@ -1,8 +1,9 @@
 // RSS Crawler
 export { RSSCrawler } from './rss-crawler.js';
 
-// Feed Service
+// Services
 export { FeedService } from './feed-service.js';
+export { ArticleService } from './article-service.js';
 
 // Types are exported from @/types
 

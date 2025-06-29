@@ -11,7 +11,7 @@ import type {
   UpdateAllFeedsResult,
   FeedUpdateSuccess,
   FeedUpdateFailure,
-  FeedServiceImpl,
+  FeedService as IFeedService,
 } from '@/types';
 import {
   DuplicateFeedError,
@@ -22,7 +22,7 @@ import {
 
 export type { FeedUpdateResult, AddFeedResult };
 
-export class FeedService implements FeedServiceImpl {
+export class FeedService implements IFeedService {
   private feedModel: FeedModel;
   private articleModel: ArticleModel;
   private crawler: RSSCrawler;

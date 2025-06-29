@@ -36,13 +36,3 @@ export type FeedUpdateFailure = {
 };
 
 export type FeedUpdateOutcome = FeedUpdateSuccess | FeedUpdateFailure;
-
-export type UpdateAllFeedsResult = {
-  successful: FeedUpdateSuccess[];
-  failed: FeedUpdateFailure[];
-  summary: {
-    totalFeeds: number;
-    successCount: number;
-    failureCount: number;
-  };
-};

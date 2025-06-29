@@ -1,4 +1,10 @@
-import type { Feed, CreateFeedInput, FeedService } from '@/types';
+import type {
+  Feed,
+  FeedService,
+  AddFeedResult,
+  FeedUpdateResult,
+  UpdateAllFeedsResult,
+} from '@/types';
 
 export class MockFeedService implements FeedService {
   private feeds: Feed[] = [
@@ -29,27 +35,23 @@ export class MockFeedService implements FeedService {
 
   private nextId = 4;
 
-  async addFeed(input: CreateFeedInput): Promise<Feed> {
+  async addFeed(url: string): Promise<AddFeedResult> {
     // Simulate async operation
     await new Promise((resolve) => setTimeout(resolve, 10));
 
     const newFeed: Feed = {
       id: this.nextId++,
-      ...input,
+      url,
+      title: `Feed ${this.nextId}`,
+      description: `Description for ${url}`,
       last_updated_at: new Date(),
       created_at: new Date(),
     };
     this.feeds.push(newFeed);
-    return newFeed;
+    return { feed: newFeed, articlesCount: 5 };
   }
 
-  async getAllFeeds(): Promise<Feed[]> {
-    await new Promise((resolve) => setTimeout(resolve, 5));
-    return [...this.feeds];
-  }
-
-  async removeFeed(feedId: number): Promise<boolean> {
-    await new Promise((resolve) => setTimeout(resolve, 5));
+  removeFeed(feedId: number): boolean {
     const index = this.feeds.findIndex((feed) => feed.id === feedId);
     if (index === -1) {
       return false;
@@ -58,28 +60,103 @@ export class MockFeedService implements FeedService {
     return true;
   }
 
-  async updateFeed(feedId: number): Promise<void> {
+  async updateFeed(feedId: number): Promise<FeedUpdateResult> {
     await new Promise((resolve) => setTimeout(resolve, 5));
     const feed = this.feeds.find((f) => f.id === feedId);
-    if (feed) {
-      feed.last_updated_at = new Date();
+    if (!feed) {
+      throw new Error(`Feed ${feedId} not found`);
     }
+    feed.last_updated_at = new Date();
+    return {
+      feedId,
+      newArticlesCount: 3,
+      updatedArticlesCount: 2,
+      totalArticlesCount: 10,
+    };
   }
 
-  async updateAllFeeds(): Promise<void> {
+  async updateAllFeeds(): Promise<UpdateAllFeedsResult> {
     await new Promise((resolve) => setTimeout(resolve, 10));
-    for (const feed of this.feeds) {
-      feed.last_updated_at = new Date();
-    }
+    return {
+      successful: this.feeds.map((feed) => ({
+        status: 'success' as const,
+        feedId: feed.id,
+        result: {
+          feedId: feed.id,
+          newArticlesCount: 3,
+          updatedArticlesCount: 2,
+          totalArticlesCount: 10,
+        },
+      })),
+      failed: [],
+      summary: {
+        totalFeeds: this.feeds.length,
+        successCount: this.feeds.length,
+        failureCount: 0,
+      },
+    };
+  }
+
+  markArticleAsRead(_articleId: number): boolean {
+    return true;
+  }
+
+  markArticleAsUnread(_articleId: number): boolean {
+    return true;
+  }
+
+  toggleArticleFavorite(_articleId: number): boolean {
+    return true;
+  }
+
+  markAllAsRead(_feedId?: number): void {
+    // Mock implementation
+  }
+
+  getUnreadCount(_feedId?: number): number {
+    return 5;
+  }
+
+  getFeedList(): Feed[] {
+    return [...this.feeds];
+  }
+
+  getArticles(_options?: {
+    feed_id?: number;
+    is_read?: boolean;
+    is_favorite?: boolean;
+    limit?: number;
+    offset?: number;
+  }): import('@/types').Article[] {
+    return [];
+  }
+
+  getFeedById(feedId: number): Feed | null {
+    return this.feeds.find((f) => f.id === feedId) || null;
+  }
+
+  getArticleById(_articleId: number): import('@/types').Article | null {
+    return null;
+  }
+
+  getUnreadCountsForAllFeeds(): { [feedId: number]: number } {
+    const counts: { [feedId: number]: number } = {};
+    this.feeds.forEach((feed) => {
+      counts[feed.id] = 5;
+    });
+    return counts;
   }
 
   async validateFeedUrl(url: string): Promise<{ title: string; description?: string }> {
-    // Mock validation - 実際の実装ではRSSフィードを取得してパース
     await new Promise((resolve) => setTimeout(resolve, 5));
-    const urlObj = new globalThis.URL(url);
     return {
-      title: `Feed from ${urlObj.hostname}`,
-      description: `RSS feed from ${url}`,
+      title: `Feed from ${url}`,
+      description: `Description for ${url}`,
     };
+  }
+
+  async getAllFeeds(): Promise<Feed[]> {
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    return [...this.feeds];
   }
 }

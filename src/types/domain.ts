@@ -25,6 +25,23 @@ export type Article = {
   updated_at: Date;
 };
 
+// DBから取得したArticleの生データ
+export type ArticleRow = {
+  id: number;
+  feed_id: number;
+  title: string;
+  url: string;
+  content?: string;
+  summary?: string;
+  author?: string;
+  published_at: number;
+  is_read: number;
+  is_favorite: number;
+  thumbnail_url?: string;
+  created_at: number;
+  updated_at: number;
+};
+
 export type CreateFeedInput = {
   url: string;
   title: string;

@@ -57,3 +57,13 @@ export type AddFeedResult = {
   feed: import('./domain').Feed;
   articlesCount: number;
 };
+
+export type UpdateAllFeedsResult = {
+  successful: import('./options').FeedUpdateSuccess[];
+  failed: import('./options').FeedUpdateFailure[];
+  summary: {
+    totalFeeds: number;
+    successCount: number;
+    failureCount: number;
+  };
+};
