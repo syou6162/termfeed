@@ -29,7 +29,7 @@ termfeedは、ターミナルで動作するRSSリーダーです。Vim風のキ
   - RSSFetchError, RSSParseError, FeedUpdateError, DuplicateFeedError, FeedNotFoundError
 
 ### プレゼンテーション層 (src/apps/)
-- **src/apps/cli/commands/**: 各CLIサブコマンドの実装（add、list、articles、update、rm、tui、export、import）
+- **src/apps/cli/commands/**: 各CLIサブコマンドの実装（add、update、rm、tui、export、import、mcp-server）
 - **src/apps/tui/**: ターミナルUI実装（Ink/React）
   - `App.tsx`: メインコンポーネント、自動既読機能実装
   - `components/`: ArticleList, FeedList, TwoPaneLayout, HelpOverlay
@@ -75,8 +75,8 @@ npm run migrate  # schema.sqlを実行してテーブル作成
 
 # CLIコマンド例（開発時）
 npm run dev add https://example.com/feed.rss
-npm run dev list
-npm run dev articles --unread
+npm run dev update  # 全フィード更新
+npm run dev rm 1  # フィードID=1を削除
 npm run dev tui  # TUIモード
 npm run dev export feeds.opml
 npm run dev import feeds.txt
