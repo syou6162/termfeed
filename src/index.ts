@@ -4,7 +4,6 @@ import { Command } from 'commander';
 import { fileURLToPath } from 'url';
 import {
   createAddCommand,
-  createUpdateCommand,
   createRmCommand,
   createTuiCommand,
   exportCommand,
@@ -23,7 +22,6 @@ program
 
 // Register subcommands
 program.addCommand(createAddCommand());
-program.addCommand(createUpdateCommand());
 program.addCommand(createRmCommand());
 program.addCommand(createTuiCommand());
 program.addCommand(exportCommand);
