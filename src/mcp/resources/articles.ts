@@ -22,8 +22,17 @@ export function registerArticleResources(
       title: 'Unread Articles',
       description: 'Get unread articles from your RSS feeds',
     },
-    (uri: URL) => {
-      const url = new URL(uri.href);
+    (uri: unknown) => {
+      // URIを安全にURL オブジェクトに変換
+      let url: URL;
+      if (typeof uri === 'string') {
+        url = new URL(uri);
+      } else if (uri instanceof URL) {
+        url = uri;
+      } else {
+        // フォールバック
+        url = new URL('articles://unread');
+      }
       const limit = parseInt(url.searchParams.get('limit') || '50', 10);
 
       const articles = articleModel.findAll({ is_read: false, limit });
@@ -41,7 +50,7 @@ export function registerArticleResources(
       return {
         contents: [
           {
-            uri: uri.href,
+            uri: url.toString(),
             mimeType: 'application/json',
             text: JSON.stringify(resources, null, 2),
           },
@@ -58,8 +67,17 @@ export function registerArticleResources(
       title: 'Favorite Articles',
       description: 'Get your favorite articles',
     },
-    (uri: URL) => {
-      const url = new URL(uri.href);
+    (uri: unknown) => {
+      // URIを安全にURL オブジェクトに変換
+      let url: URL;
+      if (typeof uri === 'string') {
+        url = new URL(uri);
+      } else if (uri instanceof URL) {
+        url = uri;
+      } else {
+        // フォールバック
+        url = new URL('articles://favorites');
+      }
       const limit = parseInt(url.searchParams.get('limit') || '50', 10);
 
       const articles = articleModel.findAll({ is_favorite: true, limit });
@@ -77,7 +95,7 @@ export function registerArticleResources(
       return {
         contents: [
           {
-            uri: uri.href,
+            uri: url.toString(),
             mimeType: 'application/json',
             text: JSON.stringify(resources, null, 2),
           },
