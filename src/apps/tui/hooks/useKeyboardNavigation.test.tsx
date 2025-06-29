@@ -11,7 +11,7 @@ function TestComponent({
   onArticleSelectionChange = vi.fn(),
   onFeedSelectionChange = vi.fn(),
   onOpenInBrowser = vi.fn(),
-  onRefresh = vi.fn(),
+  onRefreshAll = vi.fn(),
   onToggleFavorite = vi.fn(),
   onToggleHelp = vi.fn(),
   onQuit = vi.fn(),
@@ -24,7 +24,7 @@ function TestComponent({
     onArticleSelectionChange,
     onFeedSelectionChange,
     onOpenInBrowser,
-    onRefresh,
+    onRefreshAll,
     onToggleFavorite,
     onToggleHelp,
     onQuit,
@@ -38,7 +38,7 @@ describe('useKeyboardNavigation', () => {
     onArticleSelectionChange: ReturnType<typeof vi.fn>;
     onFeedSelectionChange: ReturnType<typeof vi.fn>;
     onOpenInBrowser: ReturnType<typeof vi.fn>;
-    onRefresh: ReturnType<typeof vi.fn>;
+    onRefreshAll: ReturnType<typeof vi.fn>;
     onToggleFavorite: ReturnType<typeof vi.fn>;
     onToggleHelp: ReturnType<typeof vi.fn>;
     onQuit: ReturnType<typeof vi.fn>;
@@ -49,7 +49,7 @@ describe('useKeyboardNavigation', () => {
       onArticleSelectionChange: vi.fn(),
       onFeedSelectionChange: vi.fn(),
       onOpenInBrowser: vi.fn(),
-      onRefresh: vi.fn(),
+      onRefreshAll: vi.fn(),
       onToggleFavorite: vi.fn(),
       onToggleHelp: vi.fn(),
       onQuit: vi.fn(),
@@ -183,12 +183,12 @@ describe('useKeyboardNavigation', () => {
       expect(mockHandlers.onToggleFavorite).toHaveBeenCalledOnce();
     });
 
-    it('rキーでフィードを更新する', () => {
-      const { stdin } = render(<TestComponent onRefresh={mockHandlers.onRefresh} />);
+    it('rキーで全フィードを更新する', () => {
+      const { stdin } = render(<TestComponent onRefreshAll={mockHandlers.onRefreshAll} />);
 
       stdin.write('r');
 
-      expect(mockHandlers.onRefresh).toHaveBeenCalledOnce();
+      expect(mockHandlers.onRefreshAll).toHaveBeenCalledOnce();
     });
 
     it('qキーでアプリを終了する', () => {

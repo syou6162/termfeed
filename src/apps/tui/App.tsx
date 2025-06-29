@@ -102,7 +102,7 @@ export function App() {
     [feedService]
   );
 
-  const updateFeeds = useCallback(async () => {
+  const updateAllFeeds = useCallback(async () => {
     try {
       setIsLoading(true);
       setError('');
@@ -118,7 +118,7 @@ export function App() {
     } finally {
       setIsLoading(false);
     }
-  }, [selectedFeedIndex, feeds, loadFeeds, loadArticles]);
+  }, [selectedFeedIndex, feeds, loadFeeds, loadArticles, feedService]);
 
   const handleFeedSelectionChange = useCallback(
     (index: number) => {
@@ -297,7 +297,7 @@ export function App() {
     onArticleSelectionChange: setSelectedArticleIndex,
     onFeedSelectionChange: handleFeedSelectionChange,
     onOpenInBrowser: handleArticleSelect,
-    onRefresh: () => void updateFeeds(),
+    onRefreshAll: () => void updateAllFeeds(),
     onToggleFavorite: handleToggleFavorite,
     onToggleHelp: handleToggleHelp,
     onQuit: handleQuit,
