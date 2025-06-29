@@ -2,13 +2,17 @@
 
 import type { Feed, Article } from './domain';
 import type { FeedUpdateResult, AddFeedResult, CrawlResult, UpdateAllFeedsResult } from './dto';
+import type { UpdateProgressCallback, UpdateCancelledResult } from './options';
 
 // FeedServiceの型定義（実装クラスに基づく）
 export type FeedService = {
-  addFeed(url: string): Promise<AddFeedResult>;
+  addFeed(url: string, abortSignal?: AbortSignal): Promise<AddFeedResult>;
   removeFeed(feedId: number): boolean;
-  updateFeed(feedId: number): Promise<FeedUpdateResult>;
-  updateAllFeeds(): Promise<UpdateAllFeedsResult>;
+  updateFeed(feedId: number, abortSignal?: AbortSignal): Promise<FeedUpdateResult>;
+  updateAllFeeds(
+    progressCallback?: UpdateProgressCallback,
+    abortSignal?: AbortSignal
+  ): Promise<UpdateAllFeedsResult | UpdateCancelledResult>;
   markArticleAsRead(articleId: number): boolean;
   markArticleAsUnread(articleId: number): boolean;
   toggleArticleFavorite(articleId: number): boolean;
@@ -46,5 +50,5 @@ export type ArticleService = {
 
 // RSSCrawlerの型定義
 export type RSSCrawler = {
-  crawl(url: string): Promise<CrawlResult>;
+  crawl(url: string, abortSignal?: AbortSignal): Promise<CrawlResult>;
 };

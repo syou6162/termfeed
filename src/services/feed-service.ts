@@ -12,6 +12,8 @@ import type {
   FeedUpdateSuccess,
   FeedUpdateFailure,
   FeedService as IFeedService,
+  UpdateProgressCallback,
+  UpdateCancelledResult,
 } from '@/types';
 import {
   DuplicateFeedError,
@@ -33,7 +35,7 @@ export class FeedService implements IFeedService {
     this.crawler = crawler || new RSSCrawler();
   }
 
-  async addFeed(url: string): Promise<AddFeedResult> {
+  async addFeed(url: string, abortSignal?: AbortSignal): Promise<AddFeedResult> {
     const existingFeed = this.feedModel.findByUrl(url);
     if (existingFeed) {
       throw new DuplicateFeedError(`Feed already exists: ${url}`, url);
@@ -41,7 +43,7 @@ export class FeedService implements IFeedService {
 
     let crawlResult: CrawlResult;
     try {
-      crawlResult = await this.crawler.crawl(url);
+      crawlResult = await this.crawler.crawl(url, abortSignal);
     } catch (error) {
       throw new FeedManagementError(
         `Failed to fetch feed: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -90,7 +92,7 @@ export class FeedService implements IFeedService {
     return this.feedModel.delete(feedId);
   }
 
-  async updateFeed(feedId: number): Promise<FeedUpdateResult> {
+  async updateFeed(feedId: number, abortSignal?: AbortSignal): Promise<FeedUpdateResult> {
     const feed = this.feedModel.findById(feedId);
     if (!feed) {
       throw new FeedNotFoundError(`Feed not found: ${feedId}`, feedId);
@@ -98,7 +100,7 @@ export class FeedService implements IFeedService {
 
     let crawlResult: CrawlResult;
     try {
-      crawlResult = await this.crawler.crawl(feed.url);
+      crawlResult = await this.crawler.crawl(feed.url, abortSignal);
     } catch (error) {
       throw new FeedUpdateError(`Failed to update feed ${feedId}: ${feed.url}`, feedId, feed.url, {
         cause: error,
@@ -145,14 +147,40 @@ export class FeedService implements IFeedService {
     };
   }
 
-  async updateAllFeeds(): Promise<UpdateAllFeedsResult> {
+  async updateAllFeeds(
+    progressCallback?: UpdateProgressCallback,
+    abortSignal?: AbortSignal
+  ): Promise<UpdateAllFeedsResult | UpdateCancelledResult> {
     const feeds = this.feedModel.findAll();
     const successful: FeedUpdateSuccess[] = [];
     const failed: FeedUpdateFailure[] = [];
 
-    for (const feed of feeds) {
+    for (let i = 0; i < feeds.length; i++) {
+      const feed = feeds[i];
+
+      // キャンセルチェック
+      if (abortSignal?.aborted) {
+        return {
+          cancelled: true,
+          processedFeeds: i,
+          totalFeeds: feeds.length,
+          successful,
+          failed,
+        };
+      }
+
+      // 進捗を通知
+      if (progressCallback) {
+        progressCallback({
+          totalFeeds: feeds.length,
+          currentIndex: i + 1,
+          currentFeedTitle: feed.title || 'Unknown',
+          currentFeedUrl: feed.url,
+        });
+      }
+
       try {
-        const result = await this.updateFeed(feed.id);
+        const result = await this.updateFeed(feed.id, abortSignal);
         successful.push({
           status: 'success',
           feedId: feed.id,

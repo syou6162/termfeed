@@ -316,6 +316,7 @@ describe('RSSCrawler', () => {
 
       expect(axios.get).toHaveBeenCalledWith('https://example.com/rss.xml', {
         timeout: 30000,
+        signal: undefined,
         headers: {
           'User-Agent': 'termfeed/0.1.0',
           Accept: 'application/rss+xml, application/atom+xml, application/xml, text/xml',
@@ -351,6 +352,7 @@ describe('RSSCrawler', () => {
 
       expect(axios.get).toHaveBeenCalledWith('https://example.com/rss.xml', {
         timeout: 5000,
+        signal: undefined,
         headers: {
           'User-Agent': 'custom-agent/1.0',
           Accept: 'application/rss+xml, application/atom+xml, application/xml, text/xml',
@@ -412,6 +414,51 @@ describe('RSSCrawler', () => {
 
       expect(result.articles[0].is_read).toBe(false);
       expect(result.articles[0].is_favorite).toBe(false);
+    });
+
+    it('キャンセルエラーでRSSFetchErrorを投げる', async () => {
+      const cancelError = new AxiosError('Request cancelled');
+      cancelError.code = 'ERR_CANCELED';
+
+      vi.mocked(axios.get).mockRejectedValue(cancelError);
+      vi.mocked(axios.isAxiosError).mockReturnValue(true);
+
+      await expect(crawler.crawl('https://example.com/rss.xml')).rejects.toThrow(RSSFetchError);
+      await expect(crawler.crawl('https://example.com/rss.xml')).rejects.toThrow(
+        'Request cancelled'
+      );
+    });
+
+    it('AbortSignalがaxiosに正しく渡される', async () => {
+      const mockRSSData = `
+        <?xml version="1.0" encoding="UTF-8" ?>
+        <rss version="2.0">
+          <channel>
+            <title>Test Feed</title>
+          </channel>
+        </rss>
+      `;
+
+      vi.mocked(axios.get).mockResolvedValue({
+        data: mockRSSData,
+        status: 200,
+        statusText: 'OK',
+        headers: {},
+        config: {} as InternalAxiosRequestConfig,
+      });
+
+      const abortController = new AbortController();
+      await crawler.crawl('https://example.com/rss.xml', abortController.signal);
+
+      expect(axios.get).toHaveBeenCalledWith('https://example.com/rss.xml', {
+        timeout: 30000,
+        signal: abortController.signal,
+        headers: {
+          'User-Agent': 'termfeed/0.1.0',
+          Accept: 'application/rss+xml, application/atom+xml, application/xml, text/xml',
+        },
+        responseType: 'text',
+      });
     });
   });
 });
