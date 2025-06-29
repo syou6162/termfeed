@@ -19,7 +19,7 @@ type KeyboardNavigationProps = {
   onArticleSelectionChange: (index: number) => void;
   onFeedSelectionChange: (index: number) => void;
   onOpenInBrowser?: () => void;
-  onRefresh?: () => void;
+  onRefreshAll?: () => void;
   onToggleFavorite?: () => void;
   onToggleHelp?: () => void;
   onQuit?: () => void;
@@ -29,6 +29,8 @@ type KeyboardNavigationProps = {
   onPageUp?: () => void;
   onScrollOffsetChange?: (offset: number) => void;
   onScrollToEnd?: () => void;
+  onCancel?: () => void;
+  onToggleFailedFeeds?: () => void;
 };
 
 export function useKeyboardNavigation({
@@ -39,7 +41,7 @@ export function useKeyboardNavigation({
   onArticleSelectionChange,
   onFeedSelectionChange,
   onOpenInBrowser,
-  onRefresh,
+  onRefreshAll,
   onToggleFavorite,
   onToggleHelp,
   onQuit,
@@ -49,6 +51,8 @@ export function useKeyboardNavigation({
   onPageUp,
   onScrollOffsetChange,
   onScrollToEnd,
+  onCancel,
+  onToggleFailedFeeds,
 }: KeyboardNavigationProps) {
   const handleInput = useCallback(
     (input: string, key: KeyEvent) => {
@@ -58,9 +62,9 @@ export function useKeyboardNavigation({
         return;
       }
 
-      // 更新
+      // 全フィード更新
       if (input === 'r') {
-        onRefresh?.();
+        onRefreshAll?.();
         return;
       }
 
@@ -73,6 +77,18 @@ export function useKeyboardNavigation({
       // ヘルプ表示トグル
       if (input === '?') {
         onToggleHelp?.();
+        return;
+      }
+
+      // キャンセル (ESC)
+      if (key.escape) {
+        onCancel?.();
+        return;
+      }
+
+      // エラー詳細表示トグル (e)
+      if (input === 'e') {
+        onToggleFailedFeeds?.();
         return;
       }
 
@@ -141,7 +157,7 @@ export function useKeyboardNavigation({
       onArticleSelectionChange,
       onFeedSelectionChange,
       onOpenInBrowser,
-      onRefresh,
+      onRefreshAll,
       onToggleFavorite,
       onToggleHelp,
       onQuit,
@@ -151,6 +167,8 @@ export function useKeyboardNavigation({
       onPageUp,
       onScrollOffsetChange,
       onScrollToEnd,
+      onCancel,
+      onToggleFailedFeeds,
     ]
   );
 

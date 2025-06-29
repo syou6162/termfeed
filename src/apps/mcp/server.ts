@@ -6,6 +6,7 @@ import { dirname, join } from 'node:path';
 import { ArticleModel } from '../../models/article.js';
 import { FeedModel } from '../../models/feed.js';
 import { registerArticleResources } from './resources/articles.js';
+import { registerFeedTools } from './tools/feeds.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -25,6 +26,9 @@ export async function createMcpServer(
 
   // Register resources
   registerArticleResources(server, articleModel, feedModel);
+
+  // Register tools
+  registerFeedTools(server, feedModel, articleModel);
 
   // Connect using stdio transport
   const transport = new StdioServerTransport();

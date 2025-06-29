@@ -4,19 +4,20 @@
 
 ## 📁 ファイル構成
 
-| ファイル | 役割 | 例 |
-|---------|------|-----|
-| `domain.ts` | DBエンティティ・ドメインモデル | `Feed`, `Article`, `CreateFeedInput` |
-| `dto.ts` | データ転送・外部システム連携 | `RSSItem`, `CrawlResult`, `AddFeedResult` |
-| `options.ts` | 関数引数・設定・フィルタ条件 | `ArticleQueryOptions`, `ServiceError` |
-| `services.ts` | サービス層のインターフェース | `FeedService`, `ArticleService` |
-| `index.ts` | すべての型の再エクスポート | - |
+| ファイル      | 役割                           | 例                                        |
+| ------------- | ------------------------------ | ----------------------------------------- |
+| `domain.ts`   | DBエンティティ・ドメインモデル | `Feed`, `Article`, `CreateFeedInput`      |
+| `dto.ts`      | データ転送・外部システム連携   | `RSSItem`, `CrawlResult`, `AddFeedResult` |
+| `options.ts`  | 関数引数・設定・フィルタ条件   | `ArticleQueryOptions`, `ServiceError`     |
+| `services.ts` | サービス層のインターフェース   | `FeedService`, `ArticleService`           |
+| `index.ts`    | すべての型の再エクスポート     | -                                         |
 
 ## 🚀 クイックリファレンス
 
 ### 新しい型を追加する場合
 
 1. **DBに保存されるエンティティ** → `domain.ts`
+
    ```typescript
    export type User = {
      id: number;
@@ -26,6 +27,7 @@
    ```
 
 2. **APIレスポンスや外部データ** → `dto.ts`
+
    ```typescript
    export type ApiResponse = {
      success: boolean;
@@ -34,6 +36,7 @@
    ```
 
 3. **関数の引数やオプション** → `options.ts`
+
    ```typescript
    export type SearchOptions = {
      query: string;

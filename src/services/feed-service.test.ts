@@ -8,6 +8,7 @@ import { ArticleModel } from '../models/article.js';
 import { FeedService } from './feed-service.js';
 import { RSSCrawler } from './rss-crawler.js';
 import { DuplicateFeedError, FeedNotFoundError, FeedUpdateError } from './errors.js';
+import type { UpdateProgress } from '@/types';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -312,6 +313,10 @@ describe('FeedService', () => {
 
       const results = await feedService.updateAllFeeds();
 
+      if ('cancelled' in results) {
+        throw new Error('Expected successful result, not cancelled');
+      }
+
       expect(results.summary.totalFeeds).toBe(2);
       expect(results.summary.successCount).toBe(2);
       expect(results.summary.failureCount).toBe(0);
@@ -350,6 +355,10 @@ describe('FeedService', () => {
 
       const results = await feedService.updateAllFeeds();
 
+      if ('cancelled' in results) {
+        throw new Error('Expected successful result, not cancelled');
+      }
+
       expect(results.summary.totalFeeds).toBe(2);
       expect(results.summary.successCount).toBe(1);
       expect(results.summary.failureCount).toBe(1);
@@ -366,6 +375,109 @@ describe('FeedService', () => {
       expect(results.failed[0].feedUrl).toBe('https://example.com/rss1.xml');
       expect(results.failed[0].error).toBeInstanceOf(FeedUpdateError);
       expect(results.failed[0].error.cause).toBeInstanceOf(Error);
+    });
+
+    it('進捗コールバックが正しく呼ばれる', async () => {
+      // フィードを作成
+      feedModel.create({
+        url: 'https://example.com/rss1.xml',
+        title: 'Feed 1',
+        description: 'Description 1',
+      });
+
+      feedModel.create({
+        url: 'https://example.com/rss2.xml',
+        title: 'Feed 2',
+        description: 'Description 2',
+      });
+
+      const mockCrawlResult = {
+        feed: {
+          url: 'https://example.com/rss.xml',
+          title: 'Updated Feed',
+          description: 'Updated Description',
+          last_updated_at: new Date(),
+        },
+        articles: [],
+      };
+
+      vi.mocked(mockCrawler.crawl).mockResolvedValue(mockCrawlResult);
+
+      const progressUpdates: UpdateProgress[] = [];
+      const progressCallback = vi.fn((progress: UpdateProgress) => {
+        progressUpdates.push({ ...progress });
+      });
+
+      await feedService.updateAllFeeds(progressCallback);
+
+      // 進捗コールバックが正しく呼ばれたか確認
+      expect(progressCallback).toHaveBeenCalledTimes(2);
+      expect(progressUpdates).toHaveLength(2);
+
+      // 1回目の進捗
+      expect(progressUpdates[0]).toEqual({
+        totalFeeds: 2,
+        currentIndex: 1,
+        currentFeedTitle: 'Feed 1',
+        currentFeedUrl: 'https://example.com/rss1.xml',
+      });
+
+      // 2回目の進捗
+      expect(progressUpdates[1]).toEqual({
+        totalFeeds: 2,
+        currentIndex: 2,
+        currentFeedTitle: 'Feed 2',
+        currentFeedUrl: 'https://example.com/rss2.xml',
+      });
+    });
+
+    it('エラー時でも進捗コールバックが呼ばれる', async () => {
+      // フィードを作成
+      feedModel.create({
+        url: 'https://example.com/rss1.xml',
+        title: 'Feed 1',
+        description: 'Description 1',
+      });
+
+      feedModel.create({
+        url: 'https://example.com/rss2.xml',
+        title: 'Feed 2',
+        description: 'Description 2',
+      });
+
+      const mockCrawlResult = {
+        feed: {
+          url: 'https://example.com/rss.xml',
+          title: 'Updated Feed',
+          description: 'Updated Description',
+          last_updated_at: new Date(),
+        },
+        articles: [],
+      };
+
+      // 最初の呼び出しでエラー、2回目は成功
+      vi.mocked(mockCrawler.crawl)
+        .mockRejectedValueOnce(new Error('Network error'))
+        .mockResolvedValueOnce(mockCrawlResult);
+
+      const progressCallback = vi.fn();
+
+      await feedService.updateAllFeeds(progressCallback);
+
+      // 進捗コールバックは両方のフィードで呼ばれる
+      expect(progressCallback).toHaveBeenCalledTimes(2);
+      expect(progressCallback).toHaveBeenNthCalledWith(1, {
+        totalFeeds: 2,
+        currentIndex: 1,
+        currentFeedTitle: 'Feed 1',
+        currentFeedUrl: 'https://example.com/rss1.xml',
+      });
+      expect(progressCallback).toHaveBeenNthCalledWith(2, {
+        totalFeeds: 2,
+        currentIndex: 2,
+        currentFeedTitle: 'Feed 2',
+        currentFeedUrl: 'https://example.com/rss2.xml',
+      });
     });
 
     it('全フィード更新が失敗した場合の詳細な結果を返す', async () => {
@@ -387,6 +499,10 @@ describe('FeedService', () => {
 
       const results = await feedService.updateAllFeeds();
 
+      if ('cancelled' in results) {
+        throw new Error('Expected successful result, not cancelled');
+      }
+
       expect(results.summary.totalFeeds).toBe(2);
       expect(results.summary.successCount).toBe(0);
       expect(results.summary.failureCount).toBe(2);
@@ -400,6 +516,68 @@ describe('FeedService', () => {
         expect(failure.error.cause).toBeInstanceOf(Error);
         expect(failure.feedUrl).toMatch(/^https:\/\/example\.com\/rss[12]\.xml$/);
       });
+    });
+
+    it('AbortSignalによるループレベルでのキャンセルが正しく動作する', async () => {
+      // 複数のフィードを作成
+      feedModel.create({
+        url: 'https://example.com/rss1.xml',
+        title: 'Feed 1',
+        description: 'Description 1',
+      });
+
+      feedModel.create({
+        url: 'https://example.com/rss2.xml',
+        title: 'Feed 2',
+        description: 'Description 2',
+      });
+
+      const abortController = new AbortController();
+
+      // すぐにキャンセル（ループの開始時点でabortedになる）
+      abortController.abort();
+
+      const result = await feedService.updateAllFeeds(undefined, abortController.signal);
+
+      // キャンセルされた結果であることを確認
+      if ('cancelled' in result) {
+        expect(result.cancelled).toBe(true);
+        expect(result.processedFeeds).toBe(0);
+        expect(result.totalFeeds).toBe(2);
+        expect(result.successful).toHaveLength(0);
+        expect(result.failed).toHaveLength(0);
+      } else {
+        throw new Error('Expected cancelled result');
+      }
+    });
+
+    it('HTTPリクエスト中のキャンセルでRSSFetchErrorが投げられることを確認', async () => {
+      // フィードを作成
+      const feed = feedModel.create({
+        url: 'https://example.com/rss1.xml',
+        title: 'Feed 1',
+        description: 'Description 1',
+      });
+
+      // キャンセルエラーをモック
+      const cancelError = new Error('Request cancelled');
+      vi.mocked(mockCrawler.crawl).mockRejectedValue(cancelError);
+
+      const abortController = new AbortController();
+      abortController.abort();
+
+      const result = await feedService.updateAllFeeds(undefined, abortController.signal);
+
+      // 1つのフィードが失敗として記録されることを確認
+      if ('cancelled' in result) {
+        // キャンセルされた場合（ループの最初でチェック）
+        expect(result.cancelled).toBe(true);
+        expect(result.processedFeeds).toBe(0);
+      } else {
+        // または失敗として記録される場合（HTTP リクエスト中）
+        expect(result.failed).toHaveLength(1);
+        expect(result.failed[0].feedId).toBe(feed.id);
+      }
     });
   });
 

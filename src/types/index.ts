@@ -21,6 +21,9 @@ export type {
   FeedUpdateSuccess,
   FeedUpdateFailure,
   FeedUpdateOutcome,
+  UpdateProgress,
+  UpdateProgressCallback,
+  UpdateCancelledResult,
 } from './options';
 
 // サービス型
