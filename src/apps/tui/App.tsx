@@ -129,10 +129,7 @@ export function App() {
     } catch (err) {
       // エラー時は進捗情報を保持してエラーメッセージを表示
       setError(err instanceof Error ? err.message : 'フィードの更新に失敗しました');
-      // エラー表示後も少し進捗を見せてから消す
-      setTimeout(() => {
-        setUpdateProgress(null);
-      }, 2000);
+      // 進捗表示はuseEffectで管理
     } finally {
       setIsLoading(false);
     }
@@ -258,6 +255,21 @@ export function App() {
       process.off('SIGTERM', handleExit);
     };
   }, [articles, selectedArticleIndex, feedService]);
+
+  // エラー時の進捗表示を管理
+  useEffect(() => {
+    let timeoutId: ReturnType<typeof setTimeout>;
+    if (error && updateProgress) {
+      timeoutId = setTimeout(() => {
+        setUpdateProgress(null);
+      }, 2000);
+    }
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, [error, updateProgress]);
 
   const handleToggleHelp = useCallback(() => {
     setShowHelp((prev) => !prev);

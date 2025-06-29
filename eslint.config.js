@@ -22,6 +22,7 @@ export default [
         require: 'readonly',
         module: 'readonly',
         setTimeout: 'readonly',
+        clearTimeout: 'readonly',
       },
     },
     plugins: {
