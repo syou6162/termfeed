@@ -62,4 +62,4 @@ import type { Feed } from '../types/domain';
 
 型定義の設計思想、詳細な使い分け基準、アンチパターンについては以下を参照：
 
-→ [/docs/development/type_definitions.md](/docs/development/type_definitions.md)
+→ [../../docs/development/type_definitions.md](../../docs/development/type_definitions.md)
