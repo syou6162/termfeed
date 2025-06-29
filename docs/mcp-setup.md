@@ -55,9 +55,27 @@ claude mcp add --scope user termfeed -- termfeed mcp-server
 
 1. Claude Desktopを再起動
 2. 設定画面でMCPサーバーの一覧に「termfeed」が表示されることを確認
-3. チャットで以下のようなプロンプトを試す：
-   - 「未読のRSS記事を見せて」
-   - 「お気に入りの記事を10件取得して」
+
+## 使用例
+
+Claude Desktopで以下のように使用できます：
+
+```
+@termfeed:articles://unread        # 未読記事10件（デフォルト）
+@termfeed:articles://unread?limit=20  # 未読記事20件（※現在動作しない可能性あり）
+@termfeed:articles://favorites     # お気に入り記事
+@termfeed:articles://article/123   # 記事ID 123の詳細（全文）
+```
+
+または自然言語で：
+- 「termfeedの未読記事を見せて」
+- 「お気に入りの記事を表示して」
+
+## 注意事項
+
+- 記事の内容は最大500文字に制限されています（詳細は個別記事リソースで取得）
+- デフォルトの取得件数は10件です
+- 大量の記事を取得するとClaude Desktopのコンテキストウィンドウを超える可能性があります
 
 ## トラブルシューティング
 
