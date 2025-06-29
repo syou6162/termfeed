@@ -1,5 +1,5 @@
 import { DatabaseManager } from './database.js';
-import { Article, UpdateArticleInput } from './types.js';
+import type { Article, UpdateArticleInput } from '@/types';
 import { UniqueConstraintError, ForeignKeyConstraintError } from './errors.js';
 import { dateToUnixSeconds, nowInUnixSeconds, unixSecondsToDate } from './utils/timestamp.js';
 
@@ -55,8 +55,8 @@ export class ArticleModel {
       is_read: Boolean(data.is_read),
       is_favorite: Boolean(data.is_favorite),
       thumbnail_url: data.thumbnail_url,
-      created_at: data.created_at ? unixSecondsToDate(data.created_at) : undefined,
-      updated_at: data.updated_at ? unixSecondsToDate(data.updated_at) : undefined,
+      created_at: data.created_at ? unixSecondsToDate(data.created_at) : new Date(),
+      updated_at: data.updated_at ? unixSecondsToDate(data.updated_at) : new Date(),
     };
   }
 

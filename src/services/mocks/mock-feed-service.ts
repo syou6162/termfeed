@@ -1,5 +1,4 @@
-import { Feed, CreateFeedInput } from '../../models/types';
-import { FeedService } from '../interfaces';
+import type { Feed, CreateFeedInput, FeedService } from '@/types';
 
 export class MockFeedService implements FeedService {
   private feeds: Feed[] = [

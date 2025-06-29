@@ -105,7 +105,7 @@ describe('ArticleModel', () => {
       };
 
       const created = articleModel.create(articleInput);
-      const found = articleModel.findById(created.id!);
+      const found = articleModel.findById(created.id);
 
       expect(found).not.toBeNull();
       expect(found!.id).toBe(created.id);
@@ -194,7 +194,7 @@ describe('ArticleModel', () => {
       });
 
       articleModel.create({
-        feed_id: anotherFeed.id!,
+        feed_id: anotherFeed.id,
         title: 'Feed 2 Article',
         url: 'https://example.com/feed2-art',
         published_at: new Date(),
@@ -221,7 +221,7 @@ describe('ArticleModel', () => {
       });
 
       // 1つの記事を既読にする
-      articleModel.markAsRead(article1.id!);
+      articleModel.markAsRead(article1.id);
 
       const readArticles = articleModel.findAll({ is_read: true });
       expect(readArticles).toHaveLength(1);
@@ -264,7 +264,7 @@ describe('ArticleModel', () => {
         published_at: new Date(),
       });
 
-      const updated = articleModel.update(article.id!, { is_read: true });
+      const updated = articleModel.update(article.id, { is_read: true });
 
       expect(updated).not.toBeNull();
       expect(updated!.is_read).toBe(true);
@@ -279,7 +279,7 @@ describe('ArticleModel', () => {
         published_at: new Date(),
       });
 
-      const updated = articleModel.update(article.id!, { is_favorite: true });
+      const updated = articleModel.update(article.id, { is_favorite: true });
 
       expect(updated).not.toBeNull();
       expect(updated!.is_favorite).toBe(true);
@@ -301,10 +301,10 @@ describe('ArticleModel', () => {
         published_at: new Date(),
       });
 
-      const deleted = articleModel.delete(article.id!);
+      const deleted = articleModel.delete(article.id);
       expect(deleted).toBe(true);
 
-      const found = articleModel.findById(article.id!);
+      const found = articleModel.findById(article.id);
       expect(found).toBeNull();
     });
 
@@ -343,10 +343,10 @@ describe('ArticleModel', () => {
         published_at: new Date(),
       });
 
-      const success = articleModel.markAsRead(article.id!);
+      const success = articleModel.markAsRead(article.id);
       expect(success).toBe(true);
 
-      const updated = articleModel.findById(article.id!);
+      const updated = articleModel.findById(article.id);
       expect(updated!.is_read).toBe(true);
     });
 
@@ -359,13 +359,13 @@ describe('ArticleModel', () => {
       });
 
       // まず既読にする
-      articleModel.markAsRead(article.id!);
+      articleModel.markAsRead(article.id);
 
       // 未読に戻す
-      const success = articleModel.markAsUnread(article.id!);
+      const success = articleModel.markAsUnread(article.id);
       expect(success).toBe(true);
 
-      const updated = articleModel.findById(article.id!);
+      const updated = articleModel.findById(article.id);
       expect(updated!.is_read).toBe(false);
     });
   });
@@ -380,17 +380,17 @@ describe('ArticleModel', () => {
       });
 
       // お気に入りにする
-      let success = articleModel.toggleFavorite(article.id!);
+      let success = articleModel.toggleFavorite(article.id);
       expect(success).toBe(true);
 
-      let updated = articleModel.findById(article.id!);
+      let updated = articleModel.findById(article.id);
       expect(updated!.is_favorite).toBe(true);
 
       // お気に入りを解除する
-      success = articleModel.toggleFavorite(article.id!);
+      success = articleModel.toggleFavorite(article.id);
       expect(success).toBe(true);
 
-      updated = articleModel.findById(article.id!);
+      updated = articleModel.findById(article.id);
       expect(updated!.is_favorite).toBe(false);
     });
 
@@ -432,7 +432,7 @@ describe('ArticleModel', () => {
       }
 
       // 1つを既読にする
-      articleModel.markAsRead(articles[0].id!);
+      articleModel.markAsRead(articles[0].id);
 
       const unreadCount = articleModel.countUnread();
       expect(unreadCount).toBe(2);
@@ -454,7 +454,7 @@ describe('ArticleModel', () => {
           published_at: new Date(),
         });
         articleModel.create({
-          feed_id: anotherFeed.id!,
+          feed_id: anotherFeed.id,
           title: `Feed2 Article ${i}`,
           url: `https://example.com/f2-art${i}`,
           published_at: new Date(),

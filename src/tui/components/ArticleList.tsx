@@ -1,6 +1,6 @@
 import { Box, Text, useStdout } from 'ink';
 import { useState, useEffect } from 'react';
-import type { Article } from '../../models/types.js';
+import type { Article } from '@/types';
 import { convertHtmlToText } from '../utils/html.js';
 
 type ArticleListProps = {

@@ -1,7 +1,6 @@
 import Parser from 'rss-parser';
 import axios, { HttpStatusCode } from 'axios';
-import type { Article, Feed } from '../models/types.js';
-import type { RSSItem, CrawlResult, CrawlerOptions } from './types.js';
+import type { Article, Feed, RSSItem, CrawlResult, CrawlerOptions } from '@/types';
 import { RSSFetchError, RSSParseError } from './errors.js';
 
 export type { RSSItem, CrawlResult, CrawlerOptions };

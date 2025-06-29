@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { DatabaseManager } from './database.js';
 import { FeedModel } from './feed.js';
-import { CreateFeedInput } from './types.js';
+import type { CreateFeedInput } from '@/types';
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
@@ -78,7 +78,7 @@ describe('FeedModel', () => {
       };
 
       const created = feedModel.create(feedInput);
-      const found = feedModel.findById(created.id!);
+      const found = feedModel.findById(created.id);
 
       expect(found).not.toBeNull();
       expect(found!.id).toBe(created.id);
@@ -151,7 +151,7 @@ describe('FeedModel', () => {
       };
 
       const created = feedModel.create(feedInput);
-      const updated = feedModel.update(created.id!, {
+      const updated = feedModel.update(created.id, {
         title: 'Updated Title',
         description: 'Updated Description',
       });
@@ -174,7 +174,7 @@ describe('FeedModel', () => {
       };
 
       const created = feedModel.create(feedInput);
-      const updated = feedModel.update(created.id!, {});
+      const updated = feedModel.update(created.id, {});
 
       expect(updated).not.toBeNull();
       expect(updated!.title).toBe(created.title);
@@ -189,11 +189,11 @@ describe('FeedModel', () => {
       };
 
       const created = feedModel.create(feedInput);
-      const deleted = feedModel.delete(created.id!);
+      const deleted = feedModel.delete(created.id);
 
       expect(deleted).toBe(true);
 
-      const found = feedModel.findById(created.id!);
+      const found = feedModel.findById(created.id);
       expect(found).toBeNull();
     });
 
@@ -213,8 +213,8 @@ describe('FeedModel', () => {
       const created = feedModel.create(feedInput);
 
       // 更新を実行
-      feedModel.updateLastUpdatedAt(created.id!);
-      const updated = feedModel.findById(created.id!);
+      feedModel.updateLastUpdatedAt(created.id);
+      const updated = feedModel.findById(created.id);
 
       expect(updated).not.toBeNull();
       // 更新日時が変更されているかはSQLiteのdatetime('now')に依存するため、

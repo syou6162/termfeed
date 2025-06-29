@@ -1,4 +1,4 @@
-import { Article } from '../../models/types';
+import type { Article } from '@/types';
 
 export interface ArticleService {
   /**

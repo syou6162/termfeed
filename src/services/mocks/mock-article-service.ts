@@ -1,5 +1,4 @@
-import { Article } from '../../models/types';
-import { ArticleService } from '../interfaces';
+import type { Article, ArticleService } from '@/types';
 
 export class MockArticleService implements ArticleService {
   private articles: Article[] = [

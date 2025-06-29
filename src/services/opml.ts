@@ -1,4 +1,4 @@
-import { Feed } from '../models/types.js';
+import type { Feed } from '@/types';
 
 export type ExportFormat = 'opml' | 'text';
 

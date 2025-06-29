@@ -1,4 +1,4 @@
-import { Feed, CreateFeedInput } from '../../models/types';
+import type { Feed, CreateFeedInput } from '@/types';
 
 export interface FeedService {
   /**

@@ -4,7 +4,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { ArticleModel } from '../../models/article.js';
 import { FeedModel } from '../../models/feed.js';
 import { registerArticleResources } from './articles.js';
-import type { Article, Feed } from '../../models/types.js';
+import type { Article, Feed } from '@/types';
 
 interface RegisteredResource {
   uri: string;
@@ -73,6 +73,8 @@ describe('registerArticleResources', () => {
           published_at: new Date('2024-01-01'),
           is_read: false,
           is_favorite: false,
+          created_at: new Date(),
+          updated_at: new Date(),
         },
       ];
 
@@ -82,6 +84,7 @@ describe('registerArticleResources', () => {
           url: 'https://example.com/feed',
           title: 'Example Feed',
           last_updated_at: new Date(),
+          created_at: new Date(),
         },
       ];
 
@@ -118,6 +121,8 @@ describe('registerArticleResources', () => {
           published_at: new Date('2024-01-01'),
           is_read: false,
           is_favorite: false,
+          created_at: new Date(),
+          updated_at: new Date(),
         },
       ];
 
@@ -160,6 +165,8 @@ describe('registerArticleResources', () => {
           published_at: new Date('2024-01-01'),
           is_read: true,
           is_favorite: true,
+          created_at: new Date(),
+          updated_at: new Date(),
         },
       ];
 
@@ -169,6 +176,7 @@ describe('registerArticleResources', () => {
           url: 'https://example.com/feed',
           title: 'Example Feed',
           last_updated_at: new Date(),
+          created_at: new Date(),
         },
       ];
 

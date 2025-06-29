@@ -27,7 +27,7 @@ export function registerArticleResources(
       const feedMap = getAllFeedsMap();
 
       const resources: ArticleResource[] = articles.map((article) => ({
-        id: article.id!,
+        id: article.id,
         title: article.title,
         url: article.url,
         content: article.content ? article.content.substring(0, 500) + '...' : null,
@@ -61,7 +61,7 @@ export function registerArticleResources(
       const feedMap = getAllFeedsMap();
 
       const resources: ArticleResource[] = articles.map((article) => ({
-        id: article.id!,
+        id: article.id,
         title: article.title,
         url: article.url,
         content: article.content ? article.content.substring(0, 500) + '...' : null,
@@ -127,7 +127,7 @@ export function registerArticleResources(
 
       const feed = feedModel.findById(article.feed_id);
       const resource: ArticleResource = {
-        id: article.id!,
+        id: article.id,
         title: article.title,
         url: article.url,
         content: article.content || null, // 全文を返す
