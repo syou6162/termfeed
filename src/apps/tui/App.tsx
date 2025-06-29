@@ -109,9 +109,16 @@ export function App() {
       setError('');
       setUpdateProgress(null);
 
-      await feedService.updateAllFeeds((progress) => {
+      const result = await feedService.updateAllFeeds((progress) => {
         setUpdateProgress(progress);
       });
+
+      // 更新完了後、成功/失敗の結果を表示
+      if (result.failed.length > 0) {
+        setError(
+          `フィード更新が一部失敗しました (成功: ${result.summary.successCount}件, 失敗: ${result.summary.failureCount}件)`
+        );
+      }
 
       setUpdateProgress(null);
       loadFeeds();
@@ -120,10 +127,14 @@ export function App() {
         loadArticles(feeds[selectedFeedIndex].id);
       }
     } catch (err) {
+      // エラー時は進捗情報を保持してエラーメッセージを表示
       setError(err instanceof Error ? err.message : 'フィードの更新に失敗しました');
+      // エラー表示後も少し進捗を見せてから消す
+      setTimeout(() => {
+        setUpdateProgress(null);
+      }, 2000);
     } finally {
       setIsLoading(false);
-      setUpdateProgress(null);
     }
   }, [selectedFeedIndex, feeds, loadFeeds, loadArticles, feedService]);
 
