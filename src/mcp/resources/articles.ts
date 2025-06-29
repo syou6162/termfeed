@@ -25,10 +25,6 @@ export function registerArticleResources(
         'Get unread articles from your RSS feeds. Use ?limit=N to specify number of articles (default: 10)',
     },
     (uri: unknown, params?: Record<string, unknown>) => {
-      // MCPではパラメータが第2引数として渡される可能性がある
-      console.error('DEBUG: uri =', uri);
-      console.error('DEBUG: params =', params);
-
       let limit = 10; // デフォルト値
 
       // パラメータから limit を取得
@@ -39,7 +35,12 @@ export function registerArticleResources(
       }
 
       // URIからも試す（fallback）
-      if (typeof uri === 'string' && uri.includes('?')) {
+      if (uri instanceof URL) {
+        const urlLimit = uri.searchParams.get('limit');
+        if (urlLimit) {
+          limit = parseInt(urlLimit, 10);
+        }
+      } else if (typeof uri === 'string' && uri.includes('?')) {
         // クエリパラメータを手動で解析
         const queryStart = uri.indexOf('?');
         if (queryStart !== -1) {
@@ -96,7 +97,12 @@ export function registerArticleResources(
       }
 
       // URIからも試す（fallback）
-      if (typeof uri === 'string' && uri.includes('?')) {
+      if (uri instanceof URL) {
+        const urlLimit = uri.searchParams.get('limit');
+        if (urlLimit) {
+          limit = parseInt(urlLimit, 10);
+        }
+      } else if (typeof uri === 'string' && uri.includes('?')) {
         const queryStart = uri.indexOf('?');
         if (queryStart !== -1) {
           const queryString = uri.substring(queryStart + 1);

@@ -55,7 +55,8 @@ describe('registerArticleResources', () => {
         'articles://unread',
         {
           title: 'Unread Articles',
-          description: 'Get unread articles from your RSS feeds',
+          description:
+            'Get unread articles from your RSS feeds. Use ?limit=N to specify number of articles (default: 10)',
         },
         expect.any(Function)
       );
