@@ -1,6 +1,6 @@
 import { Box, Text, useApp, useStdout } from 'ink';
 import { useCallback, useEffect, useState, useMemo } from 'react';
-import type { Article, Feed, UpdateProgress, FeedUpdateFailure } from '@/types';
+import type { Article, UpdateProgress, FeedUpdateFailure } from '@/types';
 import { FeedService } from '../../services/feed-service.js';
 import { FeedModel } from '../../models/feed.js';
 import { ArticleModel } from '../../models/article.js';
@@ -11,10 +11,7 @@ import { TwoPaneLayout } from './components/TwoPaneLayout.js';
 import { HelpOverlay } from './components/HelpOverlay.js';
 import { useKeyboardNavigation } from './hooks/useKeyboardNavigation.js';
 import { openUrlInBrowser } from './utils/browser.js';
-
-type FeedWithUnreadCount = Feed & {
-  unreadCount: number;
-};
+import { sortFeedsByUnreadCount, type FeedWithUnreadCount } from './utils/feed-sorter.js';
 
 export function App() {
   const { exit } = useApp();
@@ -58,14 +55,8 @@ export function App() {
         return { ...feed, unreadCount };
       });
 
-      // 未読件数でソート：未読あり → 未読なし
-      const sortedFeeds = feedsWithUnreadCount.sort((a, b) => {
-        // 未読件数が多い順、同じ場合は元の順序を維持
-        if (a.unreadCount > 0 && b.unreadCount === 0) return -1;
-        if (a.unreadCount === 0 && b.unreadCount > 0) return 1;
-        if (a.unreadCount > 0 && b.unreadCount > 0) return b.unreadCount - a.unreadCount;
-        return 0; // 両方とも未読なしの場合は元の順序
-      });
+      // 未読件数でソート
+      const sortedFeeds = sortFeedsByUnreadCount(feedsWithUnreadCount);
 
       setFeeds(sortedFeeds);
 
