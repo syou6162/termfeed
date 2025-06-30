@@ -79,3 +79,53 @@ describe('DatabaseManager', () => {
     expect(article.is_favorite).toBe(0);
   });
 });
+
+describe('DatabaseManager - in-memory database', () => {
+  it('should support in-memory database', () => {
+    const db = new DatabaseManager(':memory:');
+
+    expect(db.isInMemory()).toBe(true);
+    expect(() => db.migrate()).not.toThrow();
+
+    // データの読み書きが可能か確認
+    const insertStmt = db.getDb().prepare(`
+      INSERT INTO feeds (url, title, created_at, last_updated_at)
+      VALUES (?, ?, ?, ?)
+    `);
+
+    const now = Math.floor(Date.now() / 1000);
+    insertStmt.run('https://example.com/feed', 'Test Feed', now, now);
+
+    const feed = db
+      .getDb()
+      .prepare('SELECT * FROM feeds WHERE url = ?')
+      .get('https://example.com/feed') as { title: string };
+    expect(feed.title).toBe('Test Feed');
+
+    db.close();
+  });
+
+  it('should not create files for in-memory database', () => {
+    const db = new DatabaseManager(':memory:');
+    db.migrate();
+
+    // インメモリDBはファイルを作成しない
+    expect(fs.existsSync(':memory:')).toBe(false);
+    expect(fs.existsSync(':memory:-wal')).toBe(false);
+    expect(fs.existsSync(':memory:-shm')).toBe(false);
+
+    db.close();
+  });
+
+  it('should report correctly for file-based database', () => {
+    const tempDbPath = path.join(os.tmpdir(), 'test-not-memory.db');
+    const db = new DatabaseManager(tempDbPath);
+
+    expect(db.isInMemory()).toBe(false);
+
+    db.close();
+    if (fs.existsSync(tempDbPath)) {
+      fs.unlinkSync(tempDbPath);
+    }
+  });
+});
