@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { DatabaseManager } from './database.js';
+import { DatabaseManager, IN_MEMORY_DB } from './database.js';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
@@ -82,7 +82,7 @@ describe('DatabaseManager', () => {
 
 describe('DatabaseManager - in-memory database', () => {
   it('should support in-memory database', () => {
-    const db = new DatabaseManager(':memory:');
+    const db = new DatabaseManager(IN_MEMORY_DB);
 
     expect(db.isInMemory()).toBe(true);
     expect(() => db.migrate()).not.toThrow();
@@ -106,13 +106,13 @@ describe('DatabaseManager - in-memory database', () => {
   });
 
   it('should not create files for in-memory database', () => {
-    const db = new DatabaseManager(':memory:');
+    const db = new DatabaseManager(IN_MEMORY_DB);
     db.migrate();
 
     // インメモリDBはファイルを作成しない
-    expect(fs.existsSync(':memory:')).toBe(false);
-    expect(fs.existsSync(':memory:-wal')).toBe(false);
-    expect(fs.existsSync(':memory:-shm')).toBe(false);
+    expect(fs.existsSync(IN_MEMORY_DB)).toBe(false);
+    expect(fs.existsSync(`${IN_MEMORY_DB}-wal`)).toBe(false);
+    expect(fs.existsSync(`${IN_MEMORY_DB}-shm`)).toBe(false);
 
     db.close();
   });

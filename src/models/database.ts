@@ -6,6 +6,8 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+export const IN_MEMORY_DB = ':memory:';
+
 export class DatabaseManager {
   private db: Database.Database;
   private dbPath: string;
@@ -14,7 +16,7 @@ export class DatabaseManager {
     this.dbPath = dbPath || this.getDefaultDbPath();
 
     // インメモリDBの場合はディレクトリ作成をスキップ
-    if (this.dbPath !== ':memory:') {
+    if (this.dbPath !== IN_MEMORY_DB) {
       this.ensureDbDirectory();
     }
 
@@ -22,7 +24,7 @@ export class DatabaseManager {
     this.db.pragma('foreign_keys = ON');
 
     // インメモリDBの場合はWALモードを設定しない
-    if (this.dbPath !== ':memory:') {
+    if (this.dbPath !== IN_MEMORY_DB) {
       this.db.pragma('journal_mode = WAL');
     }
   }
@@ -72,6 +74,6 @@ export class DatabaseManager {
   }
 
   public isInMemory(): boolean {
-    return this.dbPath === ':memory:';
+    return this.dbPath === IN_MEMORY_DB;
   }
 }
