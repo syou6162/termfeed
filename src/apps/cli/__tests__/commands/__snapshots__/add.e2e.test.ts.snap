@@ -17,7 +17,7 @@ exports[`add command E2E > should handle duplicate feed error > duplicate-feed-e
 `;
 
 exports[`add command E2E > should handle invalid URL gracefully > invalid-url-error-output 1`] = `
-"Error adding feed: Failed to fetch feed: Failed to parse RSS feed: Invalid URL
+"Error adding feed: Failed to parse RSS feed: Invalid URL
 "
 `;
 
