@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import * as path from 'path';
 import { createTestContext, runCommand, type TestContext } from '@/test-helpers/index.js';
 
 describe('export command E2E', () => {
@@ -31,7 +32,11 @@ describe('export command E2E', () => {
 
     // Assert
     expect(output.exitCode).toBeUndefined();
-    expect(output.stdout).toMatchSnapshot('export-opml-success-output');
+
+    // 絶対パスを正規化してからスナップショットを取る
+    const normalizedOutput = output.stdout.replace(/\/[^\s]+\/(subscriptions\.opml)/, '[PATH]/$1');
+    expect(normalizedOutput).toMatchSnapshot('export-opml-success-output');
+
     expect(output.stdout).toContain('Exported 2 feeds');
     expect(output.stdout).toContain('subscriptions.opml');
     expect(output.stdout).toContain('OPML format');
@@ -55,7 +60,11 @@ describe('export command E2E', () => {
 
     // Assert
     expect(output.exitCode).toBeUndefined();
-    expect(output.stdout).toMatchSnapshot('export-text-success-output');
+
+    // 絶対パスを正規化してからスナップショットを取る
+    const normalizedOutput = output.stdout.replace(/\/[^\s]+\/(feeds\.txt)/, '[PATH]/$1');
+    expect(normalizedOutput).toMatchSnapshot('export-text-success-output');
+
     expect(output.stdout).toContain('Exported 2 feeds');
     expect(output.stdout).toContain('feeds.txt');
     expect(output.stdout).toContain('text format');
@@ -116,7 +125,7 @@ describe('export command E2E', () => {
     });
 
     // Act
-    const customPath = '/tmp/my-feeds.opml';
+    const customPath = path.join(context.tempDir, 'my-feeds.opml');
     const output = await runCommand(['export', customPath], {
       dbPath: context.dbPath,
     });
@@ -124,6 +133,6 @@ describe('export command E2E', () => {
     // Assert
     expect(output.exitCode).toBeUndefined();
     expect(output.stdout).toContain('Exported 1 feeds');
-    expect(output.stdout).toContain(customPath);
+    expect(output.stdout).toContain('my-feeds.opml');
   });
 });
