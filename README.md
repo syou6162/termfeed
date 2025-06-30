@@ -2,6 +2,10 @@
 
 ターミナルで動作するモダンなRSSリーダー
 
+<p align="center">
+  <img src="./termfeed_icon.png" alt="termfeed icon" width="200">
+</p>
+
 ## 概要
 
 termfeedは、ターミナル内で完全に動作するローカルRSSリーダーです。コマンドラインから離れることなく、高速でキーボード駆動のインターフェースでRSSフィードを管理・閲読できます。
