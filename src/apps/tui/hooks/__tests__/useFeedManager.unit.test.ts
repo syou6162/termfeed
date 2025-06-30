@@ -31,7 +31,7 @@ const mockFeeds: Feed[] = [
   },
 ];
 
-const mockUnreadCounts = {
+const mockUnreadCounts: Record<number, number> = {
   1: 5,
   2: 3,
 };
@@ -79,18 +79,15 @@ describe('useFeedManager Unit Tests', () => {
   });
 
   it('エラーハンドリングが正しく機能することを確認', () => {
-    const error = new Error('ネットワークエラー');
     mockFeedService.getFeedList.mockImplementation(() => {
-      throw error;
+      throw new Error('ネットワークエラー');
     });
 
-    let errorMessage = '';
-    try {
-      mockFeedService.getFeedList();
-    } catch (err) {
-      errorMessage = err instanceof Error ? err.message : 'フィードの読み込みに失敗しました';
-    }
-
-    expect(errorMessage).toBe('ネットワークエラー');
+    expect(() => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const result = mockFeedService.getFeedList();
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+      return result;
+    }).toThrow('ネットワークエラー');
   });
 });

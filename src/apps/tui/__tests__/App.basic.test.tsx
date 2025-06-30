@@ -21,31 +21,31 @@ vi.mock('child_process', () => ({
 }));
 
 // DatabaseManagerのモック
+const mockDatabaseManager = {
+  migrate: vi.fn(),
+};
+
 vi.mock('../../../models/database.js', () => ({
-  DatabaseManager: vi.fn().mockImplementation(() => ({
-    migrate: vi.fn(),
-  })),
+  DatabaseManager: vi.fn().mockImplementation(() => mockDatabaseManager),
 }));
 
 // モデルのモック
-vi.mock('../../models/feed.js', () => ({
+vi.mock('../../../models/feed.js', () => ({
   FeedModel: vi.fn().mockImplementation(() => ({})),
 }));
 
-vi.mock('../../models/article.js', () => ({
+vi.mock('../../../models/article.js', () => ({
   ArticleModel: vi.fn().mockImplementation(() => ({})),
 }));
 
 // FeedServiceのモック
-vi.mock('../../services/feed-service.js', () => ({
+vi.mock('../../../services/feed-service.js', () => ({
   FeedService: vi.fn().mockImplementation(() => mockFeedService),
 }));
 
 // データベースユーティリティのモック
-vi.mock('../cli/utils/database.js', () => ({
-  createDatabaseManager: vi.fn(() => ({
-    migrate: vi.fn(),
-  })),
+vi.mock('../../cli/utils/database.js', () => ({
+  createDatabaseManager: vi.fn(() => mockDatabaseManager),
 }));
 
 // App コンポーネントのimport（モック設定後）
@@ -110,20 +110,24 @@ describe('App Basic Tests', () => {
     expect(output?.length ?? 0).toBeGreaterThan(0);
   });
 
-  it('フィードが表示される', () => {
+  it('フィードが表示される', async () => {
     const { lastFrame } = render(<App />);
-    const output = lastFrame();
 
-    // フィードタイトルが表示されることを確認
-    expect(output).toContain('Test Feed 1');
+    // useEffectの実行を待つ
+    await vi.waitFor(() => {
+      const output = lastFrame();
+      expect(output).toContain('Test Feed 1');
+    });
   });
 
-  it('記事が表示される', () => {
+  it('記事が表示される', async () => {
     const { lastFrame } = render(<App />);
-    const output = lastFrame();
 
-    // 記事タイトルが表示されることを確認
-    expect(output).toContain('Article 1');
+    // useEffectの実行を待つ
+    await vi.waitFor(() => {
+      const output = lastFrame();
+      expect(output).toContain('Article 1');
+    });
   });
 
   it('サービスメソッドが呼ばれる', async () => {
@@ -132,9 +136,12 @@ describe('App Basic Tests', () => {
     // useEffectの非同期処理を待つ
     await vi.waitFor(() => {
       expect(mockFeedService.getFeedList).toHaveBeenCalled();
+      expect(mockFeedService.getUnreadCountsForAllFeeds).toHaveBeenCalled();
     });
 
-    expect(mockFeedService.getUnreadCountsForAllFeeds).toHaveBeenCalled();
-    expect(mockFeedService.getArticles).toHaveBeenCalled();
+    // getArticlesは遅れて呼ばれる可能性があるので別途待つ
+    await vi.waitFor(() => {
+      expect(mockFeedService.getArticles).toHaveBeenCalled();
+    });
   });
 });

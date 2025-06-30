@@ -32,10 +32,17 @@ vi.mock('../../models/article.js', () => ({
   ArticleModel: vi.fn(),
 }));
 
+// DatabaseManagerのモック
+const mockDatabaseManager = {
+  migrate: vi.fn(),
+};
+
+vi.mock('../../../models/database.js', () => ({
+  DatabaseManager: vi.fn().mockImplementation(() => mockDatabaseManager),
+}));
+
 vi.mock('../cli/utils/database.js', () => ({
-  createDatabaseManager: vi.fn(() => ({
-    migrate: vi.fn(),
-  })),
+  createDatabaseManager: vi.fn(() => mockDatabaseManager),
 }));
 
 // App コンポーネントのimport（モック設定後）
