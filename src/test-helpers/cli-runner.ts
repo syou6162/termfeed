@@ -6,12 +6,15 @@ export type CommandOutput = {
   exitCode: number | undefined;
 };
 
+export type RunCommandOptions = {
+  dbPath: string;
+  env?: Record<string, string>;
+  cwd?: string; // 将来の拡張性のため
+};
+
 export async function runCommand(
   args: string[],
-  options: {
-    dbPath: string;
-    env?: Record<string, string>;
-  }
+  options: RunCommandOptions
 ): Promise<CommandOutput> {
   const stdout = new PassThrough();
   const stderr = new PassThrough();

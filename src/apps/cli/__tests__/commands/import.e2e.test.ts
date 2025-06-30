@@ -39,25 +39,27 @@ describe('import command E2E', () => {
     await fs.writeFile(opmlPath, opmlContent, 'utf-8');
 
     // RSSクローラーのモック設定
-    rssMock.crawlSpy.mockImplementation((url) => {
-      if (url === 'https://example.com/feed1.rss') {
-        return Promise.resolve(
-          createMockRSSData({
-            title: 'Feed 1',
-            feedUrl: 'https://example.com/feed1.rss',
-          })
-        );
-      }
-      if (url === 'https://example.com/feed2.rss') {
-        return Promise.resolve(
-          createMockRSSData({
-            title: 'Feed 2',
-            feedUrl: 'https://example.com/feed2.rss',
-          })
-        );
-      }
-      return Promise.reject(new Error(`Unexpected URL: ${url}`));
-    });
+    const feedResponses = new Map([
+      [
+        'https://example.com/feed1.rss',
+        createMockRSSData({
+          title: 'Feed 1',
+          feedUrl: 'https://example.com/feed1.rss',
+        }),
+      ],
+      [
+        'https://example.com/feed2.rss',
+        createMockRSSData({
+          title: 'Feed 2',
+          feedUrl: 'https://example.com/feed2.rss',
+        }),
+      ],
+    ]);
+    rssMock.crawlSpy.mockImplementation((url) =>
+      feedResponses.has(url)
+        ? Promise.resolve(feedResponses.get(url)!)
+        : Promise.reject(new Error(`Unexpected URL: ${url}`))
+    );
 
     // Act
     const output = await runCommand(['import', opmlPath], {
@@ -87,18 +89,34 @@ https://example.com/feed3.rss
     await fs.writeFile(textPath, textContent, 'utf-8');
 
     // RSSクローラーのモック設定
-    rssMock.crawlSpy.mockImplementation((url) => {
-      const match = url.match(/https:\/\/example\.com\/(feed\d)\.rss/);
-      if (match) {
-        return Promise.resolve(
-          createMockRSSData({
-            title: match[1],
-            feedUrl: url,
-          })
-        );
-      }
-      return Promise.reject(new Error(`Unexpected URL: ${url}`));
-    });
+    const feedResponses = new Map([
+      [
+        'https://example.com/feed1.rss',
+        createMockRSSData({
+          title: 'feed1',
+          feedUrl: 'https://example.com/feed1.rss',
+        }),
+      ],
+      [
+        'https://example.com/feed2.rss',
+        createMockRSSData({
+          title: 'feed2',
+          feedUrl: 'https://example.com/feed2.rss',
+        }),
+      ],
+      [
+        'https://example.com/feed3.rss',
+        createMockRSSData({
+          title: 'feed3',
+          feedUrl: 'https://example.com/feed3.rss',
+        }),
+      ],
+    ]);
+    rssMock.crawlSpy.mockImplementation((url) =>
+      feedResponses.has(url)
+        ? Promise.resolve(feedResponses.get(url)!)
+        : Promise.reject(new Error(`Unexpected URL: ${url}`))
+    );
 
     // Act
     const output = await runCommand(['import', textPath], {
@@ -195,25 +213,25 @@ https://example.com/bad.rss`;
     const textPath = path.join(context.tempDir, 'feeds.txt');
     await fs.writeFile(textPath, textContent, 'utf-8');
 
-    rssMock.mockFeedResponse(
-      'https://example.com/good.rss',
-      createMockRSSData({
-        title: 'Good Feed',
-        feedUrl: 'https://example.com/good.rss',
-      })
-    );
-
-    // badフィードでエラーを返す
-    rssMock.crawlSpy.mockImplementation((url) => {
-      if (url === 'https://example.com/bad.rss') {
-        return Promise.reject(new Error('Network error'));
-      }
-      return Promise.resolve(
+    // RSSクローラーのモック設定
+    const feedResponses = new Map([
+      [
+        'https://example.com/good.rss',
         createMockRSSData({
           title: 'Good Feed',
           feedUrl: 'https://example.com/good.rss',
-        })
-      );
+        }),
+      ],
+    ]);
+    const errorResponses = new Map([['https://example.com/bad.rss', new Error('Network error')]]);
+
+    rssMock.crawlSpy.mockImplementation((url) => {
+      if (errorResponses.has(url)) {
+        return Promise.reject(errorResponses.get(url)!);
+      }
+      return feedResponses.has(url)
+        ? Promise.resolve(feedResponses.get(url)!)
+        : Promise.reject(new Error(`Unexpected URL: ${url}`));
     });
 
     // Act
