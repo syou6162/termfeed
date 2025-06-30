@@ -120,28 +120,38 @@ export function createMockRSSData(
     title: string;
     description: string;
     items: RSSItem[];
+    feedUrl?: string;
   }> = {}
 ): CrawlResult {
+  // フィードURLから記事URLのプレフィックスを生成
+  const feedUrl = overrides.feedUrl || 'https://example.com/feed.rss';
+  const parsedUrl = new URL(feedUrl);
+  // ホスト名とパス名を組み合わせてユニークなプレフィックスを生成
+  const urlBase = (parsedUrl.hostname + parsedUrl.pathname)
+    .replace(/[^a-zA-Z0-9]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+
   const defaultItems: RSSItem[] = [
     {
       title: 'Test Article 1',
-      link: 'https://example.com/article1',
+      link: `https://example.com/${urlBase}/article1`,
       content: 'Test content 1',
       pubDate: new Date('2023-01-01').toISOString(),
-      guid: 'article1',
+      guid: `${urlBase}-article1`,
     },
     {
       title: 'Test Article 2',
-      link: 'https://example.com/article2',
+      link: `https://example.com/${urlBase}/article2`,
       content: 'Test content 2',
       pubDate: new Date('2023-01-02').toISOString(),
-      guid: 'article2',
+      guid: `${urlBase}-article2`,
     },
   ];
 
   return {
     feed: {
-      url: 'https://example.com/feed.rss',
+      url: feedUrl,
       title: overrides.title || 'Test Feed',
       description: overrides.description || 'Test feed description',
       last_updated_at: new Date(),

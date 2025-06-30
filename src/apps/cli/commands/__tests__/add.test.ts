@@ -78,8 +78,8 @@ describe('add command', () => {
       const mockData = createMockRSSData({
         title: 'Example Feed',
         description: 'Example feed description',
+        feedUrl: testUrl,
       });
-      mockData.feed.url = testUrl; // URLを正しく設定
       context.mockCrawler.setMockResponse(testUrl, mockData);
 
       // Act
@@ -113,8 +113,8 @@ describe('add command', () => {
       const mockData = createMockRSSData({
         title: 'Empty Feed',
         items: [], // 記事なし
+        feedUrl: testUrl,
       });
-      mockData.feed.url = testUrl; // URLを正しく設定
       context.mockCrawler.setMockResponse(testUrl, mockData);
 
       // Act
@@ -140,8 +140,8 @@ describe('add command', () => {
       // モックデータを作成してからdescriptionを削除
       const mockData = createMockRSSData({
         title: 'No Description Feed',
+        feedUrl: testUrl,
       });
-      mockData.feed.url = testUrl; // URLを正しく設定
       mockData.feed.description = undefined;
       context.mockCrawler.setMockResponse(testUrl, mockData);
 
@@ -180,8 +180,7 @@ describe('add command', () => {
     it('重複フィードエラー時にエラーが適切に処理される', async () => {
       // Arrange
       const testUrl = 'https://example.com/duplicate-feed.rss';
-      const mockData = createMockRSSData();
-      mockData.feed.url = testUrl; // URLを正しく設定
+      const mockData = createMockRSSData({ feedUrl: testUrl });
       context.mockCrawler.setMockResponse(testUrl, mockData);
 
       // 最初にフィードを追加
@@ -235,8 +234,7 @@ describe('add command', () => {
     it('データベースが正常にクローズされる（成功時）', async () => {
       // Arrange
       const testUrl = 'https://example.com/close-test-feed.rss';
-      const mockData = createMockRSSData();
-      mockData.feed.url = testUrl; // URLを正しく設定
+      const mockData = createMockRSSData({ feedUrl: testUrl });
       context.mockCrawler.setMockResponse(testUrl, mockData);
 
       // Act
@@ -259,14 +257,9 @@ describe('add command', () => {
         'https://example.com/feed3.rss',
       ];
 
-      const mockData1 = createMockRSSData({ title: 'Feed 1' });
-      const mockData2 = createMockRSSData({ title: 'Feed 2' });
-      const mockData3 = createMockRSSData({ title: 'Feed 3' });
-
-      // URLを正しく設定
-      mockData1.feed.url = testUrls[0];
-      mockData2.feed.url = testUrls[1];
-      mockData3.feed.url = testUrls[2];
+      const mockData1 = createMockRSSData({ title: 'Feed 1', feedUrl: testUrls[0] });
+      const mockData2 = createMockRSSData({ title: 'Feed 2', feedUrl: testUrls[1] });
+      const mockData3 = createMockRSSData({ title: 'Feed 3', feedUrl: testUrls[2] });
 
       context.mockCrawler.setMockResponse(testUrls[0], mockData1);
       context.mockCrawler.setMockResponse(testUrls[1], mockData2);
