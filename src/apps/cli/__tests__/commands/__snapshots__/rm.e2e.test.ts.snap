@@ -1,0 +1,23 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`rm command E2E > should handle feed not found error > rm-not-found-error-output 1`] = `
+"Error removing feed: Feed not found: 999
+"
+`;
+
+exports[`rm command E2E > should handle invalid feed ID format > rm-invalid-id-error-output 1`] = `
+"Invalid feed ID: must be a positive number
+Error removing feed: process.exit called
+"
+`;
+
+exports[`rm command E2E > should handle negative feed ID > rm-negative-id-error-output 1`] = `
+"Invalid feed ID: must be a positive number
+Error removing feed: process.exit called
+"
+`;
+
+exports[`rm command E2E > should remove feed successfully > rm-success-output 1`] = `
+"Feed ID 1 removed successfully!
+"
+`;
