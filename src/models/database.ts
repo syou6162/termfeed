@@ -12,10 +12,19 @@ export class DatabaseManager {
 
   constructor(dbPath?: string) {
     this.dbPath = dbPath || this.getDefaultDbPath();
-    this.ensureDbDirectory();
+
+    // インメモリDBの場合はディレクトリ作成をスキップ
+    if (this.dbPath !== ':memory:') {
+      this.ensureDbDirectory();
+    }
+
     this.db = new Database(this.dbPath);
     this.db.pragma('foreign_keys = ON');
-    this.db.pragma('journal_mode = WAL');
+
+    // インメモリDBの場合はWALモードを設定しない
+    if (this.dbPath !== ':memory:') {
+      this.db.pragma('journal_mode = WAL');
+    }
   }
 
   private getDefaultDbPath(): string {
@@ -60,5 +69,9 @@ export class DatabaseManager {
 
   public close(): void {
     this.db.close();
+  }
+
+  public isInMemory(): boolean {
+    return this.dbPath === ':memory:';
   }
 }
