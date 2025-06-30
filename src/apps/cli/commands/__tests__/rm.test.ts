@@ -1,52 +1,40 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { createTestContext, createMockRSSData, type TestContext } from './test-helpers.js';
-import { FeedService } from '../../../../services/feed-service.js';
-import { FeedModel } from '../../../../models/feed.js';
-import { ArticleModel } from '../../../../models/article.js';
-import { createDatabaseManager } from '../../utils/database.js';
-import { FeedNotFoundError } from '../../../../services/errors.js';
-
-// rm.tsの内部ロジックを直接テストするため、アクション関数を抽出してテスト
-// eslint-disable-next-line @typescript-eslint/require-await
-async function removeFeedAction(feedId: string, dbPath: string) {
-  const originalDb = process.env.TERMFEED_DB;
-  process.env.TERMFEED_DB = dbPath;
-
-  try {
-    const dbManager = createDatabaseManager();
-
-    // parsePositiveIntegerの実装を模倣
-    const id = parseInt(feedId, 10);
-    if (isNaN(id) || id <= 0) {
-      throw new Error('Invalid feed ID');
-    }
-
-    const feedModel = new FeedModel(dbManager);
-    const articleModel = new ArticleModel(dbManager);
-    const feedService = new FeedService(feedModel, articleModel);
-
-    const success = feedService.removeFeed(id);
-
-    dbManager.close();
-    return success;
-  } finally {
-    if (originalDb) {
-      process.env.TERMFEED_DB = originalDb;
-    } else {
-      delete process.env.TERMFEED_DB;
-    }
-  }
-}
+import { createRmCommand } from '../rm.js';
+import { RSSCrawler } from '../../../../services/rss-crawler.js';
 
 describe('rm command', () => {
   let context: TestContext;
+  let originalExit: typeof process.exit;
+  let exitCode: number | undefined;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let crawlSpy: any;
 
   beforeEach(() => {
     context = createTestContext();
+
+    // process.exitをモック
+    exitCode = undefined;
+    originalExit = process.exit;
+    process.exit = vi.fn((code?: number) => {
+      exitCode = code;
+      throw new Error(`Process exited with code ${code}`);
+    }) as never;
+
+    // console出力をミュート
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    // RSSCrawlerをモック（addFeedのため）
+    crawlSpy = vi.spyOn(RSSCrawler.prototype, 'crawl');
   });
 
   afterEach(() => {
     context.cleanup();
+    process.exit = originalExit;
+    vi.restoreAllMocks();
   });
 
   describe('基本的なフィード削除', () => {
@@ -54,7 +42,7 @@ describe('rm command', () => {
       // Arrange
       const testUrl = 'https://example.com/feed-to-delete.rss';
       const mockData = createMockRSSData({ title: 'Feed to Delete', feedUrl: testUrl });
-      context.mockCrawler.setMockResponse(testUrl, mockData);
+      crawlSpy.mockResolvedValueOnce(mockData);
 
       // フィードを追加
       const addResult = await context.feedService.addFeed(testUrl);
@@ -64,12 +52,13 @@ describe('rm command', () => {
       const articlesBefore = context.articleModel.findAll({ feed_id: feedId });
       expect(articlesBefore).toHaveLength(2); // mockDataには2つの記事がある
 
-      // Act
-      const success = await removeFeedAction(feedId.toString(), context.dbPath);
+      process.env.TERMFEED_DB = context.dbPath;
+
+      // Act - コマンドを実行
+      const command = createRmCommand();
+      await command.parseAsync(['node', 'termfeed', feedId.toString()]);
 
       // Assert
-      expect(success).toBe(true);
-
       // フィードが削除されていることを確認
       const feeds = context.feedModel.findAll();
       expect(feeds).toHaveLength(0);
@@ -80,9 +69,7 @@ describe('rm command', () => {
     });
 
     it('複数のフィードから特定のフィードのみを削除できる', async () => {
-      // Arrange - 新しいコンテキストで開始（前のテストの影響を受けない）
-      const newContext = createTestContext();
-
+      // Arrange
       const urls = [
         'https://example.com/multi-feed1.rss',
         'https://example.com/multi-feed2.rss',
@@ -94,98 +81,137 @@ describe('rm command', () => {
       let totalArticlesAdded = 0;
       for (let i = 0; i < urls.length; i++) {
         const mockData = createMockRSSData({ title: `Feed ${i + 1}`, feedUrl: urls[i] });
-        newContext.mockCrawler.setMockResponse(urls[i], mockData);
-        const result = await newContext.feedService.addFeed(urls[i]);
+        crawlSpy.mockResolvedValueOnce(mockData);
+        const result = await context.feedService.addFeed(urls[i]);
         feedIds.push(result.feed.id);
         totalArticlesAdded += result.articlesCount;
       }
 
       // 削除前の記事数を確認
-      const articlesBeforeRemoval = newContext.articleModel.findAll();
-      expect(totalArticlesAdded).toBe(6); // 各フィードは2記事を追加すべき
+      const articlesBeforeRemoval = context.articleModel.findAll();
       expect(articlesBeforeRemoval).toHaveLength(totalArticlesAdded);
 
-      // Act - 2番目のフィードを削除（同じデータベースインスタンスを使用）
-      const targetId = feedIds[1];
-      const targetFeed = newContext.feedModel.findById(targetId);
-      expect(targetFeed).not.toBeNull();
+      process.env.TERMFEED_DB = context.dbPath;
 
-      // 削除を実行（removeFeedActionではなく、直接サービスを使用）
-      const success = newContext.feedService.removeFeed(targetId);
+      // Act - 2番目のフィードを削除
+      const targetId = feedIds[1];
+      const command = createRmCommand();
+      await command.parseAsync(['node', 'termfeed', targetId.toString()]);
 
       // Assert
-      expect(success).toBe(true);
-
-      const remainingFeeds = newContext.feedModel.findAll();
+      const remainingFeeds = context.feedModel.findAll();
       expect(remainingFeeds).toHaveLength(2);
       const remainingTitles = remainingFeeds.map((f) => f.title).sort();
       expect(remainingTitles).toEqual(['Feed 1', 'Feed 3']);
 
       // 削除されたフィードの記事も削除されていることを確認
-      const deletedFeedArticles = newContext.articleModel.findAll({ feed_id: targetId });
+      const deletedFeedArticles = context.articleModel.findAll({ feed_id: targetId });
       expect(deletedFeedArticles).toHaveLength(0);
 
       // 他のフィードの記事は残っていることを確認
-      const allArticles = newContext.articleModel.findAll();
+      const allArticles = context.articleModel.findAll();
       expect(allArticles).toHaveLength(4); // 2フィード×2記事
 
       const feed1Articles = allArticles.filter((a) => a.feed_id === feedIds[0]);
       const feed3Articles = allArticles.filter((a) => a.feed_id === feedIds[2]);
       expect(feed1Articles).toHaveLength(2);
       expect(feed3Articles).toHaveLength(2);
-
-      // クリーンアップ
-      newContext.cleanup();
     });
   });
 
   describe('エラーハンドリング', () => {
-    it('存在しないフィードIDでエラーが発生する', async () => {
+    it('存在しないフィードIDでprocess.exitが1で呼ばれる', async () => {
       // Arrange
       const nonExistentId = 999;
+      process.env.TERMFEED_DB = context.dbPath;
 
-      // Act & Assert
-      await expect(removeFeedAction(nonExistentId.toString(), context.dbPath)).rejects.toThrow(
-        FeedNotFoundError
-      );
+      // Act
+      const command = createRmCommand();
+      try {
+        await command.parseAsync(['node', 'termfeed', nonExistentId.toString()]);
+      } catch (error) {
+        // process.exitが呼ばれると例外が発生する
+        expect(error).toBeDefined();
+      }
+
+      // Assert
+      expect(exitCode).toBe(1);
 
       // フィードが存在しないことを確認
       const feeds = context.feedModel.findAll();
       expect(feeds).toHaveLength(0);
     });
 
-    it('無効なフィードID（負の数）でエラーが発生する', async () => {
+    it('無効なフィードID（負の数）でprocess.exitが1で呼ばれる', async () => {
       // Arrange
       const invalidId = '-1';
+      process.env.TERMFEED_DB = context.dbPath;
 
-      // Act & Assert
-      await expect(removeFeedAction(invalidId, context.dbPath)).rejects.toThrow('Invalid feed ID');
+      // Act
+      const command = createRmCommand();
+      try {
+        await command.parseAsync(['node', 'termfeed', invalidId]);
+      } catch (error) {
+        // process.exitが呼ばれると例外が発生する
+        expect(error).toBeDefined();
+      }
+
+      // Assert
+      expect(exitCode).toBe(1);
     });
 
-    it('無効なフィードID（ゼロ）でエラーが発生する', async () => {
+    it('無効なフィードID（ゼロ）でprocess.exitが1で呼ばれる', async () => {
       // Arrange
       const invalidId = '0';
+      process.env.TERMFEED_DB = context.dbPath;
 
-      // Act & Assert
-      await expect(removeFeedAction(invalidId, context.dbPath)).rejects.toThrow('Invalid feed ID');
+      // Act
+      const command = createRmCommand();
+      try {
+        await command.parseAsync(['node', 'termfeed', invalidId]);
+      } catch (error) {
+        // process.exitが呼ばれると例外が発生する
+        expect(error).toBeDefined();
+      }
+
+      // Assert
+      expect(exitCode).toBe(1);
     });
 
-    it('無効なフィードID（文字列）でエラーが発生する', async () => {
+    it('無効なフィードID（文字列）でprocess.exitが1で呼ばれる', async () => {
       // Arrange
       const invalidId = 'abc';
+      process.env.TERMFEED_DB = context.dbPath;
 
-      // Act & Assert
-      await expect(removeFeedAction(invalidId, context.dbPath)).rejects.toThrow('Invalid feed ID');
+      // Act
+      const command = createRmCommand();
+      try {
+        await command.parseAsync(['node', 'termfeed', invalidId]);
+      } catch (error) {
+        // process.exitが呼ばれると例外が発生する
+        expect(error).toBeDefined();
+      }
+
+      // Assert
+      expect(exitCode).toBe(1);
     });
 
-    it('無効なフィードID（小数）でエラーが発生する', async () => {
+    it('無効なフィードID（小数）でprocess.exitが1で呼ばれる', async () => {
       // Arrange
       const invalidId = '1.5';
+      process.env.TERMFEED_DB = context.dbPath;
 
-      // Act & Assert
-      // parseIntは小数点以下を切り捨てるため、1として処理される
-      // しかしフィードが存在しないのでFeedNotFoundErrorが発生
-      await expect(removeFeedAction(invalidId, context.dbPath)).rejects.toThrow(FeedNotFoundError);
+      // Act
+      const command = createRmCommand();
+      try {
+        await command.parseAsync(['node', 'termfeed', invalidId]);
+      } catch (error) {
+        // process.exitが呼ばれると例外が発生する
+        expect(error).toBeDefined();
+      }
+
+      // Assert
+      expect(exitCode).toBe(1);
     });
   });
 
@@ -205,7 +231,7 @@ describe('rm command', () => {
         items: manyArticles,
         feedUrl: testUrl,
       });
-      context.mockCrawler.setMockResponse(testUrl, mockData);
+      crawlSpy.mockResolvedValueOnce(mockData);
 
       // フィードを追加
       const addResult = await context.feedService.addFeed(testUrl);
@@ -215,12 +241,13 @@ describe('rm command', () => {
       const articlesBefore = context.articleModel.findAll({ feed_id: feedId });
       expect(articlesBefore).toHaveLength(50);
 
+      process.env.TERMFEED_DB = context.dbPath;
+
       // Act
-      const success = await removeFeedAction(feedId.toString(), context.dbPath);
+      const command = createRmCommand();
+      await command.parseAsync(['node', 'termfeed', feedId.toString()]);
 
       // Assert
-      expect(success).toBe(true);
-
       // すべての記事が削除されていることを確認
       const articlesAfter = context.articleModel.findAll({ feed_id: feedId });
       expect(articlesAfter).toHaveLength(0);
@@ -234,18 +261,21 @@ describe('rm command', () => {
       // Arrange
       const url1 = 'https://example.com/feed1.rss';
       const mockData1 = createMockRSSData({ title: 'Feed 1', feedUrl: url1 });
-      context.mockCrawler.setMockResponse(url1, mockData1);
+      crawlSpy.mockResolvedValueOnce(mockData1);
 
       const result1 = await context.feedService.addFeed(url1);
       const feedId1 = result1.feed.id;
 
+      process.env.TERMFEED_DB = context.dbPath;
+
       // Act - フィードを削除
-      await removeFeedAction(feedId1.toString(), context.dbPath);
+      const command = createRmCommand();
+      await command.parseAsync(['node', 'termfeed', feedId1.toString()]);
 
       // Assert - 削除後も新しいフィードを追加できることを確認
       const url2 = 'https://example.com/feed2.rss';
       const mockData2 = createMockRSSData({ title: 'Feed 2', feedUrl: url2 });
-      context.mockCrawler.setMockResponse(url2, mockData2);
+      crawlSpy.mockResolvedValueOnce(mockData2);
 
       const result2 = await context.feedService.addFeed(url2);
       expect(result2.feed.title).toBe('Feed 2');

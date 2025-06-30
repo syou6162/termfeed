@@ -1,89 +1,48 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { createTestContext, createMockRSSData, type TestContext } from './test-helpers.js';
-import { FeedModel } from '../../../../models/feed.js';
-import { createDatabaseManager } from '../../utils/database.js';
-import { OPMLService } from '../../../../services/opml.js';
+import { exportCommand } from '../export.js';
+import { RSSCrawler } from '../../../../services/rss-crawler.js';
 
 // fs.writeFileをモック
 vi.mock('fs/promises');
 
-// export.tsの内部ロジックを直接テストするため、アクション関数を抽出してテスト
-async function exportFeedsAction(
-  dbPath: string,
-  outputFile?: string,
-  format?: string
-): Promise<{ content: string; path: string; format: string }> {
-  const originalDb = process.env.TERMFEED_DB;
-  process.env.TERMFEED_DB = dbPath;
-
-  try {
-    const dbManager = createDatabaseManager();
-    dbManager.migrate();
-
-    const feedModel = new FeedModel(dbManager);
-
-    // すべてのフィードを取得
-    const feeds = feedModel.findAll();
-
-    if (feeds.length === 0) {
-      throw new Error('No feeds to export');
-    }
-
-    // ファイルパスの決定
-    const outputPath = outputFile || 'subscriptions.opml';
-    const absolutePath = path.resolve(outputPath);
-
-    // 形式の決定
-    let exportFormat: 'opml' | 'text';
-    if (format === 'auto' || !format) {
-      exportFormat = OPMLService.detectFormat(outputPath);
-    } else if (format === 'opml' || format === 'text') {
-      exportFormat = format;
-    } else {
-      throw new Error('Invalid format');
-    }
-
-    // 指定された形式でエクスポート
-    let content: string;
-    if (exportFormat === 'opml') {
-      content = OPMLService.exportToOPML(feeds);
-    } else {
-      content = OPMLService.exportToText(feeds);
-    }
-
-    // ファイルに書き込み（テストではモック）
-    await fs.writeFile(absolutePath, content, 'utf-8');
-
-    dbManager.close();
-
-    return {
-      content,
-      path: absolutePath,
-      format: exportFormat,
-    };
-  } finally {
-    if (originalDb) {
-      process.env.TERMFEED_DB = originalDb;
-    } else {
-      delete process.env.TERMFEED_DB;
-    }
-  }
-}
-
 describe('export command', () => {
   let context: TestContext;
+  let originalExit: typeof process.exit;
+  let exitCode: number | undefined;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let writeFileSpy: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let crawlSpy: any;
 
   beforeEach(() => {
     context = createTestContext();
+
+    // process.exitをモック
+    exitCode = undefined;
+    originalExit = process.exit;
+    process.exit = vi.fn((code?: number) => {
+      exitCode = code;
+      throw new Error(`Process exited with code ${code}`);
+    }) as never;
+
+    // console出力をミュート
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+
     writeFileSpy = vi.spyOn(fs, 'writeFile').mockResolvedValue();
+
+    // RSSCrawlerをモック（フィード追加のため）
+    crawlSpy = vi.spyOn(RSSCrawler.prototype, 'crawl');
   });
 
   afterEach(() => {
     context.cleanup();
+    process.exit = originalExit;
     vi.restoreAllMocks();
   });
 
@@ -98,30 +57,29 @@ describe('export command', () => {
 
       for (const feed of feeds) {
         const mockData = createMockRSSData({ title: feed.title, feedUrl: feed.url });
-        context.mockCrawler.setMockResponse(feed.url, mockData);
+        crawlSpy.mockResolvedValueOnce(mockData);
         await context.feedService.addFeed(feed.url);
       }
 
-      // Act
-      const result = await exportFeedsAction(context.dbPath, 'feeds.opml');
+      process.env.TERMFEED_DB = context.dbPath;
+
+      // Act - コマンドを実行
+      await exportCommand.parseAsync(['node', 'termfeed', 'feeds.opml']);
 
       // Assert
-      expect(result.format).toBe('opml');
-      expect(result.path).toMatch(/feeds\.opml$/);
-      expect(result.content).toContain('<?xml version="1.0" encoding="UTF-8"?>');
-      expect(result.content).toContain('<opml version="2.0">');
-
-      // 各フィードが含まれていることを確認
-      feeds.forEach((feed) => {
-        expect(result.content).toContain(`xmlUrl="${feed.url}"`);
-        expect(result.content).toContain(`text="${feed.title}"`);
-      });
-
       expect(writeFileSpy).toHaveBeenCalledWith(
         expect.stringMatching(/feeds\.opml$/),
-        result.content,
+        expect.stringContaining('<?xml version="1.0" encoding="UTF-8"?>'),
         'utf-8'
       );
+
+      // エクスポートされた内容を検証
+      const content = writeFileSpy.mock.calls[0][1] as string;
+      expect(content).toContain('<opml version="2.0">');
+      feeds.forEach((feed) => {
+        expect(content).toContain(`xmlUrl="${feed.url}"`);
+        expect(content).toContain(`text="${feed.title}"`);
+      });
     });
 
     it('フィードをテキスト形式でエクスポートできる', async () => {
@@ -133,21 +91,19 @@ describe('export command', () => {
 
       for (const feed of feeds) {
         const mockData = createMockRSSData({ title: feed.title, feedUrl: feed.url });
-        context.mockCrawler.setMockResponse(feed.url, mockData);
+        crawlSpy.mockResolvedValueOnce(mockData);
         await context.feedService.addFeed(feed.url);
       }
 
+      process.env.TERMFEED_DB = context.dbPath;
+
       // Act
-      const result = await exportFeedsAction(context.dbPath, 'feeds.txt', 'text');
+      await exportCommand.parseAsync(['node', 'termfeed', 'feeds.txt', '--format', 'text']);
 
       // Assert
-      expect(result.format).toBe('text');
-      expect(result.path).toMatch(/feeds\.txt$/);
-      expect(result.content).toBe('https://example.com/feed1.rss\nhttps://example.com/feed2.rss');
-
       expect(writeFileSpy).toHaveBeenCalledWith(
         expect.stringMatching(/feeds\.txt$/),
-        result.content,
+        'https://example.com/feed1.rss\nhttps://example.com/feed2.rss',
         'utf-8'
       );
     });
@@ -156,35 +112,47 @@ describe('export command', () => {
       // Arrange
       const feedUrl = 'https://example.com/feed.rss';
       const mockData = createMockRSSData({ feedUrl });
-      context.mockCrawler.setMockResponse(feedUrl, mockData);
+      crawlSpy.mockResolvedValueOnce(mockData);
       await context.feedService.addFeed(feedUrl);
 
+      process.env.TERMFEED_DB = context.dbPath;
+
       // Act
-      const result = await exportFeedsAction(context.dbPath);
+      await exportCommand.parseAsync(['node', 'termfeed']);
 
       // Assert
-      expect(result.path).toMatch(/subscriptions\.opml$/);
-      expect(result.format).toBe('opml');
+      expect(writeFileSpy).toHaveBeenCalledWith(
+        expect.stringMatching(/subscriptions\.opml$/),
+        expect.any(String),
+        'utf-8'
+      );
     });
 
     it('拡張子から自動的に形式を判定できる', async () => {
       // Arrange
       const feedUrl = 'https://example.com/feed.rss';
       const mockData = createMockRSSData({ feedUrl });
-      context.mockCrawler.setMockResponse(feedUrl, mockData);
+      crawlSpy.mockResolvedValueOnce(mockData);
       await context.feedService.addFeed(feedUrl);
 
+      process.env.TERMFEED_DB = context.dbPath;
+
       // Act - .txt拡張子
-      const resultTxt = await exportFeedsAction(context.dbPath, 'output.txt', 'auto');
-      expect(resultTxt.format).toBe('text');
+      await exportCommand.parseAsync(['node', 'termfeed', 'output.txt']);
+
+      // Assert
+      const content = writeFileSpy.mock.calls[0][1] as string;
+      expect(content).not.toContain('<?xml');
+      expect(content).toBe(feedUrl);
 
       // Act - .opml拡張子
-      const resultOpml = await exportFeedsAction(context.dbPath, 'output.opml', 'auto');
-      expect(resultOpml.format).toBe('opml');
+      writeFileSpy.mockClear();
+      await exportCommand.parseAsync(['node', 'termfeed', 'output.opml']);
 
-      // Act - .xml拡張子
-      const resultXml = await exportFeedsAction(context.dbPath, 'output.xml', 'auto');
-      expect(resultXml.format).toBe('opml');
+      // Assert
+      const opmlContent = writeFileSpy.mock.calls[0][1] as string;
+      expect(opmlContent).toContain('<?xml');
+      expect(opmlContent).toContain('<opml version="2.0">');
     });
   });
 
@@ -197,17 +165,18 @@ describe('export command', () => {
         title: specialTitle,
         feedUrl,
       });
-      context.mockCrawler.setMockResponse(feedUrl, mockData);
+      crawlSpy.mockResolvedValueOnce(mockData);
       await context.feedService.addFeed(feedUrl);
 
+      process.env.TERMFEED_DB = context.dbPath;
+
       // Act
-      const result = await exportFeedsAction(context.dbPath, 'special.opml');
+      await exportCommand.parseAsync(['node', 'termfeed', 'special.opml']);
 
       // Assert
-      expect(result.content).toContain(
-        'Feed &amp; &quot;News&quot; &lt;Latest&gt; &apos;Updates&apos;'
-      );
-      expect(result.content).not.toContain(specialTitle); // 元の文字列は含まれないはず
+      const content = writeFileSpy.mock.calls[0][1] as string;
+      expect(content).toContain('Feed &amp; &quot;News&quot; &lt;Latest&gt; &apos;Updates&apos;');
+      expect(content).not.toContain(specialTitle); // 元の文字列は含まれないはず
     });
 
     it('URLと同じタイトルのフィードをエクスポートできる', async () => {
@@ -220,47 +189,75 @@ describe('export command', () => {
         description: undefined,
       });
 
+      process.env.TERMFEED_DB = context.dbPath;
+
       // Act
-      const result = await exportFeedsAction(context.dbPath, 'sameasurl.opml');
+      await exportCommand.parseAsync(['node', 'termfeed', 'sameasurl.opml']);
 
       // Assert
-      expect(result.content).toContain(`text="${feedUrl}"`); // URLがタイトルとして使用される
-      expect(result.content).toContain(`xmlUrl="${feedUrl}"`);
+      const content = writeFileSpy.mock.calls[0][1] as string;
+      expect(content).toContain(`text="${feedUrl}"`); // URLがタイトルとして使用される
+      expect(content).toContain(`xmlUrl="${feedUrl}"`);
     });
   });
 
   describe('エラーハンドリング', () => {
-    it('フィードがない場合はエラーメッセージを表示', async () => {
-      // Act & Assert
-      await expect(exportFeedsAction(context.dbPath)).rejects.toThrow('No feeds to export');
+    it('フィードがない場合は早期リターン（exitなし）', async () => {
+      // Arrange
+      process.env.TERMFEED_DB = context.dbPath;
+
+      // Act
+      await exportCommand.parseAsync(['node', 'termfeed']);
+
+      // Assert
+      expect(writeFileSpy).not.toHaveBeenCalled();
+      expect(exitCode).toBeUndefined(); // process.exitは呼ばれない
     });
 
-    it('無効な形式を指定した場合はエラー', async () => {
+    it('無効な形式を指定した場合はprocess.exitが1で呼ばれる', async () => {
       // Arrange
       const feedUrl = 'https://example.com/feed.rss';
       const mockData = createMockRSSData({ feedUrl });
-      context.mockCrawler.setMockResponse(feedUrl, mockData);
+      crawlSpy.mockResolvedValueOnce(mockData);
       await context.feedService.addFeed(feedUrl);
 
-      // Act & Assert
-      await expect(exportFeedsAction(context.dbPath, 'output.txt', 'invalid')).rejects.toThrow(
-        'Invalid format'
-      );
+      process.env.TERMFEED_DB = context.dbPath;
+
+      // Act
+      try {
+        await exportCommand.parseAsync(['node', 'termfeed', 'output.txt', '--format', 'invalid']);
+      } catch (error) {
+        // process.exitが呼ばれると例外が発生する
+        expect(error).toBeDefined();
+      }
+
+      // Assert
+      expect(exitCode).toBe(1);
+      expect(writeFileSpy).not.toHaveBeenCalled();
     });
 
-    it('ファイル書き込みエラーが発生した場合', async () => {
+    it('ファイル書き込みエラーが発生した場合はprocess.exitが1で呼ばれる', async () => {
       // Arrange
       const feedUrl = 'https://example.com/feed.rss';
       const mockData = createMockRSSData({ feedUrl });
-      context.mockCrawler.setMockResponse(feedUrl, mockData);
+      crawlSpy.mockResolvedValueOnce(mockData);
       await context.feedService.addFeed(feedUrl);
 
       // ファイル書き込みでエラーを発生させる
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       writeFileSpy.mockRejectedValue(new Error('Permission denied'));
 
-      // Act & Assert
-      await expect(exportFeedsAction(context.dbPath)).rejects.toThrow('Permission denied');
+      process.env.TERMFEED_DB = context.dbPath;
+
+      // Act
+      try {
+        await exportCommand.parseAsync(['node', 'termfeed']);
+      } catch (error) {
+        // process.exitが呼ばれると例外が発生する
+        expect(error).toBeDefined();
+      }
+
+      // Assert
+      expect(exitCode).toBe(1);
     });
   });
 
@@ -275,23 +272,25 @@ describe('export command', () => {
           feedUrl,
           items: [], // 記事は不要
         });
-        context.mockCrawler.setMockResponse(feedUrl, mockData);
+        crawlSpy.mockResolvedValueOnce(mockData);
         await context.feedService.addFeed(feedUrl);
       }
 
+      process.env.TERMFEED_DB = context.dbPath;
+
       // Act
-      const result = await exportFeedsAction(context.dbPath, 'many-feeds.opml');
+      await exportCommand.parseAsync(['node', 'termfeed', 'many-feeds.opml']);
 
       // Assert
-      expect(result.format).toBe('opml');
+      const content = writeFileSpy.mock.calls[0][1] as string;
 
       // すべてのフィードが含まれていることを確認
       for (let i = 1; i <= feedCount; i++) {
-        expect(result.content).toContain(`https://example.com/feed${i}.rss`);
+        expect(content).toContain(`https://example.com/feed${i}.rss`);
       }
 
       // outline要素の数を確認
-      const outlineCount = (result.content.match(/<outline/g) || []).length;
+      const outlineCount = (content.match(/<outline/g) || []).length;
       expect(outlineCount).toBe(feedCount);
     });
   });
@@ -301,32 +300,36 @@ describe('export command', () => {
       // Arrange
       const feedUrl = 'https://example.com/feed.rss';
       const mockData = createMockRSSData({ feedUrl });
-      context.mockCrawler.setMockResponse(feedUrl, mockData);
+      crawlSpy.mockResolvedValueOnce(mockData);
       await context.feedService.addFeed(feedUrl);
 
+      process.env.TERMFEED_DB = context.dbPath;
+
       // Act
-      const result = await exportFeedsAction(context.dbPath, './exports/feeds.opml');
+      await exportCommand.parseAsync(['node', 'termfeed', './exports/feeds.opml']);
 
       // Assert
-      expect(result.path).toContain('exports');
-      expect(result.path).toContain('feeds.opml');
-      expect(path.isAbsolute(result.path)).toBe(true);
+      const filePath = writeFileSpy.mock.calls[0][0] as string;
+      expect(filePath).toContain('exports');
+      expect(filePath).toContain('feeds.opml');
+      expect(path.isAbsolute(filePath)).toBe(true);
     });
 
     it('絶対パスもそのまま使用できる', async () => {
       // Arrange
       const feedUrl = 'https://example.com/feed.rss';
       const mockData = createMockRSSData({ feedUrl });
-      context.mockCrawler.setMockResponse(feedUrl, mockData);
+      crawlSpy.mockResolvedValueOnce(mockData);
       await context.feedService.addFeed(feedUrl);
 
       const absolutePath = '/tmp/test-export.opml';
+      process.env.TERMFEED_DB = context.dbPath;
 
       // Act
-      const result = await exportFeedsAction(context.dbPath, absolutePath);
+      await exportCommand.parseAsync(['node', 'termfeed', absolutePath]);
 
       // Assert
-      expect(result.path).toBe(absolutePath);
+      expect(writeFileSpy).toHaveBeenCalledWith(absolutePath, expect.any(String), 'utf-8');
     });
   });
 });

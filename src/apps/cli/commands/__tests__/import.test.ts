@@ -1,156 +1,50 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import * as fs from 'fs/promises';
-import * as path from 'path';
 import { createTestContext, createMockRSSData, type TestContext } from './test-helpers.js';
-import { FeedModel } from '../../../../models/feed.js';
-import { ArticleModel } from '../../../../models/article.js';
-import { FeedService } from '../../../../services/feed-service.js';
-import { createDatabaseManager } from '../../utils/database.js';
-import { DuplicateFeedError } from '../../../../services/errors.js';
+import { importCommand } from '../import.js';
+import { RSSCrawler } from '../../../../services/rss-crawler.js';
 
 // fs.readFileとfs.accessをモック
 vi.mock('fs/promises');
 
-// import.tsの内部ロジックを直接テストするため、アクション関数を抽出してテスト
-async function importFeedsAction(
-  dbPath: string,
-  filePath: string,
-  format?: string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  mockCrawler?: any
-): Promise<{
-  successCount: number;
-  duplicateCount: number;
-  errorCount: number;
-}> {
-  const originalDb = process.env.TERMFEED_DB;
-  process.env.TERMFEED_DB = dbPath;
-
-  try {
-    const absolutePath = path.resolve(filePath);
-
-    // ファイルの存在確認（テストではモック）
-    try {
-      await fs.access(absolutePath);
-    } catch {
-      throw new Error(`File not found: ${absolutePath}`);
-    }
-
-    // ファイルを読み込み（テストではモック）
-    const content = await fs.readFile(absolutePath, 'utf-8');
-
-    // 形式の決定
-    let importFormat: 'opml' | 'text';
-    if (format === 'auto' || !format) {
-      // OPMLService.detectFormatFromContentの実装を模倣
-      const trimmed = content.trim();
-      if (trimmed.startsWith('<?xml') || trimmed.includes('<opml')) {
-        importFormat = 'opml';
-      } else {
-        importFormat = 'text';
-      }
-    } else if (format === 'opml' || format === 'text') {
-      importFormat = format;
-    } else {
-      throw new Error('Invalid format');
-    }
-
-    // URLを抽出（OPMLServiceの実装を使用）
-    let urls: string[];
-    if (importFormat === 'opml') {
-      // OPMLService.parseOPMLの実装を模倣
-      urls = [];
-      const outlineRegex = /<outline[^>]+xmlUrl=["']([^"']+)["'][^>]*>/gi;
-      let match;
-      while ((match = outlineRegex.exec(content)) !== null) {
-        const url = match[1]
-          .replace(/&apos;/g, "'")
-          .replace(/&quot;/g, '"')
-          .replace(/&gt;/g, '>')
-          .replace(/&lt;/g, '<')
-          .replace(/&amp;/g, '&');
-        try {
-          const parsed = new URL(url);
-          if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
-            urls.push(url);
-          }
-        } catch {
-          // 無効なURLは無視
-        }
-      }
-    } else {
-      // OPMLService.parseTextの実装を模倣
-      urls = content
-        .split('\n')
-        .map((line) => line.trim())
-        .filter((line) => line.length > 0 && !line.startsWith('#'))
-        .filter((url) => {
-          try {
-            const parsed = new URL(url);
-            return parsed.protocol === 'http:' || parsed.protocol === 'https:';
-          } catch {
-            return false;
-          }
-        });
-    }
-
-    if (urls.length === 0) {
-      throw new Error('No valid feed URLs found');
-    }
-
-    // データベースとサービスの初期化
-    const dbManager = createDatabaseManager();
-    dbManager.migrate();
-    const feedModel = new FeedModel(dbManager);
-    const articleModel = new ArticleModel(dbManager);
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    const feedService = new FeedService(feedModel, articleModel, mockCrawler);
-
-    // 各URLを追加
-    let successCount = 0;
-    let duplicateCount = 0;
-    let errorCount = 0;
-
-    for (const url of urls) {
-      try {
-        await feedService.addFeed(url);
-        successCount++;
-      } catch (error) {
-        if (error instanceof DuplicateFeedError) {
-          duplicateCount++;
-        } else {
-          errorCount++;
-        }
-      }
-    }
-
-    dbManager.close();
-
-    return { successCount, duplicateCount, errorCount };
-  } finally {
-    if (originalDb) {
-      process.env.TERMFEED_DB = originalDb;
-    } else {
-      delete process.env.TERMFEED_DB;
-    }
-  }
-}
-
 describe('import command', () => {
   let context: TestContext;
+  let originalExit: typeof process.exit;
+  let exitCode: number | undefined;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let readFileSpy: any;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let accessSpy: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let crawlSpy: any;
 
   beforeEach(() => {
     context = createTestContext();
+
+    // process.exitをモック
+    exitCode = undefined;
+    originalExit = process.exit;
+    process.exit = vi.fn((code?: number) => {
+      exitCode = code;
+      throw new Error(`Process exited with code ${code}`);
+    }) as never;
+
+    // console出力をミュート
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+
     readFileSpy = vi.spyOn(fs, 'readFile');
     accessSpy = vi.spyOn(fs, 'access');
+
+    // RSSCrawlerをモック
+    crawlSpy = vi.spyOn(RSSCrawler.prototype, 'crawl');
   });
 
   afterEach(() => {
     context.cleanup();
+    process.exit = originalExit;
     vi.restoreAllMocks();
   });
 
@@ -169,9 +63,7 @@ describe('import command', () => {
   </body>
 </opml>`;
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       accessSpy.mockResolvedValue(undefined);
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       readFileSpy.mockResolvedValue(opmlContent);
 
       // 各フィードのモックレスポンスを設定
@@ -185,23 +77,15 @@ describe('import command', () => {
           title: `Feed ${i + 1}`,
           feedUrl: feedUrls[i],
         });
-        context.mockCrawler.setMockResponse(feedUrls[i], mockData);
+        crawlSpy.mockResolvedValueOnce(mockData);
       }
 
-      // Act
-      const result = await importFeedsAction(
-        context.dbPath,
-        'subscriptions.opml',
-        'auto',
-        context.mockCrawler
-      );
+      process.env.TERMFEED_DB = context.dbPath;
 
-      // Assert
-      expect(result.successCount).toBe(3);
-      expect(result.duplicateCount).toBe(0);
-      expect(result.errorCount).toBe(0);
+      // Act - コマンドを実行
+      await importCommand.parseAsync(['node', 'termfeed', 'subscriptions.opml']);
 
-      // データベースに保存されていることを確認
+      // Assert - データベースに保存されていることを確認
       const feeds = context.feedModel.findAll();
       expect(feeds).toHaveLength(3);
       expect(feeds.map((f) => f.url).sort()).toEqual(feedUrls.sort());
@@ -216,9 +100,7 @@ https://example.com/feed3.rss
 
 https://example.com/feed4.rss`;
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       accessSpy.mockResolvedValue(undefined);
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       readFileSpy.mockResolvedValue(textContent);
 
       // モックレスポンスを設定
@@ -228,22 +110,15 @@ https://example.com/feed4.rss`;
           title: `Feed ${i}`,
           feedUrl,
         });
-        context.mockCrawler.setMockResponse(feedUrl, mockData);
+        crawlSpy.mockResolvedValueOnce(mockData);
       }
 
+      process.env.TERMFEED_DB = context.dbPath;
+
       // Act
-      const result = await importFeedsAction(
-        context.dbPath,
-        'feeds.txt',
-        'text',
-        context.mockCrawler
-      );
+      await importCommand.parseAsync(['node', 'termfeed', 'feeds.txt', '--format', 'text']);
 
       // Assert
-      expect(result.successCount).toBe(4);
-      expect(result.duplicateCount).toBe(0);
-      expect(result.errorCount).toBe(0);
-
       const feeds = context.feedModel.findAll();
       expect(feeds).toHaveLength(4);
     });
@@ -257,24 +132,20 @@ https://example.com/feed4.rss`;
   </body>
 </opml>`;
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       accessSpy.mockResolvedValue(undefined);
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       readFileSpy.mockResolvedValue(opmlContent);
 
       const mockData = createMockRSSData({ feedUrl: 'https://example.com/feed.rss' });
-      context.mockCrawler.setMockResponse('https://example.com/feed.rss', mockData);
+      crawlSpy.mockResolvedValueOnce(mockData);
+
+      process.env.TERMFEED_DB = context.dbPath;
 
       // Act
-      const result = await importFeedsAction(
-        context.dbPath,
-        'file.opml',
-        'auto',
-        context.mockCrawler
-      );
+      await importCommand.parseAsync(['node', 'termfeed', 'file.opml']);
 
       // Assert
-      expect(result.successCount).toBe(1);
+      const feeds = context.feedModel.findAll();
+      expect(feeds).toHaveLength(1);
     });
   });
 
@@ -283,146 +154,116 @@ https://example.com/feed4.rss`;
       // Arrange - 既存のフィードを追加
       const existingUrl = 'https://example.com/existing.rss';
       const mockData = createMockRSSData({ feedUrl: existingUrl });
-      context.mockCrawler.setMockResponse(existingUrl, mockData);
+      crawlSpy.mockResolvedValueOnce(mockData);
       await context.feedService.addFeed(existingUrl);
 
       // インポートファイルの内容
       const textContent = `${existingUrl}
 https://example.com/new.rss`;
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       accessSpy.mockResolvedValue(undefined);
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       readFileSpy.mockResolvedValue(textContent);
 
       // 新しいフィードのモック
       const newMockData = createMockRSSData({ feedUrl: 'https://example.com/new.rss' });
-      context.mockCrawler.setMockResponse('https://example.com/new.rss', newMockData);
+      crawlSpy.mockResolvedValueOnce(newMockData);
+
+      process.env.TERMFEED_DB = context.dbPath;
 
       // Act
-      const result = await importFeedsAction(
-        context.dbPath,
-        'feeds.txt',
-        'text',
-        context.mockCrawler
-      );
+      await importCommand.parseAsync(['node', 'termfeed', 'feeds.txt', '--format', 'text']);
 
       // Assert
-      expect(result.successCount).toBe(1);
-      expect(result.duplicateCount).toBe(1);
-      expect(result.errorCount).toBe(0);
+      const feeds = context.feedModel.findAll();
+      expect(feeds).toHaveLength(2);
     });
 
-    it('フェッチエラーが発生したフィードはエラーとしてカウントされる', async () => {
+    it('フェッチエラーが発生したフィードは追加されない', async () => {
       // Arrange
       const textContent = `https://example.com/good.rss
 https://example.com/bad.rss
 https://example.com/good2.rss`;
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       accessSpy.mockResolvedValue(undefined);
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       readFileSpy.mockResolvedValue(textContent);
 
       // 正常なフィードのモック
       const goodMockData1 = createMockRSSData({ feedUrl: 'https://example.com/good.rss' });
       const goodMockData2 = createMockRSSData({ feedUrl: 'https://example.com/good2.rss' });
-      context.mockCrawler.setMockResponse('https://example.com/good.rss', goodMockData1);
-      context.mockCrawler.setMockResponse('https://example.com/good2.rss', goodMockData2);
 
-      // エラーを発生させるフィード
-      context.mockCrawler.setMockResponse('https://example.com/bad.rss', {
-        feed: {
-          url: 'https://example.com/bad.rss',
-          title: 'Bad Feed',
-          last_updated_at: new Date(),
-        },
-        articles: [],
-      });
-      // 一度リセットしてからエラーを設定
-      context.mockCrawler.reset();
-      context.mockCrawler.setMockResponse('https://example.com/good.rss', goodMockData1);
-      context.mockCrawler.setMockResponse('https://example.com/good2.rss', goodMockData2);
-      // bad.rssでエラーを発生させる別の方法を使用
-      context.mockCrawler.setThrowError(new Error('Network error'));
+      crawlSpy
+        .mockResolvedValueOnce(goodMockData1)
+        .mockRejectedValueOnce(new Error('Network error'))
+        .mockResolvedValueOnce(goodMockData2);
 
-      // Act - MockRSSCrawlerを修正してURL別にエラーを設定できるようにする必要があるため、
-      // ここでは別のアプローチを取る
-      const newContext = createTestContext();
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-      accessSpy.mockResolvedValue(undefined);
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-      readFileSpy.mockResolvedValue(textContent);
+      process.env.TERMFEED_DB = context.dbPath;
 
-      // 正常なフィードのモック設定
-      newContext.mockCrawler.setMockResponse('https://example.com/good.rss', goodMockData1);
-      newContext.mockCrawler.setMockResponse('https://example.com/good2.rss', goodMockData2);
-
-      // bad.rssにアクセスしたときだけエラーを発生させる
-      const originalCrawl = newContext.mockCrawler.crawl.bind(newContext.mockCrawler);
-      newContext.mockCrawler.crawl = async (url: string) => {
-        if (url === 'https://example.com/bad.rss') {
-          throw new Error('Network error');
-        }
-        return originalCrawl(url);
-      };
-
-      const result = await importFeedsAction(
-        newContext.dbPath,
-        'feeds.txt',
-        'text',
-        newContext.mockCrawler
-      );
+      // Act
+      await importCommand.parseAsync(['node', 'termfeed', 'feeds.txt', '--format', 'text']);
 
       // Assert
-      expect(result.successCount).toBe(2);
-      expect(result.duplicateCount).toBe(0);
-      expect(result.errorCount).toBe(1);
-
-      // クリーンアップ
-      newContext.cleanup();
+      const feeds = context.feedModel.findAll();
+      expect(feeds).toHaveLength(2);
+      expect(feeds.map((f) => f.url).sort()).toEqual([
+        'https://example.com/good.rss',
+        'https://example.com/good2.rss',
+      ]);
     });
 
-    it('ファイルが存在しない場合はエラー', async () => {
+    it('ファイルが存在しない場合はprocess.exitが1で呼ばれる', async () => {
       // Arrange
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       accessSpy.mockRejectedValue(new Error('ENOENT'));
+      process.env.TERMFEED_DB = context.dbPath;
 
-      // Act & Assert
-      await expect(
-        importFeedsAction(context.dbPath, 'nonexistent.opml', 'auto', context.mockCrawler)
-      ).rejects.toThrow('File not found');
+      // Act
+      try {
+        await importCommand.parseAsync(['node', 'termfeed', 'nonexistent.opml']);
+      } catch (error) {
+        // process.exitが呼ばれると例外が発生する
+        expect(error).toBeDefined();
+      }
+
+      // Assert
+      expect(exitCode).toBe(1);
     });
 
-    it('無効な形式を指定した場合はエラー', async () => {
+    it('無効な形式を指定した場合はprocess.exitが1で呼ばれる', async () => {
       // Arrange
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       accessSpy.mockResolvedValue(undefined);
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       readFileSpy.mockResolvedValue('dummy content');
+      process.env.TERMFEED_DB = context.dbPath;
 
-      // Act & Assert
-      await expect(
-        importFeedsAction(context.dbPath, 'file.txt', 'invalid', context.mockCrawler)
-      ).rejects.toThrow('Invalid format');
+      // Act
+      try {
+        await importCommand.parseAsync(['node', 'termfeed', 'file.txt', '--format', 'invalid']);
+      } catch (error) {
+        // process.exitが呼ばれると例外が発生する
+        expect(error).toBeDefined();
+      }
+
+      // Assert
+      expect(exitCode).toBe(1);
     });
 
-    it('有効なURLが含まれていない場合はエラー', async () => {
+    it('有効なURLが含まれていない場合は早期リターン（exitなし）', async () => {
       // Arrange
       const textContent = `# コメントのみ
 # https://example.com/feed.rss
 not-a-url
 ftp://example.com/file.txt`;
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       accessSpy.mockResolvedValue(undefined);
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       readFileSpy.mockResolvedValue(textContent);
+      process.env.TERMFEED_DB = context.dbPath;
 
-      // Act & Assert
-      await expect(
-        importFeedsAction(context.dbPath, 'invalid.txt', 'text', context.mockCrawler)
-      ).rejects.toThrow('No valid feed URLs found');
+      // Act
+      await importCommand.parseAsync(['node', 'termfeed', 'invalid.txt', '--format', 'text']);
+
+      // Assert
+      expect(exitCode).toBeUndefined(); // process.exitは呼ばれない
+
+      const feeds = context.feedModel.findAll();
+      expect(feeds).toHaveLength(0);
     });
   });
 
@@ -436,26 +277,19 @@ ftp://example.com/file.txt`;
   </body>
 </opml>`;
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       accessSpy.mockResolvedValue(undefined);
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       readFileSpy.mockResolvedValue(opmlContent);
 
       const feedUrl = 'https://example.com/feed.rss?param=1&lang=ja';
       const mockData = createMockRSSData({ feedUrl });
-      context.mockCrawler.setMockResponse(feedUrl, mockData);
+      crawlSpy.mockResolvedValueOnce(mockData);
+
+      process.env.TERMFEED_DB = context.dbPath;
 
       // Act
-      const result = await importFeedsAction(
-        context.dbPath,
-        'escaped.opml',
-        'opml',
-        context.mockCrawler
-      );
+      await importCommand.parseAsync(['node', 'termfeed', 'escaped.opml', '--format', 'opml']);
 
       // Assert
-      expect(result.successCount).toBe(1);
-
       const feeds = context.feedModel.findAll();
       expect(feeds[0].url).toBe(feedUrl);
     });
@@ -470,9 +304,7 @@ ftp://example.com/file.txt`;
       }
       const textContent = urls.join('\n');
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       accessSpy.mockResolvedValue(undefined);
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       readFileSpy.mockResolvedValue(textContent);
 
       // 各フィードのモックレスポンスを設定
@@ -483,22 +315,15 @@ ftp://example.com/file.txt`;
           feedUrl,
           items: [], // 記事は不要
         });
-        context.mockCrawler.setMockResponse(feedUrl, mockData);
+        crawlSpy.mockResolvedValueOnce(mockData);
       }
 
+      process.env.TERMFEED_DB = context.dbPath;
+
       // Act
-      const result = await importFeedsAction(
-        context.dbPath,
-        'many-feeds.txt',
-        'text',
-        context.mockCrawler
-      );
+      await importCommand.parseAsync(['node', 'termfeed', 'many-feeds.txt', '--format', 'text']);
 
       // Assert
-      expect(result.successCount).toBe(100);
-      expect(result.duplicateCount).toBe(0);
-      expect(result.errorCount).toBe(0);
-
       const feeds = context.feedModel.findAll();
       expect(feeds).toHaveLength(100);
     });
@@ -509,7 +334,7 @@ ftp://example.com/file.txt`;
       // Arrange - 既存のフィードを1つ追加
       const existingUrl = 'https://example.com/existing.rss';
       const existingMockData = createMockRSSData({ feedUrl: existingUrl });
-      context.mockCrawler.setMockResponse(existingUrl, existingMockData);
+      crawlSpy.mockResolvedValueOnce(existingMockData);
       await context.feedService.addFeed(existingUrl);
 
       // インポートファイルの内容
@@ -518,38 +343,31 @@ ${existingUrl}
 https://example.com/error.rss
 https://example.com/new2.rss`;
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       accessSpy.mockResolvedValue(undefined);
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       readFileSpy.mockResolvedValue(textContent);
 
       // 新しいフィードのモック
       const new1MockData = createMockRSSData({ feedUrl: 'https://example.com/new1.rss' });
       const new2MockData = createMockRSSData({ feedUrl: 'https://example.com/new2.rss' });
-      context.mockCrawler.setMockResponse('https://example.com/new1.rss', new1MockData);
-      context.mockCrawler.setMockResponse('https://example.com/new2.rss', new2MockData);
 
-      // error.rssでエラーを発生させる
-      const originalCrawl = context.mockCrawler.crawl.bind(context.mockCrawler);
-      context.mockCrawler.crawl = async (url: string) => {
-        if (url === 'https://example.com/error.rss') {
-          throw new Error('Connection timeout');
-        }
-        return originalCrawl(url);
-      };
+      crawlSpy
+        .mockResolvedValueOnce(new1MockData)
+        .mockRejectedValueOnce(new Error('Connection timeout'))
+        .mockResolvedValueOnce(new2MockData);
+
+      process.env.TERMFEED_DB = context.dbPath;
 
       // Act
-      const result = await importFeedsAction(
-        context.dbPath,
-        'mixed.txt',
-        'text',
-        context.mockCrawler
-      );
+      await importCommand.parseAsync(['node', 'termfeed', 'mixed.txt', '--format', 'text']);
 
       // Assert
-      expect(result.successCount).toBe(2);
-      expect(result.duplicateCount).toBe(1);
-      expect(result.errorCount).toBe(1);
+      const feeds = context.feedModel.findAll();
+      expect(feeds).toHaveLength(3); // existing + new1 + new2
+      expect(feeds.map((f) => f.url).sort()).toEqual([
+        'https://example.com/existing.rss',
+        'https://example.com/new1.rss',
+        'https://example.com/new2.rss',
+      ]);
     });
   });
 });
