@@ -13,6 +13,10 @@ import {
 
 export const VERSION = '0.1.0';
 
+/**
+ * CLIのメインプログラムを作成します。
+ * テストからの利用を想定して、インスタンス化可能な関数として公開しています。
+ */
 export function createMainProgram(): Command {
   const program = new Command();
 
