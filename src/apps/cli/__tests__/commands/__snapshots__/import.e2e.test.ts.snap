@@ -1,0 +1,73 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`import command E2E > should handle duplicate feeds gracefully > import-with-duplicates-output 1`] = `
+"Found 2 feed URLs to import...
+Database migration completed successfully
+Adding https://example.com/feed1.rss...
+⚠ Skipped (already exists): https://example.com/feed1.rss
+Adding https://example.com/feed2.rss...
+✓ Added https://example.com/feed2.rss
+
+Import Summary:
+✓ Successfully imported: 1 feeds
+⚠ Already existed: 1 feeds
+"
+`;
+
+exports[`import command E2E > should handle empty file > import-empty-file-output 1`] = `
+"No valid feed URLs found in the file
+"
+`;
+
+exports[`import command E2E > should handle feed fetch errors > import-with-errors-output 1`] = `
+"Found 2 feed URLs to import...
+Database migration completed successfully
+Adding https://example.com/good.rss...
+✓ Added https://example.com/good.rss
+Adding https://example.com/bad.rss...
+
+Import Summary:
+✓ Successfully imported: 1 feeds
+✗ Failed to import: 1 feeds
+"
+`;
+
+exports[`import command E2E > should handle file not found error > import-file-not-found-error-output 1`] = `
+"File not found: /nonexistent/file.opml
+Error importing feeds: Error: process.exit called
+"
+`;
+
+exports[`import command E2E > should handle invalid format option > import-invalid-format-error-output 1`] = `
+"Invalid format. Use "opml" or "text"
+Error importing feeds: Error: process.exit called
+"
+`;
+
+exports[`import command E2E > should import feeds from OPML file > import-opml-success-output 1`] = `
+"Found 2 feed URLs to import...
+Database migration completed successfully
+Adding https://example.com/feed1.rss...
+✓ Added https://example.com/feed1.rss
+Adding https://example.com/feed2.rss...
+✓ Added https://example.com/feed2.rss
+
+Import Summary:
+✓ Successfully imported: 2 feeds
+"
+`;
+
+exports[`import command E2E > should import feeds from text file > import-text-success-output 1`] = `
+"Found 3 feed URLs to import...
+Database migration completed successfully
+Adding https://example.com/feed1.rss...
+✓ Added https://example.com/feed1.rss
+Adding https://example.com/feed2.rss...
+✓ Added https://example.com/feed2.rss
+Adding https://example.com/feed3.rss...
+✓ Added https://example.com/feed3.rss
+
+Import Summary:
+✓ Successfully imported: 3 feeds
+"
+`;
