@@ -40,7 +40,7 @@ export async function runCommand(
   process.exit = ((code?: number) => {
     exitCode = code;
     throw new Error('process.exit called');
-  }) as never;
+  }) as typeof process.exit;
 
   // console出力をリダイレクト
   const originalLog = console.log;
