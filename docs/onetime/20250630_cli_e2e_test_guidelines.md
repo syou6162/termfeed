@@ -10,7 +10,7 @@
 - 内部実装の詳細に依存せず、外部から見た振る舞いをテスト
 
 ### 対象範囲
-- CLIコマンド（add, rm, export, import, update）
+- CLIコマンド（add, rm, export, import）
 - TUIとMCP-serverは本ガイドラインの対象外（別途対応）
 - インメモリデータベースへの移行は将来課題として保留
 
