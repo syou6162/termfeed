@@ -45,11 +45,12 @@ export class FeedService implements IFeedService {
     try {
       crawlResult = await this.crawler.crawl(url, abortSignal);
     } catch (error) {
-      throw new FeedManagementError(
-        `Failed to fetch feed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        undefined,
-        { cause: error }
-      );
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      // エラーメッセージが既に "Failed to" で始まっている場合は重複を避ける
+      const message = errorMessage.startsWith('Failed to')
+        ? errorMessage
+        : `Failed to fetch feed: ${errorMessage}`;
+      throw new FeedManagementError(message, undefined, { cause: error });
     }
 
     const createFeedInput: CreateFeedInput = {
