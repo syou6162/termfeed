@@ -1,15 +1,12 @@
 import { Box, Text, useApp, useStdout } from 'ink';
-import { useCallback, useEffect, useState, useMemo } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { Article, UpdateProgress, FeedUpdateFailure } from '@/types';
-import { FeedService } from '../../services/feed-service.js';
-import { FeedModel } from '../../models/feed.js';
-import { ArticleModel } from '../../models/article.js';
-import { createDatabaseManager } from '../cli/utils/database.js';
 import { ArticleList } from './components/ArticleList.js';
 import { FeedList } from './components/FeedList.js';
 import { TwoPaneLayout } from './components/TwoPaneLayout.js';
 import { HelpOverlay } from './components/HelpOverlay.js';
 import { useKeyboardNavigation } from './hooks/useKeyboardNavigation.js';
+import { useTermfeedData } from './hooks/useTermfeedData.js';
 import { openUrlInBrowser } from './utils/browser.js';
 import { sortFeedsByUnreadCount, type FeedWithUnreadCount } from './utils/feed-sorter.js';
 
@@ -31,17 +28,7 @@ export function App() {
   const [showFailedFeeds, setShowFailedFeeds] = useState(false);
 
   // データベースとサービスを初期化（一度だけ実行）
-  const { feedService } = useMemo(() => {
-    const databaseManager = createDatabaseManager();
-    // マイグレーションを実行
-    databaseManager.migrate();
-
-    const feedModel = new FeedModel(databaseManager);
-    const articleModel = new ArticleModel(databaseManager);
-    const feedService = new FeedService(feedModel, articleModel);
-
-    return { feedService };
-  }, []);
+  const { feedService } = useTermfeedData();
 
   const loadFeeds = useCallback(() => {
     try {
