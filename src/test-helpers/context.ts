@@ -1,7 +1,7 @@
 import { mkdtempSync, rmSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
-import { DatabaseManager } from '@/models/database.js';
+import { DatabaseManager, IN_MEMORY_DB } from '@/models/database.js';
 import { FeedModel } from '@/models/feed.js';
 import { ArticleModel } from '@/models/article.js';
 
@@ -14,9 +14,24 @@ export type TestContext = {
   cleanup: () => void;
 };
 
-export function createTestContext(): TestContext {
-  const tempDir = mkdtempSync(join(tmpdir(), 'termfeed-test-'));
-  const dbPath = join(tempDir, 'test.db');
+export type TestContextOptions = {
+  useInMemory?: boolean;
+};
+
+export function createTestContext(options: TestContextOptions = {}): TestContext {
+  const { useInMemory = false } = options; // CLIテストではファイルベースが必要なので、デフォルトはfalse
+
+  let tempDir: string;
+  let dbPath: string;
+
+  if (useInMemory) {
+    // インメモリDBでも一時ディレクトリは作成（CLIテストの互換性のため）
+    tempDir = mkdtempSync(join(tmpdir(), 'termfeed-test-'));
+    dbPath = IN_MEMORY_DB;
+  } else {
+    tempDir = mkdtempSync(join(tmpdir(), 'termfeed-test-'));
+    dbPath = join(tempDir, 'test.db');
+  }
 
   const database = new DatabaseManager(dbPath);
   database.migrate();
