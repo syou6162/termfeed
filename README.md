@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="./termfeed_icon.png" alt="termfeed icon" width="200">
+</p>
+
 # termfeed
 
 ターミナルで動作するモダンなRSSリーダー
