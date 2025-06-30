@@ -1,10 +1,10 @@
 import { PassThrough } from 'stream';
 
-export interface CommandOutput {
+export type CommandOutput = {
   stdout: string;
   stderr: string;
   exitCode: number | undefined;
-}
+};
 
 export async function runCommand(
   args: string[],

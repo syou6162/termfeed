@@ -5,14 +5,14 @@ import { DatabaseManager } from '@/models/database.js';
 import { FeedModel } from '@/models/feed.js';
 import { ArticleModel } from '@/models/article.js';
 
-export interface TestContext {
+export type TestContext = {
   tempDir: string;
   dbPath: string;
   database: DatabaseManager;
   feedModel: FeedModel;
   articleModel: ArticleModel;
   cleanup: () => void;
-}
+};
 
 export function createTestContext(): TestContext {
   const tempDir = mkdtempSync(join(tmpdir(), 'termfeed-test-'));

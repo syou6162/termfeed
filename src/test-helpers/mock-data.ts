@@ -1,6 +1,6 @@
 import type { CrawlResult } from '@/types';
 
-interface MockRSSDataOptions {
+type MockRSSDataOptions = {
   title: string;
   description?: string;
   feedUrl: string;
@@ -12,7 +12,7 @@ interface MockRSSDataOptions {
     author?: string;
     pubDate?: string;
   }>;
-}
+};
 
 export function createMockRSSData(options: MockRSSDataOptions): CrawlResult {
   const {

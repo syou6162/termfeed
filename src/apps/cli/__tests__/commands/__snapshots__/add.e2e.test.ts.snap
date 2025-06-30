@@ -1,0 +1,12 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`add command E2E > should add RSS feed successfully > add-success-output 1`] = `
+"Database migration completed successfully
+Adding feed: https://example.com/feed.rss
+Feed added successfully!
+  ID: 1
+  Title: Test Feed
+  Description: Test Description
+  Articles added: 2
+"
+`;
