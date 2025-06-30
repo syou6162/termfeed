@@ -41,7 +41,7 @@ vi.mock('../../../models/database.js', () => ({
   DatabaseManager: vi.fn().mockImplementation(() => mockDatabaseManager),
 }));
 
-vi.mock('../cli/utils/database.js', () => ({
+vi.mock('../../cli/utils/database.js', () => ({
   createDatabaseManager: vi.fn(() => mockDatabaseManager),
 }));
 
