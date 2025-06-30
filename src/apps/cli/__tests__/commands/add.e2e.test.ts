@@ -68,6 +68,7 @@ describe('add command E2E', () => {
     // Assert
     expect(output.exitCode).toBe(1);
     expect(output.stderr).toContain('Error adding feed');
+    expect(output.stderr).toMatchSnapshot('network-error-output');
 
     // データベースに何も追加されていないことを確認
     const feeds = context.feedModel.findAll();
@@ -97,6 +98,7 @@ describe('add command E2E', () => {
     // Assert
     expect(output.exitCode).toBe(1);
     expect(output.stderr).toContain('Error adding feed');
+    expect(output.stderr).toMatchSnapshot('duplicate-feed-error-output');
 
     // フィードは1つのみ
     const feeds = context.feedModel.findAll();
@@ -112,6 +114,7 @@ describe('add command E2E', () => {
     // Assert
     expect(output.exitCode).toBe(1);
     expect(output.stderr).toContain('Error adding feed');
+    expect(output.stderr).toMatchSnapshot('invalid-url-error-output');
 
     // データベースに何も追加されていないことを確認
     const feeds = context.feedModel.findAll();

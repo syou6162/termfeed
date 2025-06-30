@@ -10,3 +10,18 @@ Feed added successfully!
   Articles added: 2
 "
 `;
+
+exports[`add command E2E > should handle duplicate feed error > duplicate-feed-error-output 1`] = `
+"Error adding feed: Feed already exists: https://example.com/feed.rss
+"
+`;
+
+exports[`add command E2E > should handle invalid URL gracefully > invalid-url-error-output 1`] = `
+"Error adding feed: Failed to fetch feed: Failed to parse RSS feed: Invalid URL
+"
+`;
+
+exports[`add command E2E > should handle network errors gracefully > network-error-output 1`] = `
+"Error adding feed: Failed to fetch feed: Network error
+"
+`;
