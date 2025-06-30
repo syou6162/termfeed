@@ -1,6 +1,5 @@
 import { Box, Text, useApp, useStdout } from 'ink';
 import { useCallback, useEffect, useState, useMemo } from 'react';
-import { spawn } from 'child_process';
 import type { Article, Feed, UpdateProgress, FeedUpdateFailure } from '@/types';
 import { FeedService } from '../../services/feed-service.js';
 import { FeedModel } from '../../models/feed.js';
@@ -11,6 +10,7 @@ import { FeedList } from './components/FeedList.js';
 import { TwoPaneLayout } from './components/TwoPaneLayout.js';
 import { HelpOverlay } from './components/HelpOverlay.js';
 import { useKeyboardNavigation } from './hooks/useKeyboardNavigation.js';
+import { openUrlInBrowser } from './utils/browser.js';
 
 type FeedWithUnreadCount = Feed & {
   unreadCount: number;
@@ -187,42 +187,11 @@ export function App() {
   const handleArticleSelect = useCallback(() => {
     const selectedArticle = articles[selectedArticleIndex];
     if (selectedArticle?.url) {
-      // URLの安全性チェック
-      const url = selectedArticle.url.trim();
-      if (!url.startsWith('http://') && !url.startsWith('https://')) {
-        console.error('無効なURLです:', url);
-        return;
+      try {
+        openUrlInBrowser(selectedArticle.url);
+      } catch (error) {
+        console.error(error instanceof Error ? error.message : '不明なエラー');
       }
-
-      // クロスプラットフォーム対応でブラウザを開く（セキュア版）
-      let command: string;
-      let args: string[];
-
-      if (process.platform === 'darwin') {
-        // macOS - バックグラウンドで開く
-        command = 'open';
-        args = ['-g', url];
-      } else if (process.platform === 'win32') {
-        // Windows - 最小化で開く
-        command = 'cmd';
-        args = ['/c', 'start', '/min', url];
-      } else {
-        // Linux/Unix - バックグラウンドで開く
-        command = 'xdg-open';
-        args = [url];
-      }
-
-      const childProcess = spawn(command, args, {
-        stdio: 'ignore',
-        detached: true,
-      });
-
-      childProcess.on('error', (error) => {
-        console.error('ブラウザの起動に失敗しました:', error.message);
-      });
-
-      // プロセスを親から切り離す
-      childProcess.unref();
     }
   }, [articles, selectedArticleIndex]);
 
