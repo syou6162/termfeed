@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { createTestContext, createMockRSSData, type TestContext } from './test-helpers.js';
 import { FeedService } from '../../../../services/feed-service.js';
 import { FeedModel } from '../../../../models/feed.js';
@@ -18,7 +18,6 @@ async function removeFeedAction(feedId: string, dbPath: string) {
     // parsePositiveIntegerの実装を模倣
     const id = parseInt(feedId, 10);
     if (isNaN(id) || id <= 0) {
-      console.error(`Invalid feed ID: must be a positive number`);
       throw new Error('Invalid feed ID');
     }
 
@@ -27,9 +26,6 @@ async function removeFeedAction(feedId: string, dbPath: string) {
     const feedService = new FeedService(feedModel, articleModel);
 
     const success = feedService.removeFeed(id);
-    if (success) {
-      console.log(`Feed ID ${id} removed successfully!`);
-    }
 
     dbManager.close();
     return success;
@@ -44,22 +40,13 @@ async function removeFeedAction(feedId: string, dbPath: string) {
 
 describe('rm command', () => {
   let context: TestContext;
-  let consoleSpy: {
-    log: ReturnType<typeof vi.spyOn>;
-    error: ReturnType<typeof vi.spyOn>;
-  };
 
   beforeEach(() => {
     context = createTestContext();
-    consoleSpy = {
-      log: vi.spyOn(console, 'log').mockImplementation(() => {}),
-      error: vi.spyOn(console, 'error').mockImplementation(() => {}),
-    };
   });
 
   afterEach(() => {
     context.cleanup();
-    vi.restoreAllMocks();
   });
 
   describe('基本的なフィード削除', () => {
@@ -82,7 +69,6 @@ describe('rm command', () => {
 
       // Assert
       expect(success).toBe(true);
-      expect(consoleSpy.log).toHaveBeenCalledWith(`Feed ID ${feedId} removed successfully!`);
 
       // フィードが削除されていることを確認
       const feeds = context.feedModel.findAll();
@@ -174,8 +160,6 @@ describe('rm command', () => {
 
       // Act & Assert
       await expect(removeFeedAction(invalidId, context.dbPath)).rejects.toThrow('Invalid feed ID');
-
-      expect(consoleSpy.error).toHaveBeenCalledWith('Invalid feed ID: must be a positive number');
     });
 
     it('無効なフィードID（ゼロ）でエラーが発生する', async () => {
@@ -184,8 +168,6 @@ describe('rm command', () => {
 
       // Act & Assert
       await expect(removeFeedAction(invalidId, context.dbPath)).rejects.toThrow('Invalid feed ID');
-
-      expect(consoleSpy.error).toHaveBeenCalledWith('Invalid feed ID: must be a positive number');
     });
 
     it('無効なフィードID（文字列）でエラーが発生する', async () => {
@@ -194,8 +176,6 @@ describe('rm command', () => {
 
       // Act & Assert
       await expect(removeFeedAction(invalidId, context.dbPath)).rejects.toThrow('Invalid feed ID');
-
-      expect(consoleSpy.error).toHaveBeenCalledWith('Invalid feed ID: must be a positive number');
     });
 
     it('無効なフィードID（小数）でエラーが発生する', async () => {

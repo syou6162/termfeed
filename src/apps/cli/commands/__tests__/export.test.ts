@@ -28,7 +28,6 @@ async function exportFeedsAction(
     const feeds = feedModel.findAll();
 
     if (feeds.length === 0) {
-      console.log('No feeds to export');
       throw new Error('No feeds to export');
     }
 
@@ -43,7 +42,6 @@ async function exportFeedsAction(
     } else if (format === 'opml' || format === 'text') {
       exportFormat = format;
     } else {
-      console.error('Invalid format. Use "opml" or "text"');
       throw new Error('Invalid format');
     }
 
@@ -57,9 +55,6 @@ async function exportFeedsAction(
 
     // ファイルに書き込み（テストではモック）
     await fs.writeFile(absolutePath, content, 'utf-8');
-
-    const formatName = exportFormat === 'opml' ? 'OPML' : 'text';
-    console.log(`✓ Exported ${feeds.length} feeds to ${absolutePath} (${formatName} format)`);
 
     dbManager.close();
 
@@ -79,19 +74,11 @@ async function exportFeedsAction(
 
 describe('export command', () => {
   let context: TestContext;
-  let consoleSpy: {
-    log: ReturnType<typeof vi.spyOn>;
-    error: ReturnType<typeof vi.spyOn>;
-  };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let writeFileSpy: any;
 
   beforeEach(() => {
     context = createTestContext();
-    consoleSpy = {
-      log: vi.spyOn(console, 'log').mockImplementation(() => {}),
-      error: vi.spyOn(console, 'error').mockImplementation(() => {}),
-    };
     writeFileSpy = vi.spyOn(fs, 'writeFile').mockResolvedValue();
   });
 
@@ -135,10 +122,6 @@ describe('export command', () => {
         result.content,
         'utf-8'
       );
-
-      expect(consoleSpy.log).toHaveBeenCalledWith(
-        expect.stringMatching(/✓ Exported 3 feeds to .+feeds\.opml \(OPML format\)/)
-      );
     });
 
     it('フィードをテキスト形式でエクスポートできる', async () => {
@@ -166,10 +149,6 @@ describe('export command', () => {
         expect.stringMatching(/feeds\.txt$/),
         result.content,
         'utf-8'
-      );
-
-      expect(consoleSpy.log).toHaveBeenCalledWith(
-        expect.stringMatching(/✓ Exported 2 feeds to .+feeds\.txt \(text format\)/)
       );
     });
 
@@ -254,7 +233,6 @@ describe('export command', () => {
     it('フィードがない場合はエラーメッセージを表示', async () => {
       // Act & Assert
       await expect(exportFeedsAction(context.dbPath)).rejects.toThrow('No feeds to export');
-      expect(consoleSpy.log).toHaveBeenCalledWith('No feeds to export');
     });
 
     it('無効な形式を指定した場合はエラー', async () => {
@@ -268,7 +246,6 @@ describe('export command', () => {
       await expect(exportFeedsAction(context.dbPath, 'output.txt', 'invalid')).rejects.toThrow(
         'Invalid format'
       );
-      expect(consoleSpy.error).toHaveBeenCalledWith('Invalid format. Use "opml" or "text"');
     });
 
     it('ファイル書き込みエラーが発生した場合', async () => {
@@ -316,10 +293,6 @@ describe('export command', () => {
       // outline要素の数を確認
       const outlineCount = (result.content.match(/<outline/g) || []).length;
       expect(outlineCount).toBe(feedCount);
-
-      expect(consoleSpy.log).toHaveBeenCalledWith(
-        expect.stringMatching(/✓ Exported 100 feeds to .+many-feeds\.opml \(OPML format\)/)
-      );
     });
   });
 

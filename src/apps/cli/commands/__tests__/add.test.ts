@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import {
   createTestContext,
   createMockRSSData,
@@ -28,17 +28,7 @@ async function addFeedAction(url: string, dbPath: string, mockCrawler?: MockRSSC
     const articleModel = new ArticleModel(dbManager);
     const feedService = new FeedService(feedModel, articleModel, mockCrawler);
 
-    console.log(`Adding feed: ${url}`);
-
     const result = await feedService.addFeed(url);
-
-    console.log(`Feed added successfully!`);
-    console.log(`  ID: ${result.feed.id}`);
-    console.log(`  Title: ${result.feed.title}`);
-    if (result.feed.description) {
-      console.log(`  Description: ${result.feed.description}`);
-    }
-    console.log(`  Articles added: ${result.articlesCount}`);
 
     dbManager.close();
     return result;
@@ -53,22 +43,13 @@ async function addFeedAction(url: string, dbPath: string, mockCrawler?: MockRSSC
 
 describe('add command', () => {
   let context: TestContext;
-  let consoleSpy: {
-    log: ReturnType<typeof vi.spyOn>;
-    error: ReturnType<typeof vi.spyOn>;
-  };
 
   beforeEach(() => {
     context = createTestContext();
-    consoleSpy = {
-      log: vi.spyOn(console, 'log').mockImplementation(() => {}),
-      error: vi.spyOn(console, 'error').mockImplementation(() => {}),
-    };
   });
 
   afterEach(() => {
     context.cleanup();
-    vi.restoreAllMocks();
   });
 
   describe('基本的なフィード追加', () => {
@@ -98,13 +79,6 @@ describe('add command', () => {
 
       const articles = context.articleModel.findAll();
       expect(articles).toHaveLength(2);
-
-      expect(consoleSpy.log).toHaveBeenCalledWith(`Adding feed: ${testUrl}`);
-      expect(consoleSpy.log).toHaveBeenCalledWith('Feed added successfully!');
-      expect(consoleSpy.log).toHaveBeenCalledWith(`  ID: ${result.feed.id}`);
-      expect(consoleSpy.log).toHaveBeenCalledWith('  Title: Example Feed');
-      expect(consoleSpy.log).toHaveBeenCalledWith('  Description: Example feed description');
-      expect(consoleSpy.log).toHaveBeenCalledWith('  Articles added: 2');
     });
 
     it('記事のないフィードも追加できる', async () => {
@@ -130,8 +104,6 @@ describe('add command', () => {
 
       const articles = context.articleModel.findAll();
       expect(articles).toHaveLength(0);
-
-      expect(consoleSpy.log).toHaveBeenCalledWith('  Articles added: 0');
     });
 
     it('descriptionがないフィードも追加できる', async () => {
@@ -154,9 +126,6 @@ describe('add command', () => {
       const feeds = context.feedModel.findAll();
       expect(feeds).toHaveLength(1);
       expect(feeds[0].description).toBeNull();
-
-      // descriptionの出力がないことを確認
-      expect(consoleSpy.log).not.toHaveBeenCalledWith(expect.stringMatching(/Description:/));
     });
   });
 

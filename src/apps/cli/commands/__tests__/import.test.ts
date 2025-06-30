@@ -33,7 +33,6 @@ async function importFeedsAction(
     try {
       await fs.access(absolutePath);
     } catch {
-      console.error(`File not found: ${absolutePath}`);
       throw new Error(`File not found: ${absolutePath}`);
     }
 
@@ -53,7 +52,6 @@ async function importFeedsAction(
     } else if (format === 'opml' || format === 'text') {
       importFormat = format;
     } else {
-      console.error('Invalid format. Use "opml" or "text"');
       throw new Error('Invalid format');
     }
 
@@ -97,11 +95,8 @@ async function importFeedsAction(
     }
 
     if (urls.length === 0) {
-      console.log('No valid feed URLs found in the file');
       throw new Error('No valid feed URLs found');
     }
-
-    console.log(`Found ${urls.length} feed URLs to import...`);
 
     // データベースとサービスの初期化
     const dbManager = createDatabaseManager();
@@ -118,31 +113,15 @@ async function importFeedsAction(
 
     for (const url of urls) {
       try {
-        console.log(`Adding ${url}...`);
         await feedService.addFeed(url);
         successCount++;
-        console.log(`✓ Added ${url}`);
       } catch (error) {
         if (error instanceof DuplicateFeedError) {
           duplicateCount++;
-          console.log(`⚠ Skipped (already exists): ${url}`);
         } else {
           errorCount++;
-          console.error(`✗ Failed to add ${url}:`, error);
         }
       }
-    }
-
-    // 結果のサマリー
-    console.log('\nImport Summary:');
-    if (successCount > 0) {
-      console.log(`✓ Successfully imported: ${successCount} feeds`);
-    }
-    if (duplicateCount > 0) {
-      console.log(`⚠ Already existed: ${duplicateCount} feeds`);
-    }
-    if (errorCount > 0) {
-      console.log(`✗ Failed to import: ${errorCount} feeds`);
     }
 
     dbManager.close();
@@ -159,10 +138,6 @@ async function importFeedsAction(
 
 describe('import command', () => {
   let context: TestContext;
-  let consoleSpy: {
-    log: ReturnType<typeof vi.spyOn>;
-    error: ReturnType<typeof vi.spyOn>;
-  };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let readFileSpy: any;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -170,10 +145,6 @@ describe('import command', () => {
 
   beforeEach(() => {
     context = createTestContext();
-    consoleSpy = {
-      log: vi.spyOn(console, 'log').mockImplementation(() => {}),
-      error: vi.spyOn(console, 'error').mockImplementation(() => {}),
-    };
     readFileSpy = vi.spyOn(fs, 'readFile');
     accessSpy = vi.spyOn(fs, 'access');
   });
@@ -234,9 +205,6 @@ describe('import command', () => {
       const feeds = context.feedModel.findAll();
       expect(feeds).toHaveLength(3);
       expect(feeds.map((f) => f.url).sort()).toEqual(feedUrls.sort());
-
-      expect(consoleSpy.log).toHaveBeenCalledWith('Found 3 feed URLs to import...');
-      expect(consoleSpy.log).toHaveBeenCalledWith('✓ Successfully imported: 3 feeds');
     });
 
     it('テキスト形式のファイルからフィードをインポートできる', async () => {
@@ -343,9 +311,6 @@ https://example.com/new.rss`;
       expect(result.successCount).toBe(1);
       expect(result.duplicateCount).toBe(1);
       expect(result.errorCount).toBe(0);
-
-      expect(consoleSpy.log).toHaveBeenCalledWith(`⚠ Skipped (already exists): ${existingUrl}`);
-      expect(consoleSpy.log).toHaveBeenCalledWith('⚠ Already existed: 1 feeds');
     });
 
     it('フェッチエラーが発生したフィードはエラーとしてカウントされる', async () => {
@@ -414,12 +379,6 @@ https://example.com/good2.rss`;
       expect(result.duplicateCount).toBe(0);
       expect(result.errorCount).toBe(1);
 
-      expect(consoleSpy.error).toHaveBeenCalledWith(
-        '✗ Failed to add https://example.com/bad.rss:',
-        expect.any(Error)
-      );
-      expect(consoleSpy.log).toHaveBeenCalledWith('✗ Failed to import: 1 feeds');
-
       // クリーンアップ
       newContext.cleanup();
     });
@@ -433,8 +392,6 @@ https://example.com/good2.rss`;
       await expect(
         importFeedsAction(context.dbPath, 'nonexistent.opml', 'auto', context.mockCrawler)
       ).rejects.toThrow('File not found');
-
-      expect(consoleSpy.error).toHaveBeenCalledWith(expect.stringContaining('File not found:'));
     });
 
     it('無効な形式を指定した場合はエラー', async () => {
@@ -448,8 +405,6 @@ https://example.com/good2.rss`;
       await expect(
         importFeedsAction(context.dbPath, 'file.txt', 'invalid', context.mockCrawler)
       ).rejects.toThrow('Invalid format');
-
-      expect(consoleSpy.error).toHaveBeenCalledWith('Invalid format. Use "opml" or "text"');
     });
 
     it('有効なURLが含まれていない場合はエラー', async () => {
@@ -468,8 +423,6 @@ ftp://example.com/file.txt`;
       await expect(
         importFeedsAction(context.dbPath, 'invalid.txt', 'text', context.mockCrawler)
       ).rejects.toThrow('No valid feed URLs found');
-
-      expect(consoleSpy.log).toHaveBeenCalledWith('No valid feed URLs found in the file');
     });
   });
 
@@ -548,9 +501,6 @@ ftp://example.com/file.txt`;
 
       const feeds = context.feedModel.findAll();
       expect(feeds).toHaveLength(100);
-
-      expect(consoleSpy.log).toHaveBeenCalledWith('Found 100 feed URLs to import...');
-      expect(consoleSpy.log).toHaveBeenCalledWith('✓ Successfully imported: 100 feeds');
     });
   });
 
@@ -600,11 +550,6 @@ https://example.com/new2.rss`;
       expect(result.successCount).toBe(2);
       expect(result.duplicateCount).toBe(1);
       expect(result.errorCount).toBe(1);
-
-      // 3つのサマリーすべてが表示されることを確認
-      expect(consoleSpy.log).toHaveBeenCalledWith('✓ Successfully imported: 2 feeds');
-      expect(consoleSpy.log).toHaveBeenCalledWith('⚠ Already existed: 1 feeds');
-      expect(consoleSpy.log).toHaveBeenCalledWith('✗ Failed to import: 1 feeds');
     });
   });
 });
