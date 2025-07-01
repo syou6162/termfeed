@@ -14,7 +14,8 @@ termfeedは、ターミナルで動作するRSSリーダーです。Vim風のキ
 - **DatabaseManager**: SQLite接続管理とマイグレーション
   - `migrate()`: schema.sqlを実行してテーブル作成
   - 開発時とビルド後で異なるパス解決を実装
-- **FeedModel**: フィードのCRUD操作
+- **FeedModel**: フィードのCRUD操作、レーティング管理
+  - `setRating()`: 0-5の範囲でフィードレーティングを設定
 - **ArticleModel**: 記事のCRUD操作、既読管理、お気に入り機能
   - `getUnreadCountsByFeedIds()`: N+1クエリ回避のバッチ処理メソッド
   - `count()`: 記事の総数を取得
@@ -24,6 +25,8 @@ termfeedは、ターミナルで動作するRSSリーダーです。Vim風のキ
 - **FeedService**: フィード管理とビジネスロジック
   - `implements IFeedService`で型安全性を保証
   - `getUnreadCountsForAllFeeds()`: 全フィードの未読件数を一括取得
+  - `setFeedRating()`: フィードレーティング設定
+  - `getUnreadFeeds()`: レーティング優先・未読件数副次のソート
 - **ArticleService**: 記事管理のビジネスロジック（ArticleModelのラッパー）
 - **カスタムエラークラス**: 型安全なエラーハンドリング
   - RSSFetchError, RSSParseError, FeedUpdateError, DuplicateFeedError, FeedNotFoundError
@@ -34,12 +37,14 @@ termfeedは、ターミナルで動作するRSSリーダーです。Vim風のキ
   - `App.tsx`: メインコンポーネント、自動既読機能実装
   - `components/`: ArticleList, FeedList, TwoPaneLayout, HelpOverlay
   - `hooks/useKeyboardNavigation.ts`: キーバインド処理
+  - `hooks/useFeedManager.ts`: フィード選択状態の自動同期
 - **src/apps/mcp/**: Model Context Protocolサーバー実装
   - AI連携用のリソースプロバイダー
 
 ### 型定義 (src/types/)
 すべての型定義を集約管理：
 - **domain.ts**: DBエンティティ（Feed, Article）
+  - `Feed.rating`: 0-5の整数値（必須）
 - **dto.ts**: データ転送オブジェクト（RSSItem, CrawlResult）
 - **options.ts**: 関数引数・設定（ArticleQueryOptions, ServiceError）
 - **services.ts**: サービス層のインターフェース
@@ -91,8 +96,15 @@ npm run dev mcp-server  # MCPサーバー起動
 - `v`: ブラウザで開く（spawn使用でセキュア実装）
 - `f`: お気に入りトグル
 - `r`: 全フィード更新
+- `0-5`: フィードレーティング設定
 - `?`: ヘルプ表示
 - `q`: 終了
+
+### レーティング機能
+- レーティング別セクション表示（折りたたみ式）
+- 現在選択中のセクションのみ展開
+- フィード一覧は30%、記事詳細は70%のレイアウト
+- `useFeedManager`がレーティング変更後の選択状態を自動同期
 
 ### 自動既読機能
 - フィード移動時（handleFeedSelectionChange）で現在記事を既読化
@@ -101,15 +113,20 @@ npm run dev mcp-server  # MCPサーバー起動
 
 ### パフォーマンス最適化
 - `getUnreadCountsForAllFeeds()`でN+1クエリ回避
-- 未読フィードを上位にソート表示
+- レーティング優先・未読件数副次のソート表示
 
 ## データベース設計
 
 SQLiteを使用（src/models/schema.sql）：
 
 ### テーブル構造
-- **feeds**: id, url (UNIQUE), title, description, last_updated_at, created_at
+- **feeds**: id, url (UNIQUE), title, description, rating (INTEGER DEFAULT 0), last_updated_at, created_at
 - **articles**: id, feed_id (FK), title, url (UNIQUE), content, summary, author, published_at, is_read, is_favorite, thumbnail_url, created_at, updated_at
+
+### インデックス
+- `idx_feeds_rating`: レーティングでの高速ソート
+- `idx_articles_feed_id`: フィード別記事の高速取得
+- `idx_articles_is_read`: 未読記事の高速フィルタリング
 
 ### 設計原則
 - データベースは制約のみ、ロジックはアプリケーション側
