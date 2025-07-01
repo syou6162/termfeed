@@ -8,8 +8,8 @@ import { useKeyboardNavigation } from './hooks/useKeyboardNavigation.js';
 import { useTermfeedData } from './hooks/useTermfeedData.js';
 import { useFeedManager } from './hooks/useFeedManager.js';
 import { useArticleManager } from './hooks/useArticleManager.js';
-import { useAutoMarkAsRead } from './hooks/useAutoMarkAsRead.js';
 import { useErrorManager } from './hooks/useErrorManager.js';
+import { useViewedArticles } from './hooks/useViewedArticles.js';
 import { openUrlInBrowser } from './utils/browser.js';
 import { ERROR_SOURCES } from './types/error.js';
 
@@ -61,6 +61,9 @@ export function App() {
   // エラー管理
   const errorManager = useErrorManager();
 
+  // 閲覧済み記事の管理
+  const { recordArticleView, markViewedArticlesAsRead } = useViewedArticles(feedService);
+
   // エラーを統合管理
   const { addError, clearErrorsBySource } = errorManager;
 
@@ -92,21 +95,32 @@ export function App() {
     }
   }, [articlesError, addError, clearErrorsBySource]);
 
-  // 自動既読機能
-  const { markCurrentArticleAsRead } = useAutoMarkAsRead({
-    articles,
-    selectedArticleIndex,
-    feedService,
-    // フィード移動時は記事リストの再読み込みは不要（useEffectで処理される）
-    onArticleMarkedAsRead: undefined,
-  });
-
   const handleFeedSelectionChange = useCallback(
     (index: number) => {
-      markCurrentArticleAsRead();
+      // 閲覧済み記事をまとめて既読化
+      markViewedArticlesAsRead();
       setSelectedFeedIndex(index);
     },
-    [markCurrentArticleAsRead, setSelectedFeedIndex]
+    [markViewedArticlesAsRead, setSelectedFeedIndex]
+  );
+
+  const handleArticleSelectionChange = useCallback(
+    (index: number) => {
+      // 現在の記事を閲覧済みとして記録（重複はSetが自動的に防ぐ）
+      const currentArticle = articles[selectedArticleIndex];
+      if (currentArticle?.id) {
+        recordArticleView(currentArticle.id);
+      }
+
+      // 新しい記事も記録
+      const newArticle = articles[index];
+      if (newArticle?.id) {
+        recordArticleView(newArticle.id);
+      }
+
+      setSelectedArticleIndex(index);
+    },
+    [articles, selectedArticleIndex, recordArticleView, setSelectedArticleIndex]
   );
 
   const handleArticleSelect = useCallback(async () => {
@@ -125,35 +139,17 @@ export function App() {
     }
   }, [articles, selectedArticleIndex, addError]);
 
-  // 現在の記事の参照を保持（プロセス終了時の既読化用）
-  const currentArticleRef = useRef<{
-    article: (typeof articles)[number] | null;
-    feedService: typeof feedService;
-  }>({
-    article: null,
-    feedService,
-  });
-
-  // 現在の記事を更新
+  // 閲覧済み記事の参照を保持（プロセス終了時の既読化用）
+  const markViewedArticlesAsReadRef = useRef(markViewedArticlesAsRead);
   useEffect(() => {
-    const currentArticle = articles[selectedArticleIndex] || null;
-    currentArticleRef.current = {
-      article: currentArticle,
-      feedService,
-    };
-  }, [articles, selectedArticleIndex, feedService]);
+    markViewedArticlesAsReadRef.current = markViewedArticlesAsRead;
+  }, [markViewedArticlesAsRead]);
 
   // プロセス終了時の既読化処理（アプリ全体で1回だけ登録）
   useEffect(() => {
     const handleExit = () => {
-      const { article, feedService } = currentArticleRef.current;
-      if (article && article.id && !article.is_read) {
-        try {
-          feedService.markArticleAsRead(article.id);
-        } catch (err) {
-          console.error('終了時の記事既読化に失敗しました:', err);
-        }
-      }
+      // 閲覧済み記事をまとめて既読化
+      markViewedArticlesAsReadRef.current();
     };
 
     process.on('SIGINT', handleExit);
@@ -166,9 +162,10 @@ export function App() {
   }, []); // 空の依存配列 = アプリ起動時に1回だけ実行
 
   const handleQuit = useCallback(() => {
-    markCurrentArticleAsRead();
+    // 閲覧済み記事をまとめて既読化
+    markViewedArticlesAsRead();
     exit();
-  }, [markCurrentArticleAsRead, exit]);
+  }, [markViewedArticlesAsRead, exit]);
 
   // 初期化時に最初のフィードの記事を読み込み
   useEffect(() => {
@@ -181,13 +178,20 @@ export function App() {
     }
   }, [feeds, selectedFeedIndex, loadArticles]);
 
+  // 初期表示時と記事リスト更新時に最初の記事を閲覧済みとして記録
+  useEffect(() => {
+    if (articles.length > 0 && articles[selectedArticleIndex]?.id) {
+      recordArticleView(articles[selectedArticleIndex].id);
+    }
+  }, [articles, selectedArticleIndex, recordArticleView]);
+
   // キーボードナビゲーション
   useKeyboardNavigation({
     articleCount: articles.length,
     feedCount: feeds.length,
     selectedArticleIndex,
     selectedFeedIndex,
-    onArticleSelectionChange: setSelectedArticleIndex,
+    onArticleSelectionChange: handleArticleSelectionChange,
     onFeedSelectionChange: handleFeedSelectionChange,
     onOpenInBrowser: () => {
       void handleArticleSelect();
@@ -294,8 +298,8 @@ export function App() {
 
   return (
     <TwoPaneLayout
-      leftWidth={20}
-      rightWidth={80}
+      leftWidth={30}
+      rightWidth={70}
       leftPane={<FeedList feeds={feeds} selectedIndex={selectedFeedIndex} />}
       rightPane={
         <ArticleList

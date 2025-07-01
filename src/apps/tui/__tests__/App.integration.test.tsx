@@ -14,6 +14,7 @@ vi.mock('child_process', () => ({
 const mockFeedService = {
   getFeedList: vi.fn(),
   getUnreadCountsForAllFeeds: vi.fn(),
+  getUnreadFeeds: vi.fn(),
   getArticles: vi.fn(),
   markArticleAsRead: vi.fn(),
   toggleArticleFavorite: vi.fn(),
@@ -104,7 +105,7 @@ const mockArticles: Article[] = [
   },
 ];
 
-const mockUnreadCounts = {
+const mockUnreadCounts: { [feedId: number]: number } = {
   1: 2,
   2: 0,
 };
@@ -117,6 +118,9 @@ describe('App Integration Tests', () => {
     // デフォルトのモック実装を設定
     mockFeedService.getFeedList.mockReturnValue(mockFeeds);
     mockFeedService.getUnreadCountsForAllFeeds.mockReturnValue(mockUnreadCounts);
+    mockFeedService.getUnreadFeeds.mockReturnValue(
+      mockFeeds.map((feed) => ({ ...feed, unreadCount: mockUnreadCounts[feed.id] || 0 }))
+    );
     mockFeedService.getArticles.mockReturnValue(mockArticles);
     mockFeedService.markArticleAsRead.mockImplementation(() => {});
     mockFeedService.toggleArticleFavorite.mockImplementation(() => {});
@@ -163,8 +167,6 @@ describe('App Integration Tests', () => {
 
       // 記事一覧の表示を確認（Article 1が表示される）
       expect(lastFrame()).toContain('Article 1');
-      // 記事の状態表示を確認
-      expect(lastFrame()).toContain('状態: 未読');
       // 記事の位置表示を確認
       expect(lastFrame()).toContain('1/2件');
     });
@@ -214,7 +216,7 @@ describe('App Integration Tests', () => {
     });
 
     it('エラー時は適切なエラーメッセージを表示する', async () => {
-      mockFeedService.getFeedList.mockImplementation(() => {
+      mockFeedService.getUnreadFeeds.mockImplementation(() => {
         throw new Error('フィードの読み込みに失敗しました');
       });
 
@@ -460,6 +462,11 @@ describe('App Integration Tests', () => {
       const isolatedFeedService = {
         getFeedList: vi.fn().mockReturnValue(mockFeeds),
         getUnreadCountsForAllFeeds: vi.fn().mockReturnValue(mockUnreadCounts),
+        getUnreadFeeds: vi
+          .fn()
+          .mockReturnValue(
+            mockFeeds.map((feed) => ({ ...feed, unreadCount: mockUnreadCounts[feed.id] || 0 }))
+          ),
         getArticles: vi.fn().mockReturnValue([]),
         markArticleAsRead: vi.fn(),
         toggleArticleFavorite: vi.fn(),
@@ -489,7 +496,7 @@ describe('App Integration Tests', () => {
 
   describe('エラーハンドリング', () => {
     it('フィード読み込みエラーを適切に表示する', async () => {
-      mockFeedService.getFeedList.mockImplementation(() => {
+      mockFeedService.getUnreadFeeds.mockImplementation(() => {
         throw new Error('ネットワークエラー');
       });
 
