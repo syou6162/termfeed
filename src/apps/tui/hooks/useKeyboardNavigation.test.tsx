@@ -85,7 +85,7 @@ describe('useKeyboardNavigation', () => {
       expect(mockHandlers.onArticleSelectionChange).toHaveBeenCalledWith(1);
     });
 
-    it('最後の記事でjキーを押すと最初の記事に戻る', () => {
+    it('最後の記事でjキーを押しても移動しない', () => {
       const { stdin } = render(
         <TestComponent
           articleCount={5}
@@ -96,10 +96,10 @@ describe('useKeyboardNavigation', () => {
 
       stdin.write('j');
 
-      expect(mockHandlers.onArticleSelectionChange).toHaveBeenCalledWith(0);
+      expect(mockHandlers.onArticleSelectionChange).not.toHaveBeenCalled();
     });
 
-    it('最初の記事でkキーを押すと最後の記事に移動する', () => {
+    it('最初の記事でkキーを押しても移動しない', () => {
       const { stdin } = render(
         <TestComponent
           articleCount={5}
@@ -110,7 +110,7 @@ describe('useKeyboardNavigation', () => {
 
       stdin.write('k');
 
-      expect(mockHandlers.onArticleSelectionChange).toHaveBeenCalledWith(4);
+      expect(mockHandlers.onArticleSelectionChange).not.toHaveBeenCalled();
     });
   });
 
@@ -143,7 +143,7 @@ describe('useKeyboardNavigation', () => {
       expect(mockHandlers.onFeedSelectionChange).toHaveBeenCalledWith(1);
     });
 
-    it('最後のフィードでsキーを押すと最初のフィードに戻る', () => {
+    it('最後のフィードでsキーを押しても移動しない', () => {
       const { stdin } = render(
         <TestComponent
           feedCount={3}
@@ -154,7 +154,21 @@ describe('useKeyboardNavigation', () => {
 
       stdin.write('s');
 
-      expect(mockHandlers.onFeedSelectionChange).toHaveBeenCalledWith(0);
+      expect(mockHandlers.onFeedSelectionChange).not.toHaveBeenCalled();
+    });
+
+    it('最初のフィードでaキーを押しても移動しない', () => {
+      const { stdin } = render(
+        <TestComponent
+          feedCount={3}
+          selectedFeedIndex={0}
+          onFeedSelectionChange={mockHandlers.onFeedSelectionChange}
+        />
+      );
+
+      stdin.write('a');
+
+      expect(mockHandlers.onFeedSelectionChange).not.toHaveBeenCalled();
     });
   });
 
