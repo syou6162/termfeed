@@ -136,7 +136,7 @@ describe('App - 自動既読機能', () => {
     const { stdin, unmount } = render(<App />);
 
     // 少し待ってから操作（初期化が完了するまで）
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // 初期状態で記事1が選択されている（未読）
     // 記事が閲覧済みとして記録される
@@ -145,7 +145,7 @@ describe('App - 自動既読機能', () => {
     stdin.write('s');
 
     // 少し待ってから確認
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // 記事1が既読にマークされる
     expect(mockFeedService.markArticleAsRead).toHaveBeenCalledWith(1);
@@ -172,7 +172,7 @@ describe('App - 自動既読機能', () => {
     const { stdin, unmount } = render(<App />);
 
     // 初期化待ち
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // markArticleAsReadの呼び出し状況をクリア（初期化時の呼び出しを無視）
     vi.clearAllMocks();
@@ -181,7 +181,7 @@ describe('App - 自動既読機能', () => {
     stdin.write('s');
 
     // 少し待ってから確認
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // 記事がフィルタリングされているので markArticleAsRead は呼ばれない
     expect(mockFeedService.markArticleAsRead).not.toHaveBeenCalled();
@@ -194,13 +194,13 @@ describe('App - 自動既読機能', () => {
     const { stdin, unmount } = render(<App />);
 
     // 初期化待ち
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // qキーで終了
     stdin.write('q');
 
     // 少し待ってから確認
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // 選択中の記事1が既読にマークされる
     expect(mockFeedService.markArticleAsRead).toHaveBeenCalledWith(1);
@@ -213,19 +213,19 @@ describe('App - 自動既読機能', () => {
     const { stdin, unmount } = render(<App />);
 
     // 初期化待ち
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // jキーで記事2に移動
     stdin.write('j');
 
     // 少し待つ
-    await new Promise((resolve) => setTimeout(resolve, 10));
+    await new Promise((resolve) => setTimeout(resolve, 20));
 
     // sキーでフィード移動
     stdin.write('s');
 
     // 少し待ってから確認
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // 記事2が既読にマークされる（j で移動した先の記事）
     const calls = mockFeedService.markArticleAsRead.mock.calls;
@@ -243,7 +243,7 @@ describe('App - 自動既読機能', () => {
     const { stdin, unmount } = render(<App />);
 
     // 初期化待ち
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // 初期化時の呼び出しをクリア
     mockFeedService.markArticleAsRead.mockClear();
@@ -252,7 +252,7 @@ describe('App - 自動既読機能', () => {
     stdin.write('a');
 
     // 少し待つ
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // markArticleAsRead は呼ばれない（記事がないため）
     expect(mockFeedService.markArticleAsRead).not.toHaveBeenCalled();
@@ -271,7 +271,7 @@ describe('App - 自動既読機能', () => {
     const { stdin, unmount } = render(<App />);
 
     // 初期化待ち
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // sキーでフィード移動
     expect(() => {
@@ -279,7 +279,7 @@ describe('App - 自動既読機能', () => {
     }).not.toThrow();
 
     // 少し待ってから確認
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // エラーログが出力される
     expect(console.error).toHaveBeenCalled();
@@ -298,11 +298,11 @@ describe('App - 自動既読機能', () => {
     const { stdin, unmount } = render(<App />);
 
     // 初期化待ち
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // まず次のフィードに移動してから前に戻る
     stdin.write('s');
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // 初回の記事1の閲覧記録をクリア
     mockFeedService.markArticleAsRead.mockClear();
@@ -311,7 +311,7 @@ describe('App - 自動既読機能', () => {
     stdin.write('a');
 
     // 少し待ってから確認
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // 前のフィードの記事が既読にマークされる
     expect(mockFeedService.markArticleAsRead).toHaveBeenCalled();
@@ -324,20 +324,20 @@ describe('App - 自動既読機能', () => {
     const { stdin, unmount } = render(<App />);
 
     // 初期化待ち
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // 初期状態の呼び出し回数を記録
     const initialCallCount = mockFeedService.markArticleAsRead.mock.calls.length;
 
     // j/kキーで記事移動のみ（フィード移動しない）
     stdin.write('j');
-    await new Promise((resolve) => setTimeout(resolve, 10));
+    await new Promise((resolve) => setTimeout(resolve, 20));
     stdin.write('k');
-    await new Promise((resolve) => setTimeout(resolve, 10));
+    await new Promise((resolve) => setTimeout(resolve, 20));
     stdin.write('j');
 
     // 少し待つ
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // j/kキーの移動だけでは既読化は発生しない
     const finalCallCount = mockFeedService.markArticleAsRead.mock.calls.length;
@@ -352,19 +352,19 @@ describe('App - 自動既読機能', () => {
     const { stdin, unmount } = render(<App />);
 
     // 初期化待ち
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // 記事2に移動
     stdin.write('j');
-    await new Promise((resolve) => setTimeout(resolve, 10));
+    await new Promise((resolve) => setTimeout(resolve, 20));
 
     // フィード移動1回目
     stdin.write('s');
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // フィード移動2回目
     stdin.write('s');
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // 複数回のフィード移動により既読化が発生
     expect(mockFeedService.markArticleAsRead).toHaveBeenCalled();
@@ -393,14 +393,14 @@ describe('App - 自動既読機能', () => {
     const { stdin, unmount } = render(<App />);
 
     // 初期化待ち
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // 初期化時の呼び出しをクリア
     mockFeedService.markArticleAsRead.mockClear();
 
     // フィード移動
     stdin.write('s');
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // IDがないので markArticleAsRead は呼ばれない
     expect(mockFeedService.markArticleAsRead).not.toHaveBeenCalled();
