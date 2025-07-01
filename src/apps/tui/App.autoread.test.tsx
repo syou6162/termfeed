@@ -43,14 +43,26 @@ vi.spyOn(process, 'off').mockImplementation((event: string | symbol, handler: Ev
 // モックサービスを関数として定義して、毎回新しいインスタンスを返す
 const createMockFeedService = () => ({
   getFeedList: vi.fn(() => [
-    { id: 1, title: 'Test Feed 1', url: 'https://example.com/feed1.rss' },
-    { id: 2, title: 'Test Feed 2', url: 'https://example.com/feed2.rss' },
+    { id: 1, title: 'Test Feed 1', rating: 0, url: 'https://example.com/feed1.rss' },
+    { id: 2, title: 'Test Feed 2', rating: 0, url: 'https://example.com/feed2.rss' },
   ]),
   getUnreadCount: vi.fn(() => 2),
   getUnreadCountsForAllFeeds: vi.fn(() => ({ 1: 2, 2: 1 })),
   getUnreadFeeds: vi.fn(() => [
-    { id: 1, title: 'Test Feed 1', url: 'https://example.com/feed1.rss', unreadCount: 2 },
-    { id: 2, title: 'Test Feed 2', url: 'https://example.com/feed2.rss', unreadCount: 1 },
+    {
+      id: 1,
+      title: 'Test Feed 1',
+      rating: 0,
+      url: 'https://example.com/feed1.rss',
+      unreadCount: 2,
+    },
+    {
+      id: 2,
+      title: 'Test Feed 2',
+      rating: 0,
+      url: 'https://example.com/feed2.rss',
+      unreadCount: 1,
+    },
   ]),
   getArticles: vi.fn(() => [
     {

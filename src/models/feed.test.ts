@@ -42,6 +42,7 @@ describe('FeedModel', () => {
       const feedInput: CreateFeedInput = {
         url: 'https://example.com/feed.xml',
         title: 'Example Feed',
+        rating: 0,
         description: 'This is an example feed',
       };
 
@@ -59,6 +60,7 @@ describe('FeedModel', () => {
       const feedInput: CreateFeedInput = {
         url: 'https://example.com/feed2.xml',
         title: 'Another Feed',
+        rating: 0,
       };
 
       const feed = feedModel.create(feedInput);
@@ -75,6 +77,7 @@ describe('FeedModel', () => {
       const feedInput: CreateFeedInput = {
         url: 'https://example.com/feed.xml',
         title: 'Example Feed',
+        rating: 0,
       };
 
       const created = feedModel.create(feedInput);
@@ -97,6 +100,7 @@ describe('FeedModel', () => {
       const feedInput: CreateFeedInput = {
         url: 'https://example.com/unique-feed.xml',
         title: 'Unique Feed',
+        rating: 0,
       };
 
       feedModel.create(feedInput);
@@ -116,9 +120,9 @@ describe('FeedModel', () => {
   describe('findAll', () => {
     it('すべてのフィードを取得できる', () => {
       const feeds: CreateFeedInput[] = [
-        { url: 'https://example1.com/feed.xml', title: 'Feed 1' },
-        { url: 'https://example2.com/feed.xml', title: 'Feed 2' },
-        { url: 'https://example3.com/feed.xml', title: 'Feed 3' },
+        { url: 'https://example1.com/feed.xml', title: 'Feed 1', rating: 0 },
+        { url: 'https://example2.com/feed.xml', title: 'Feed 2', rating: 0 },
+        { url: 'https://example3.com/feed.xml', title: 'Feed 3', rating: 0 },
       ];
 
       // フィードを作成
@@ -148,6 +152,7 @@ describe('FeedModel', () => {
         url: 'https://example.com/feed.xml',
         title: 'Original Title',
         description: 'Original Description',
+        rating: 0,
       };
 
       const created = feedModel.create(feedInput);
@@ -171,6 +176,7 @@ describe('FeedModel', () => {
       const feedInput: CreateFeedInput = {
         url: 'https://example.com/feed.xml',
         title: 'Original Title',
+        rating: 0,
       };
 
       const created = feedModel.create(feedInput);
@@ -186,6 +192,7 @@ describe('FeedModel', () => {
       const feedInput: CreateFeedInput = {
         url: 'https://example.com/feed.xml',
         title: 'To Be Deleted',
+        rating: 0,
       };
 
       const created = feedModel.create(feedInput);
@@ -208,6 +215,7 @@ describe('FeedModel', () => {
       const feedInput: CreateFeedInput = {
         url: 'https://example.com/feed.xml',
         title: 'Test Feed',
+        rating: 0,
       };
 
       const created = feedModel.create(feedInput);

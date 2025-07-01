@@ -73,6 +73,7 @@ export class RSSCrawler {
       url,
       title: feed.title || 'Untitled Feed',
       description: feed.description,
+      rating: 0,
       last_updated_at: new Date(),
     };
   }
