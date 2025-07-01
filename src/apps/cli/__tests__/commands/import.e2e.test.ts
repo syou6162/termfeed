@@ -135,6 +135,7 @@ https://example.com/feed3.rss
     context.feedModel.create({
       url: 'https://example.com/feed1.rss',
       title: 'Existing Feed',
+      rating: 0,
     });
 
     const textContent = `https://example.com/feed1.rss

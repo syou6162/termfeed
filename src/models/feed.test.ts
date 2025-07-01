@@ -120,9 +120,9 @@ describe('FeedModel', () => {
   describe('findAll', () => {
     it('すべてのフィードを取得できる', () => {
       const feeds: CreateFeedInput[] = [
-        { url: 'https://example1.com/feed.xml', title: 'Feed 1' },
-        { url: 'https://example2.com/feed.xml', title: 'Feed 2' },
-        { url: 'https://example3.com/feed.xml', title: 'Feed 3' },
+        { url: 'https://example1.com/feed.xml', title: 'Feed 1', rating: 0 },
+        { url: 'https://example2.com/feed.xml', title: 'Feed 2', rating: 0 },
+        { url: 'https://example3.com/feed.xml', title: 'Feed 3', rating: 0 },
       ];
 
       // フィードを作成
@@ -152,6 +152,7 @@ describe('FeedModel', () => {
         url: 'https://example.com/feed.xml',
         title: 'Original Title',
         description: 'Original Description',
+        rating: 0,
       };
 
       const created = feedModel.create(feedInput);
@@ -175,6 +176,7 @@ describe('FeedModel', () => {
       const feedInput: CreateFeedInput = {
         url: 'https://example.com/feed.xml',
         title: 'Original Title',
+        rating: 0,
       };
 
       const created = feedModel.create(feedInput);
@@ -190,6 +192,7 @@ describe('FeedModel', () => {
       const feedInput: CreateFeedInput = {
         url: 'https://example.com/feed.xml',
         title: 'To Be Deleted',
+        rating: 0,
       };
 
       const created = feedModel.create(feedInput);

@@ -19,10 +19,12 @@ describe('export command E2E', () => {
       url: 'https://example.com/feed1.rss',
       title: 'Feed 1',
       description: 'Description 1',
+      rating: 0,
     });
     context.feedModel.create({
       url: 'https://example.com/feed2.rss',
       title: 'Feed 2',
+      rating: 0,
     });
 
     // Act
@@ -47,10 +49,12 @@ describe('export command E2E', () => {
     context.feedModel.create({
       url: 'https://example.com/feed1.rss',
       title: 'Feed 1',
+      rating: 0,
     });
     context.feedModel.create({
       url: 'https://example.com/feed2.rss',
       title: 'Feed 2',
+      rating: 0,
     });
 
     // Act
@@ -75,6 +79,7 @@ describe('export command E2E', () => {
     context.feedModel.create({
       url: 'https://example.com/feed.rss',
       title: 'Test Feed',
+      rating: 0,
     });
 
     // Act - .txt拡張子でtext形式を自動検出
@@ -104,6 +109,7 @@ describe('export command E2E', () => {
     context.feedModel.create({
       url: 'https://example.com/feed.rss',
       title: 'Test Feed',
+      rating: 0,
     });
 
     // Act
@@ -122,6 +128,7 @@ describe('export command E2E', () => {
     context.feedModel.create({
       url: 'https://example.com/feed.rss',
       title: 'Test Feed',
+      rating: 0,
     });
 
     // Act
