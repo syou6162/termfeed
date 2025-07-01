@@ -59,3 +59,7 @@ Thumbs.db
 *.temp
 .tmp/
 .temp/
+
+# Export files
+*.opml
+feeds.txt
