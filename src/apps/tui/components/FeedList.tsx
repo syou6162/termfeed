@@ -104,10 +104,7 @@ export const FeedList = memo(function FeedList({ feeds, selectedIndex }: FeedLis
                 justifyContent="space-between"
               >
                 <Box flexDirection="row" alignItems="center">
-                  <Text bold color="cyan">
-                    ⭐ レーティング {section.rating}
-                  </Text>
-                  <Text color="yellow" marginLeft={1}>
+                  <Text bold color="yellow">
                     {'★'.repeat(section.rating)}{'☆'.repeat(5 - section.rating)}
                   </Text>
                 </Box>
