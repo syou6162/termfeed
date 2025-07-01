@@ -58,21 +58,24 @@ export function useFeedManager(feedService: FeedService): FeedManagerState & Fee
       setFeeds(sortedFeeds);
 
       // ソート後に選択中のフィードのインデックスを更新
-      if (selection.id) {
-        const newIndex = sortedFeeds.findIndex((feed) => feed.id === selection.id);
-        if (newIndex !== -1) {
-          setSelection({ index: newIndex, id: selection.id });
+      setSelection((currentSelection) => {
+        if (currentSelection.id) {
+          const newIndex = sortedFeeds.findIndex((feed) => feed.id === currentSelection.id);
+          if (newIndex !== -1) {
+            return { index: newIndex, id: currentSelection.id };
+          }
+        } else if (sortedFeeds.length > 0 && sortedFeeds[0].id) {
+          // 初回読み込み時は最初のフィードを選択
+          return { index: 0, id: sortedFeeds[0].id };
         }
-      } else if (sortedFeeds.length > 0 && sortedFeeds[0].id) {
-        // 初回読み込み時は最初のフィードを選択
-        setSelection({ index: 0, id: sortedFeeds[0].id });
-      }
+        return currentSelection;
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'フィードの読み込みに失敗しました');
     } finally {
       setIsLoading(false);
     }
-  }, [feedService, selection.id]);
+  }, [feedService]);
 
   const updateAllFeeds = useCallback(async () => {
     try {
