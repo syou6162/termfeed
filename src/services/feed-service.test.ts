@@ -743,5 +743,117 @@ describe('FeedService', () => {
       const notFound = feedService.getArticleById(999);
       expect(notFound).toBeNull();
     });
+
+    it('未読記事があるフィードのみを取得する', () => {
+      // フィードを4つ作成
+      const feed1 = feedModel.create({
+        url: 'https://example.com/rss1.xml',
+        title: 'Feed 1',
+        description: 'Description 1',
+      });
+
+      const feed2 = feedModel.create({
+        url: 'https://example.com/rss2.xml',
+        title: 'Feed 2',
+        description: 'Description 2',
+      });
+
+      const feed3 = feedModel.create({
+        url: 'https://example.com/rss3.xml',
+        title: 'Feed 3',
+        description: 'Description 3',
+      });
+
+      // feed4は記事なしのフィードとして使用
+      feedModel.create({
+        url: 'https://example.com/rss4.xml',
+        title: 'Feed 4',
+        description: 'Description 4',
+      });
+
+      // feed1: 未読記事2件
+      articleModel.create({
+        feed_id: feed1.id,
+        title: 'Article 1-1',
+        url: 'https://example.com/article1-1',
+        content: 'Content',
+        published_at: new Date(),
+      });
+
+      articleModel.create({
+        feed_id: feed1.id,
+        title: 'Article 1-2',
+        url: 'https://example.com/article1-2',
+        content: 'Content',
+        published_at: new Date(),
+      });
+
+      // feed2: 未読記事1件
+      articleModel.create({
+        feed_id: feed2.id,
+        title: 'Article 2-1',
+        url: 'https://example.com/article2-1',
+        content: 'Content',
+        published_at: new Date(),
+      });
+
+      // feed3: 既読記事のみ（記事を作成して既読にする）
+      const article3 = articleModel.create({
+        feed_id: feed3.id,
+        title: 'Article 3-1',
+        url: 'https://example.com/article3-1',
+        content: 'Content',
+        published_at: new Date(),
+      });
+      articleModel.markAsRead(article3.id);
+
+      // feed4: 記事なし
+
+      const unreadFeeds = feedService.getUnreadFeeds();
+
+      // 未読記事があるフィードのみが返される
+      expect(unreadFeeds).toHaveLength(2);
+
+      // 未読件数の多い順にソートされている
+      expect(unreadFeeds[0].title).toBe('Feed 1');
+      expect(unreadFeeds[0].unreadCount).toBe(2);
+
+      expect(unreadFeeds[1].title).toBe('Feed 2');
+      expect(unreadFeeds[1].unreadCount).toBe(1);
+
+      // feed3とfeed4は含まれない
+      expect(unreadFeeds.find((f) => f.title === 'Feed 3')).toBeUndefined();
+      expect(unreadFeeds.find((f) => f.title === 'Feed 4')).toBeUndefined();
+    });
+
+    it('すべてのフィードが既読の場合は空配列を返す', () => {
+      const feed1 = feedModel.create({
+        url: 'https://example.com/rss1.xml',
+        title: 'Feed 1',
+        description: 'Description 1',
+      });
+
+      // feed2は記事なしのフィードとして使用
+      feedModel.create({
+        url: 'https://example.com/rss2.xml',
+        title: 'Feed 2',
+        description: 'Description 2',
+      });
+
+      // feed1: 既読記事のみ
+      const article1 = articleModel.create({
+        feed_id: feed1.id,
+        title: 'Article 1',
+        url: 'https://example.com/article1',
+        content: 'Content',
+        published_at: new Date(),
+      });
+      articleModel.markAsRead(article1.id);
+
+      // feed2: 記事なし
+
+      const unreadFeeds = feedService.getUnreadFeeds();
+      expect(unreadFeeds).toHaveLength(0);
+    });
   });
 });
