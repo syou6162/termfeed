@@ -139,7 +139,7 @@ describe('App - 自動既読機能', () => {
     await new Promise((resolve) => setTimeout(resolve, 100));
 
     // 初期状態で記事1が選択されている（未読）
-    // 記事が閲覧済みとして記録される
+    // フィード移動時に既読化される
 
     // sキーでフィード2に移動
     stdin.write('s');
