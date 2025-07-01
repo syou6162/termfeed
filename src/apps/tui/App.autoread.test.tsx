@@ -243,10 +243,10 @@ describe('App - 自動既読機能', () => {
     // 少し待ってから確認
     await new Promise((resolve) => setTimeout(resolve, 50));
 
-    // 記事1または記事2が既読にマークされる（再レンダリングによって記事1が何度も既読化される可能性がある）
+    // 記事2が既読にマークされる（j で移動した先の記事）
     const calls = mockFeedService.markArticleAsRead.mock.calls;
     const calledArticleIds = calls.map((call) => call[0] as number);
-    expect(calledArticleIds).toContain(1); // 記事1は確実に既読化される
+    expect(calledArticleIds).toContain(2); // 記事2が既読化される
 
     // クリーンアップ
     unmount();
@@ -342,17 +342,10 @@ describe('App - 自動既読機能', () => {
     // 少し待つ
     await new Promise((resolve) => setTimeout(resolve, 50));
 
-    // j/kキーの移動だけでは追加の既読化は発生しない（ただし、再レンダリングによる既読化は許容）
+    // j/kキーの移動だけでは既読化は発生しない
     const finalCallCount = mockFeedService.markArticleAsRead.mock.calls.length;
-    // 初期状態から増えているが、これは再レンダリングによるもの
-    // 実際の動作としては、j/kキーの移動だけでは意図的な既読化は発生しない
-    expect(finalCallCount).toBeGreaterThan(initialCallCount); // 再レンダリングで増える
-
-    // ただし、記事2への既読化は発生していないことを確認
-    const calledArticleIds = mockFeedService.markArticleAsRead.mock.calls.map(
-      (call) => call[0] as number
-    );
-    expect(calledArticleIds.filter((id) => id === 2).length).toBeLessThanOrEqual(1); // 記事2への既読化は最小限
+    // クリーンアップ時の既読化を削除したので、j/k移動では既読化されない
+    expect(finalCallCount).toBe(initialCallCount);
 
     // クリーンアップ
     unmount();

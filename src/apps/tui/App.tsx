@@ -62,12 +62,8 @@ export function App() {
     articles,
     selectedArticleIndex,
     feedService,
-    onArticleMarkedAsRead: (_articleId) => {
-      // 既読化した記事をリストから除外
-      if (selectedFeedId) {
-        loadArticles(selectedFeedId);
-      }
-    },
+    // フィード移動時は記事リストの再読み込みは不要（useEffectで処理される）
+    onArticleMarkedAsRead: undefined,
   });
 
   const handleFeedSelectionChange = useCallback(

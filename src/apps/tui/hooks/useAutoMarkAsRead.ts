@@ -43,8 +43,7 @@ export function useAutoMarkAsRead({
     process.on('SIGTERM', handleExit);
 
     return () => {
-      // クリーンアップ時にも実行
-      handleExit();
+      // クリーンアップ時は既読化せず、リスナーの削除のみ
       process.off('SIGINT', handleExit);
       process.off('SIGTERM', handleExit);
     };

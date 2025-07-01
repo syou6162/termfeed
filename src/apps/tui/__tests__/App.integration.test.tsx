@@ -439,18 +439,20 @@ describe('App Integration Tests', () => {
     });
 
     it('アプリ終了時に現在の記事を既読にする', async () => {
-      const { lastFrame, unmount } = render(<App />);
+      const { stdin, lastFrame } = render(<App />);
 
       // 初期化の完了を待つ
       await vi.waitFor(() => {
         expect(lastFrame()).toContain('Article 1');
       });
 
-      // コンポーネントをアンマウント（終了をシミュレート）
-      unmount();
+      // qキーで終了
+      stdin.write('q');
 
       // 既読化が呼ばれることを確認
-      expect(mockFeedService.markArticleAsRead).toHaveBeenCalledWith(1);
+      await vi.waitFor(() => {
+        expect(mockFeedService.markArticleAsRead).toHaveBeenCalledWith(1);
+      });
     });
 
     it('既に既読の記事は既読処理をスキップする', async () => {
