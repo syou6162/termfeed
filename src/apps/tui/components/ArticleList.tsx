@@ -174,9 +174,8 @@ export const ArticleList = memo(function ArticleList({
       {/* ステータス部分：固定 */}
       <Box paddingX={1} marginTop={1}>
         <Text color="gray" dimColor>
-          状態: {selectedArticle.is_read ? '既読' : '未読'}
-          {selectedArticle.is_favorite ? ' | ★お気に入り' : ''}
-          {scrollInfo && ` | ${scrollInfo}`}
+          {selectedArticle.is_favorite ? '★お気に入り' : ''}
+          {scrollInfo && (selectedArticle.is_favorite ? ' | ' : '') + scrollInfo}
           {hasMoreContent && ' スペースで続きを表示'}
         </Text>
       </Box>
