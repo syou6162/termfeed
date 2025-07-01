@@ -168,13 +168,21 @@ export function App() {
   }, [markViewedArticlesAsRead, exit]);
 
   const handleSetFeedRating = useCallback(
-    (rating: number) => {
+    async (rating: number) => {
       const selectedFeed = feeds[selectedFeedIndex];
       if (selectedFeed?.id) {
+        const selectedFeedId = selectedFeed.id;
         try {
-          feedService.setFeedRating(selectedFeed.id, rating);
+          feedService.setFeedRating(selectedFeedId, rating);
           // フィード一覧を再読み込みしてソート順を更新
-          loadFeeds();
+          await loadFeeds();
+          
+          // レーティング変更後に同じフィードを選択状態に保つ
+          const updatedFeeds = feedService.getFeedList();
+          const newIndex = updatedFeeds.findIndex(feed => feed.id === selectedFeedId);
+          if (newIndex !== -1 && newIndex !== selectedFeedIndex) {
+            setSelectedFeedIndex(newIndex);
+          }
         } catch (error) {
           addError({
             source: ERROR_SOURCES.NETWORK,
@@ -185,7 +193,7 @@ export function App() {
         }
       }
     },
-    [feeds, selectedFeedIndex, feedService, loadFeeds, addError]
+    [feeds, selectedFeedIndex, feedService, loadFeeds, setSelectedFeedIndex, addError]
   );
 
   // 初期化時に最初のフィードの記事を読み込み
