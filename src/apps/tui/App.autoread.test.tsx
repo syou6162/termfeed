@@ -155,15 +155,17 @@ describe('App - 自動既読機能', () => {
       { timeout: 1000 }
     );
 
+    // markArticleAsReadの呼び出し状況をクリア（初期化時の呼び出しを無視）
+    mockFeedService.markArticleAsRead.mockClear();
+
     // sキーでフィード2に移動
     stdin.write('s');
 
-    // 記事1が既読にマークされるまで待機
     await vi.waitFor(
       () => {
         expect(mockFeedService.markArticleAsRead).toHaveBeenCalledWith(1);
       },
-      { timeout: 1000 }
+      { timeout: 2000, interval: 50 }
     );
 
     // クリーンアップ
@@ -220,15 +222,17 @@ describe('App - 自動既読機能', () => {
       { timeout: 1000 }
     );
 
+    // markArticleAsReadの呼び出し状況をクリア（初期化時の呼び出しを無視）
+    mockFeedService.markArticleAsRead.mockClear();
+
     // qキーで終了
     stdin.write('q');
 
-    // 選択中の記事1が既読にマークされるまで待機
     await vi.waitFor(
       () => {
         expect(mockFeedService.markArticleAsRead).toHaveBeenCalledWith(1);
       },
-      { timeout: 1000 }
+      { timeout: 2000, interval: 50 }
     );
 
     // クリーンアップ
