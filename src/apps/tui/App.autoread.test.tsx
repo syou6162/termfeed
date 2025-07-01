@@ -98,7 +98,7 @@ vi.mock('ink', async () => {
   };
 });
 
-describe.sequential('App - 自動既読機能', () => {
+describe('App - 自動既読機能', () => {
   let originalConsoleLog: typeof console.log;
   let originalConsoleError: typeof console.error;
 
@@ -117,7 +117,6 @@ describe.sequential('App - 自動既読機能', () => {
 
     // モックのリセット
     vi.clearAllMocks();
-    vi.resetAllMocks();
 
     // 新しいモックサービスインスタンスを作成
     mockFeedService = createMockFeedService();
