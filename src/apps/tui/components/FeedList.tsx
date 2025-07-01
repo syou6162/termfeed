@@ -86,10 +86,12 @@ export const FeedList = memo(function FeedList({ feeds, selectedIndex }: FeedLis
     );
   }
 
+  const totalUnreadCount = feeds.reduce((total, feed) => total + feed.unreadCount, 0);
+
   return (
     <Box flexDirection="column" padding={1}>
       <Text bold color="blue">
-        フィード一覧 ({feeds.length}件)
+        フィード一覧 ({totalUnreadCount}件)
       </Text>
       <Box marginTop={1}>
         <Box flexDirection="column">
