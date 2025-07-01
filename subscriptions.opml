@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <head>
+    <title>termfeed subscriptions</title>
+    <dateCreated>Tue, 01 Jul 2025 09:07:29 GMT</dateCreated>
+    <dateModified>Tue, 01 Jul 2025 09:07:29 GMT</dateModified>
+  </head>
+  <body>
+    <outline text="Feed 1" title="Feed 1" type="rss" xmlUrl="https://example.com/feed1.rss" htmlUrl="https://example.com/feed1.rss"/>
+    <outline text="Feed 2" title="Feed 2" type="rss" xmlUrl="https://example.com/feed2.rss" htmlUrl="https://example.com/feed2.rss"/>
+  </body>
+</opml>

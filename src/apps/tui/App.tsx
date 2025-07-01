@@ -1,247 +1,174 @@
 import { Box, Text, useApp, useStdout } from 'ink';
-import { useCallback, useEffect, useState, useMemo } from 'react';
-import { spawn } from 'child_process';
-import type { Article, Feed, UpdateProgress, FeedUpdateFailure } from '@/types';
-import { FeedService } from '../../services/feed-service.js';
-import { FeedModel } from '../../models/feed.js';
-import { ArticleModel } from '../../models/article.js';
-import { createDatabaseManager } from '../cli/utils/database.js';
+import { useCallback, useEffect, useState, useRef } from 'react';
 import { ArticleList } from './components/ArticleList.js';
 import { FeedList } from './components/FeedList.js';
 import { TwoPaneLayout } from './components/TwoPaneLayout.js';
 import { HelpOverlay } from './components/HelpOverlay.js';
 import { useKeyboardNavigation } from './hooks/useKeyboardNavigation.js';
-
-type FeedWithUnreadCount = Feed & {
-  unreadCount: number;
-};
+import { useTermfeedData } from './hooks/useTermfeedData.js';
+import { useFeedManager } from './hooks/useFeedManager.js';
+import { useArticleManager } from './hooks/useArticleManager.js';
+import { useAutoMarkAsRead } from './hooks/useAutoMarkAsRead.js';
+import { useErrorManager } from './hooks/useErrorManager.js';
+import { openUrlInBrowser } from './utils/browser.js';
+import { ERROR_SOURCES } from './types/error.js';
 
 export function App() {
   const { exit } = useApp();
   const { stdout } = useStdout();
-  const [feeds, setFeeds] = useState<FeedWithUnreadCount[]>([]);
-  const [articles, setArticles] = useState<Article[]>([]);
-  const [selectedFeedIndex, setSelectedFeedIndex] = useState(0);
-  const [selectedFeedId, setSelectedFeedId] = useState<number | null>(null);
-  const [selectedArticleIndex, setSelectedArticleIndex] = useState(0);
-  const [scrollOffset, setScrollOffset] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string>('');
   const [showHelp, setShowHelp] = useState(false);
-  const [updateProgress, setUpdateProgress] = useState<UpdateProgress | null>(null);
-  const [abortController, setAbortController] = useState<AbortController | null>(null);
-  const [failedFeeds, setFailedFeeds] = useState<FeedUpdateFailure[]>([]);
-  const [showFailedFeeds, setShowFailedFeeds] = useState(false);
 
-  // データベースとサービスを初期化（一度だけ実行）
-  const { feedService } = useMemo(() => {
-    const databaseManager = createDatabaseManager();
-    // マイグレーションを実行
-    databaseManager.migrate();
+  // データベースとサービスを初期化
+  const { feedService } = useTermfeedData();
 
-    const feedModel = new FeedModel(databaseManager);
-    const articleModel = new ArticleModel(databaseManager);
-    const feedService = new FeedService(feedModel, articleModel);
+  // フィード管理
+  const {
+    feeds,
+    selectedFeedIndex,
+    selectedFeedId,
+    isLoading: feedsLoading,
+    error,
+    updateProgress,
+    failedFeeds,
+    showFailedFeeds,
+    loadFeeds,
+    updateAllFeeds,
+    setSelectedFeedIndex,
+    cancelUpdate,
+    toggleFailedFeeds,
+  } = useFeedManager(feedService);
 
-    return { feedService };
-  }, []);
+  // 記事管理
+  const {
+    articles,
+    selectedArticleIndex,
+    scrollOffset,
+    isLoading: articlesLoading,
+    error: articlesError,
+    loadArticles,
+    setSelectedArticleIndex,
+    setScrollOffset,
+    toggleFavorite,
+    scrollDown,
+    scrollUp,
+    pageDown,
+    pageUp,
+    scrollToEnd,
+  } = useArticleManager(feedService, selectedFeedId);
 
-  const loadFeeds = useCallback(() => {
-    try {
-      setIsLoading(true);
-      setError('');
+  const isLoading = feedsLoading || articlesLoading;
 
-      const allFeeds = feedService.getFeedList();
-      const unreadCounts = feedService.getUnreadCountsForAllFeeds();
-      const feedsWithUnreadCount = allFeeds.map((feed) => {
-        const unreadCount = feed.id ? unreadCounts[feed.id] || 0 : 0;
-        return { ...feed, unreadCount };
+  // エラー管理
+  const errorManager = useErrorManager();
+
+  // エラーを統合管理
+  const { addError, clearErrorsBySource } = errorManager;
+
+  // フィードエラーの管理
+  useEffect(() => {
+    if (error) {
+      addError({
+        source: ERROR_SOURCES.FEED,
+        message: error,
+        timestamp: new Date(),
+        recoverable: true,
       });
+    } else {
+      clearErrorsBySource(ERROR_SOURCES.FEED);
+    }
+  }, [error, addError, clearErrorsBySource]);
 
-      // 未読件数でソート：未読あり → 未読なし
-      const sortedFeeds = feedsWithUnreadCount.sort((a, b) => {
-        // 未読件数が多い順、同じ場合は元の順序を維持
-        if (a.unreadCount > 0 && b.unreadCount === 0) return -1;
-        if (a.unreadCount === 0 && b.unreadCount > 0) return 1;
-        if (a.unreadCount > 0 && b.unreadCount > 0) return b.unreadCount - a.unreadCount;
-        return 0; // 両方とも未読なしの場合は元の順序
+  // 記事エラーの管理
+  useEffect(() => {
+    if (articlesError) {
+      addError({
+        source: ERROR_SOURCES.ARTICLE,
+        message: articlesError,
+        timestamp: new Date(),
+        recoverable: true,
       });
-
-      setFeeds(sortedFeeds);
-
-      // ソート後に選択中のフィードのインデックスを更新
-      if (selectedFeedId) {
-        const newIndex = sortedFeeds.findIndex((feed) => feed.id === selectedFeedId);
-        if (newIndex !== -1) {
-          setSelectedFeedIndex(newIndex);
-        }
-      } else if (sortedFeeds.length > 0 && sortedFeeds[0].id) {
-        // 初回読み込み時は最初のフィードを選択
-        setSelectedFeedId(sortedFeeds[0].id);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'フィードの読み込みに失敗しました');
-    } finally {
-      setIsLoading(false);
+    } else {
+      clearErrorsBySource(ERROR_SOURCES.ARTICLE);
     }
-  }, [feedService, selectedFeedId]);
+  }, [articlesError, addError, clearErrorsBySource]);
 
-  const loadArticles = useCallback(
-    (feedId: number) => {
-      try {
-        setIsLoading(true);
-        setError('');
-
-        const allArticles = feedService.getArticles({ feed_id: feedId, limit: 100 });
-        // 未読記事のみをフィルタリング
-        const unreadArticles = allArticles.filter((article) => !article.is_read);
-        setArticles(unreadArticles);
-        setSelectedArticleIndex(0);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : '記事の読み込みに失敗しました');
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [feedService]
-  );
-
-  const updateAllFeeds = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setError('');
-      setUpdateProgress(null);
-      setFailedFeeds([]);
-      setShowFailedFeeds(false);
-
-      // AbortControllerを作成
-      const controller = new AbortController();
-      setAbortController(controller);
-
-      const result = await feedService.updateAllFeeds((progress) => {
-        setUpdateProgress(progress);
-      }, controller.signal);
-
-      // キャンセルされた場合
-      if ('cancelled' in result) {
-        const cancelledResult = result;
-        setError(
-          `更新がキャンセルされました (${cancelledResult.processedFeeds}/${cancelledResult.totalFeeds}件処理済み)`
-        );
-        if (cancelledResult.failed.length > 0) {
-          setFailedFeeds(cancelledResult.failed);
-        }
-      } else {
-        // 通常の完了
-        if (result.failed.length > 0) {
-          setError(
-            `フィード更新が一部失敗しました (成功: ${result.summary.successCount}件, 失敗: ${result.summary.failureCount}件)`
-          );
-          setFailedFeeds(result.failed);
-        }
-      }
-
-      setUpdateProgress(null);
-      loadFeeds();
-
-      if (feeds[selectedFeedIndex]?.id) {
-        loadArticles(feeds[selectedFeedIndex].id);
-      }
-    } catch (err) {
-      // エラー時は進捗情報を保持してエラーメッセージを表示
-      setError(err instanceof Error ? err.message : 'フィードの更新に失敗しました');
-      // 進捗表示はuseEffectで管理
-    } finally {
-      setIsLoading(false);
-      setAbortController(null);
-    }
-  }, [selectedFeedIndex, feeds, loadFeeds, loadArticles, feedService]);
+  // 自動既読機能
+  const { markCurrentArticleAsRead } = useAutoMarkAsRead({
+    articles,
+    selectedArticleIndex,
+    feedService,
+    // フィード移動時は記事リストの再読み込みは不要（useEffectで処理される）
+    onArticleMarkedAsRead: undefined,
+  });
 
   const handleFeedSelectionChange = useCallback(
     (index: number) => {
-      // フィード移動前に現在選択中の記事を既読にする
-      const currentArticle = articles[selectedArticleIndex];
-      if (currentArticle && currentArticle.id && !currentArticle.is_read) {
-        try {
-          feedService.markArticleAsRead(currentArticle.id);
-          // 既読化した記事をリストから除外
-          const updatedArticles = articles.filter((article) => article.id !== currentArticle.id);
-          setArticles(updatedArticles);
-          // インデックスを調整
-          setSelectedArticleIndex(Math.min(selectedArticleIndex, updatedArticles.length - 1));
-        } catch (err) {
-          console.error('記事の既読化に失敗しました:', err);
-        }
-      }
-
+      markCurrentArticleAsRead();
       setSelectedFeedIndex(index);
-      if (feeds[index]?.id) {
-        setSelectedFeedId(feeds[index].id);
-      }
-      setSelectedArticleIndex(0); // 記事選択をリセット
-      // loadArticlesはuseEffectで自動的に呼ばれる
     },
-    [articles, selectedArticleIndex, feedService, feeds]
+    [markCurrentArticleAsRead, setSelectedFeedIndex]
   );
 
-  const handleArticleSelect = useCallback(() => {
+  const handleArticleSelect = useCallback(async () => {
     const selectedArticle = articles[selectedArticleIndex];
     if (selectedArticle?.url) {
-      // URLの安全性チェック
-      const url = selectedArticle.url.trim();
-      if (!url.startsWith('http://') && !url.startsWith('https://')) {
-        console.error('無効なURLです:', url);
-        return;
-      }
-
-      // クロスプラットフォーム対応でブラウザを開く（セキュア版）
-      let command: string;
-      let args: string[];
-
-      if (process.platform === 'darwin') {
-        // macOS - バックグラウンドで開く
-        command = 'open';
-        args = ['-g', url];
-      } else if (process.platform === 'win32') {
-        // Windows - 最小化で開く
-        command = 'cmd';
-        args = ['/c', 'start', '/min', url];
-      } else {
-        // Linux/Unix - バックグラウンドで開く
-        command = 'xdg-open';
-        args = [url];
-      }
-
-      const childProcess = spawn(command, args, {
-        stdio: 'ignore',
-        detached: true,
-      });
-
-      childProcess.on('error', (error) => {
-        console.error('ブラウザの起動に失敗しました:', error.message);
-      });
-
-      // プロセスを親から切り離す
-      childProcess.unref();
-    }
-  }, [articles, selectedArticleIndex]);
-
-  const handleToggleFavorite = useCallback(() => {
-    const selectedArticle = articles[selectedArticleIndex];
-    if (selectedArticle?.id) {
       try {
-        feedService.toggleArticleFavorite(selectedArticle.id);
-
-        // 記事リストを再読み込み
-        const selectedFeed = feeds[selectedFeedIndex];
-        if (selectedFeed?.id) {
-          loadArticles(selectedFeed.id);
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'お気に入り状態の更新に失敗しました');
+        await openUrlInBrowser(selectedArticle.url);
+      } catch (error) {
+        addError({
+          source: ERROR_SOURCES.NETWORK,
+          message: error instanceof Error ? error.message : 'ブラウザの起動に失敗しました',
+          timestamp: new Date(),
+          recoverable: true,
+        });
       }
     }
-  }, [articles, selectedArticleIndex, feeds, selectedFeedIndex, loadArticles, feedService]);
+  }, [articles, selectedArticleIndex, addError]);
+
+  // 現在の記事の参照を保持（プロセス終了時の既読化用）
+  const currentArticleRef = useRef<{
+    article: (typeof articles)[number] | null;
+    feedService: typeof feedService;
+  }>({
+    article: null,
+    feedService,
+  });
+
+  // 現在の記事を更新
+  useEffect(() => {
+    const currentArticle = articles[selectedArticleIndex] || null;
+    currentArticleRef.current = {
+      article: currentArticle,
+      feedService,
+    };
+  }, [articles, selectedArticleIndex, feedService]);
+
+  // プロセス終了時の既読化処理（アプリ全体で1回だけ登録）
+  useEffect(() => {
+    const handleExit = () => {
+      const { article, feedService } = currentArticleRef.current;
+      if (article && article.id && !article.is_read) {
+        try {
+          feedService.markArticleAsRead(article.id);
+        } catch (err) {
+          console.error('終了時の記事既読化に失敗しました:', err);
+        }
+      }
+    };
+
+    process.on('SIGINT', handleExit);
+    process.on('SIGTERM', handleExit);
+
+    return () => {
+      process.off('SIGINT', handleExit);
+      process.off('SIGTERM', handleExit);
+    };
+  }, []); // 空の依存配列 = アプリ起動時に1回だけ実行
+
+  const handleQuit = useCallback(() => {
+    markCurrentArticleAsRead();
+    exit();
+  }, [markCurrentArticleAsRead, exit]);
 
   // 初期化時に最初のフィードの記事を読み込み
   useEffect(() => {
@@ -254,102 +181,6 @@ export function App() {
     }
   }, [feeds, selectedFeedIndex, loadArticles]);
 
-  // Ctrl+C等での終了時にも既読処理を行う
-  useEffect(() => {
-    const handleExit = () => {
-      const currentArticle = articles[selectedArticleIndex];
-      if (currentArticle && currentArticle.id && !currentArticle.is_read) {
-        try {
-          feedService.markArticleAsRead(currentArticle.id);
-        } catch (err) {
-          console.error('記事の既読化に失敗しました:', err);
-        }
-      }
-    };
-
-    process.on('SIGINT', handleExit);
-    process.on('SIGTERM', handleExit);
-
-    return () => {
-      // クリーンアップ時にも実行
-      handleExit();
-      process.off('SIGINT', handleExit);
-      process.off('SIGTERM', handleExit);
-    };
-  }, [articles, selectedArticleIndex, feedService]);
-
-  // エラー時の進捗表示を管理
-  useEffect(() => {
-    let timeoutId: ReturnType<typeof setTimeout>;
-    if (error && updateProgress) {
-      timeoutId = setTimeout(() => {
-        setUpdateProgress(null);
-      }, 2000);
-    }
-    return () => {
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
-    };
-  }, [error, updateProgress]);
-
-  const handleToggleHelp = useCallback(() => {
-    setShowHelp((prev) => !prev);
-  }, []);
-
-  const handleCancelUpdate = useCallback(() => {
-    if (abortController) {
-      abortController.abort();
-    }
-  }, [abortController]);
-
-  const handleToggleFailedFeeds = useCallback(() => {
-    setShowFailedFeeds((prev) => !prev);
-  }, []);
-
-  const handleQuit = useCallback(() => {
-    // TUI終了前に現在選択中の記事を既読にする
-    const currentArticle = articles[selectedArticleIndex];
-    if (currentArticle && currentArticle.id && !currentArticle.is_read) {
-      try {
-        feedService.markArticleAsRead(currentArticle.id);
-      } catch (err) {
-        console.error('記事の既読化に失敗しました:', err);
-      }
-    }
-    exit();
-  }, [articles, selectedArticleIndex, feedService, exit]);
-
-  const handleScrollDown = useCallback(() => {
-    setScrollOffset((prev) => prev + 1);
-  }, []);
-
-  const handleScrollUp = useCallback(() => {
-    setScrollOffset((prev) => Math.max(0, prev - 1));
-  }, []);
-
-  const handlePageDown = useCallback(() => {
-    // 実際の表示行数分スクロール
-    const totalHeight = stdout?.rows || 24;
-    const fixedLines = 16; // ArticleListと同じ固定行数
-    const availableLines = Math.max(1, totalHeight - fixedLines);
-    setScrollOffset((prev) => prev + availableLines);
-  }, [stdout]);
-
-  const handlePageUp = useCallback(() => {
-    // 実際の表示行数分スクロール
-    const totalHeight = stdout?.rows || 24;
-    const fixedLines = 16; // ArticleListと同じ固定行数
-    const availableLines = Math.max(1, totalHeight - fixedLines);
-    setScrollOffset((prev) => Math.max(0, prev - availableLines));
-  }, [stdout]);
-
-  const handleScrollToEnd = useCallback(() => {
-    // 記事の最後にジャンプするため、大きな値を設定
-    // ArticleListコンポーネントで実際の最大値に調整される
-    setScrollOffset(999999);
-  }, []);
-
   // キーボードナビゲーション
   useKeyboardNavigation({
     articleCount: articles.length,
@@ -358,19 +189,23 @@ export function App() {
     selectedFeedIndex,
     onArticleSelectionChange: setSelectedArticleIndex,
     onFeedSelectionChange: handleFeedSelectionChange,
-    onOpenInBrowser: handleArticleSelect,
-    onRefreshAll: () => void updateAllFeeds(),
-    onToggleFavorite: handleToggleFavorite,
-    onToggleHelp: handleToggleHelp,
+    onOpenInBrowser: () => {
+      void handleArticleSelect();
+    },
+    onRefreshAll: () => {
+      void updateAllFeeds();
+    },
+    onToggleFavorite: toggleFavorite,
+    onToggleHelp: () => setShowHelp((prev) => !prev),
     onQuit: handleQuit,
-    onScrollDown: handleScrollDown,
-    onScrollUp: handleScrollUp,
-    onPageDown: handlePageDown,
-    onPageUp: handlePageUp,
+    onScrollDown: scrollDown,
+    onScrollUp: scrollUp,
+    onPageDown: () => pageDown(stdout?.rows),
+    onPageUp: () => pageUp(stdout?.rows),
     onScrollOffsetChange: setScrollOffset,
-    onScrollToEnd: handleScrollToEnd,
-    onCancel: handleCancelUpdate,
-    onToggleFailedFeeds: handleToggleFailedFeeds,
+    onScrollToEnd: scrollToEnd,
+    onCancel: cancelUpdate,
+    onToggleFailedFeeds: toggleFailedFeeds,
   });
 
   if (isLoading) {
@@ -398,16 +233,39 @@ export function App() {
     );
   }
 
-  if (error) {
+  if (errorManager.hasError) {
+    const latestError = errorManager.getLatestError();
     return (
       <Box flexDirection="column" padding={1}>
         <Text bold color="red">
           エラーが発生しました
         </Text>
-        <Text color="red">{error}</Text>
-        <Text color="gray">
-          r: 再試行 | {failedFeeds.length > 0 ? 'e: エラー詳細 | ' : ''}q: 終了
-        </Text>
+        {latestError && (
+          <>
+            <Text color="red">
+              [{latestError.source.toUpperCase()}] {latestError.message}
+            </Text>
+            <Text color="gray" dimColor>
+              発生時刻: {latestError.timestamp.toLocaleTimeString('ja-JP')}
+            </Text>
+          </>
+        )}
+        {errorManager.errors.length > 1 && (
+          <Box marginTop={1} flexDirection="column">
+            <Text color="yellow">エラー履歴 ({errorManager.errors.length}件):</Text>
+            {errorManager.errors.slice(-3).map((err, index) => (
+              <Text key={index} color="gray" dimColor>
+                • [{err.source}]{' '}
+                {err.message.length > 40 ? err.message.substring(0, 40) + '...' : err.message}
+              </Text>
+            ))}
+          </Box>
+        )}
+        <Box marginTop={1}>
+          <Text color="gray">
+            r: 再試行 | {failedFeeds.length > 0 ? 'e: エラー詳細 | ' : ''}q: 終了
+          </Text>
+        </Box>
         {showFailedFeeds && failedFeeds.length > 0 && (
           <Box marginTop={1} flexDirection="column">
             <Text bold color="yellow">

@@ -1,14 +1,12 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`export command E2E > should export feeds to OPML format by default > export-opml-success-output 1`] = `
-"Database migration completed successfully
-✓ Exported 2 feeds to [PATH]/subscriptions.opml (OPML format)
+"✓ Exported 2 feeds to [PATH]/subscriptions.opml (OPML format)
 "
 `;
 
 exports[`export command E2E > should export feeds to text format when specified > export-text-success-output 1`] = `
-"Database migration completed successfully
-✓ Exported 2 feeds to [PATH]/feeds.txt (text format)
+"✓ Exported 2 feeds to [PATH]/feeds.txt (text format)
 "
 `;
 
@@ -19,7 +17,6 @@ Error exporting feeds: Error: process.exit called
 `;
 
 exports[`export command E2E > should handle no feeds to export > export-no-feeds-output 1`] = `
-"Database migration completed successfully
-No feeds to export
+"No feeds to export
 "
 `;
