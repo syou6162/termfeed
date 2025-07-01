@@ -24,7 +24,16 @@ export type {
   UpdateProgress,
   UpdateProgressCallback,
   UpdateCancelledResult,
+  // TUI固有の型
+  ErrorSource,
+  ErrorInfo,
+  UseErrorManagerReturn,
+  FeedSelection,
+  ArticleSelection,
 } from './options';
+
+// TUI固有の定数
+export { ERROR_SOURCES } from './options';
 
 // サービス型
 export type { FeedService, ArticleService, RSSCrawler } from './services';

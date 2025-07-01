@@ -11,7 +11,7 @@ import { useArticleManager } from './hooks/useArticleManager.js';
 import { useAutoMarkAsRead } from './hooks/useAutoMarkAsRead.js';
 import { useErrorManager } from './hooks/useErrorManager.js';
 import { openUrlInBrowser } from './utils/browser.js';
-import { ERROR_SOURCES } from './types/error.js';
+import { ERROR_SOURCES } from '@/types';
 
 export function App() {
   const { exit } = useApp();
