@@ -133,7 +133,7 @@ describe('browser utilities', () => {
         if (event === 'error') {
           // process.nextTickで実行されるため、即座にエラーを発生させる
           process.nextTick(() => {
-            handler(new Error('Test error'));
+            (handler as (error: Error) => void)(new Error('Test error'));
           });
         }
         return mockChildProcess;

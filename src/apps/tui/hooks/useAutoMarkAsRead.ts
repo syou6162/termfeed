@@ -37,7 +37,7 @@ export function useAutoMarkAsRead({
   useEffect(() => {
     // markCurrentArticleAsReadを安定した参照にするため、依存関係を減らす
     const currentArticleRef = { current: articles[selectedArticleIndex] };
-    
+
     const handleExit = () => {
       const currentArticle = currentArticleRef.current;
       if (currentArticle && currentArticle.id && !currentArticle.is_read) {

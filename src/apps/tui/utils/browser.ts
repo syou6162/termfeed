@@ -51,7 +51,7 @@ export function openUrlInBrowser(url: string): Promise<void> {
     });
 
     let hasError = false;
-    
+
     childProcess.on('error', (error) => {
       hasError = true;
       reject(new Error(`ブラウザの起動に失敗しました: ${error.message}`));
