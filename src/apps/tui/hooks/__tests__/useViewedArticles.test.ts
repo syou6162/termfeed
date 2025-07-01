@@ -16,11 +16,23 @@ import type { FeedService } from '../../../../services/feed-service.js';
  *
  * 注意: Reactフックは直接テストできないため、フックの実装をシミュレートしたヘルパークラスを使用。
  * このアプローチは実際のフックの動作を正確に再現し、ビジネスロジックを確実にテストする。
+ *
+ * 理想的には @testing-library/react の renderHook を使用すべきだが、
+ * 現在の vitest.config.ts では environment: 'node' のため DOM が使用できない。
+ * 将来的に environment: 'jsdom' に変更する場合は、renderHook への移行を推奨。
  */
 
-// フックの実装をテストするためのモックヘルパー
+/**
+ * 重要: このクラスはuseViewedArticles.tsの実装と同期を保つ必要があります
+ * フックの実装を変更した場合は、このクラスも更新してください
+ *
+ * 実装との主な差異:
+ * - useState の代わりに private プロパティを使用
+ * - useCallback の代わりに通常のメソッドを使用
+ * - 戻り値の hasViewedArticles はメソッドではなくゲッターとして実装
+ */
 class HookTester {
-  private viewedArticleIds: Set<number> = new Set();
+  private viewedArticleIdsSet: Set<number> = new Set();
   private feedService: Partial<FeedService>;
 
   constructor(feedService: Partial<FeedService>) {
@@ -30,12 +42,12 @@ class HookTester {
   // useViewedArticlesの基本的な動作を模倣
   recordArticleView(articleId: number | undefined) {
     if (articleId !== undefined) {
-      this.viewedArticleIds.add(articleId);
+      this.viewedArticleIdsSet.add(articleId);
     }
   }
 
   markViewedArticlesAsRead() {
-    const ids = Array.from(this.viewedArticleIds);
+    const ids = Array.from(this.viewedArticleIdsSet);
     if (ids.length === 0) return;
 
     for (const articleId of ids) {
@@ -46,19 +58,23 @@ class HookTester {
       }
     }
 
-    this.viewedArticleIds.clear();
+    this.viewedArticleIdsSet.clear();
   }
 
   getViewedCount() {
-    return this.viewedArticleIds.size;
+    return this.viewedArticleIdsSet.size;
   }
 
   isArticleViewed(articleId: number | undefined): boolean {
-    return articleId !== undefined && this.viewedArticleIds.has(articleId);
+    return articleId !== undefined && this.viewedArticleIdsSet.has(articleId);
   }
 
-  getViewedIds() {
-    return Array.from(this.viewedArticleIds);
+  get hasViewedArticles() {
+    return this.viewedArticleIdsSet.size > 0;
+  }
+
+  get viewedArticleIds() {
+    return Array.from(this.viewedArticleIdsSet);
   }
 }
 
@@ -78,13 +94,15 @@ describe('useViewedArticles', () => {
       // 初期状態
       expect(hookTester.getViewedCount()).toBe(0);
       expect(hookTester.isArticleViewed(123)).toBe(false);
+      expect(hookTester.hasViewedArticles).toBe(false);
 
       // 記事を閲覧済みとして記録
       hookTester.recordArticleView(123);
 
       expect(hookTester.getViewedCount()).toBe(1);
       expect(hookTester.isArticleViewed(123)).toBe(true);
-      expect(hookTester.getViewedIds()).toEqual([123]);
+      expect(hookTester.hasViewedArticles).toBe(true);
+      expect(hookTester.viewedArticleIds).toEqual([123]);
     });
 
     it('同じ記事IDを複数回記録しても重複しない', () => {
@@ -96,7 +114,7 @@ describe('useViewedArticles', () => {
       hookTester.recordArticleView(123);
 
       // 1つだけ記録される
-      expect(hookTester.getViewedIds()).toEqual([123]);
+      expect(hookTester.viewedArticleIds).toEqual([123]);
 
       // 既読化を実行
       hookTester.markViewedArticlesAsRead();
@@ -113,7 +131,7 @@ describe('useViewedArticles', () => {
       hookTester.recordArticleView(undefined);
 
       expect(hookTester.getViewedCount()).toBe(0);
-      expect(hookTester.getViewedIds()).toEqual([]);
+      expect(hookTester.viewedArticleIds).toEqual([]);
 
       // 既読化を実行
       hookTester.markViewedArticlesAsRead();
@@ -134,7 +152,7 @@ describe('useViewedArticles', () => {
       expect(hookTester.isArticleViewed(1)).toBe(true);
       expect(hookTester.isArticleViewed(2)).toBe(true);
       expect(hookTester.isArticleViewed(3)).toBe(true);
-      expect(hookTester.getViewedIds().sort()).toEqual([1, 2, 3]);
+      expect(hookTester.viewedArticleIds.sort()).toEqual([1, 2, 3]);
 
       // 既読化を実行
       hookTester.markViewedArticlesAsRead();
@@ -162,7 +180,8 @@ describe('useViewedArticles', () => {
 
       // リストがクリアされる
       expect(hookTester.getViewedCount()).toBe(0);
-      expect(hookTester.getViewedIds()).toEqual([]);
+      expect(hookTester.viewedArticleIds).toEqual([]);
+      expect(hookTester.hasViewedArticles).toBe(false);
 
       // 再度既読化しても何も起きない
       vi.clearAllMocks();
@@ -210,7 +229,7 @@ describe('useViewedArticles', () => {
       hookTester.recordArticleView(1);
 
       // Setなので1つだけ記録される
-      expect(hookTester.getViewedIds()).toEqual([1]);
+      expect(hookTester.viewedArticleIds).toEqual([1]);
 
       // 既読化を実行
       hookTester.markViewedArticlesAsRead();
@@ -229,7 +248,7 @@ describe('useViewedArticles', () => {
       hookTester.recordArticleView(10);
 
       // Setなので1つだけ記録される
-      expect(hookTester.getViewedIds()).toEqual([10]);
+      expect(hookTester.viewedArticleIds).toEqual([10]);
 
       // 既読化を実行
       hookTester.markViewedArticlesAsRead();
@@ -255,7 +274,7 @@ describe('useViewedArticles', () => {
       hookTester.recordArticleView(2);
 
       // Setなので重複しない
-      expect(hookTester.getViewedIds().sort()).toEqual([1, 2, 3]);
+      expect(hookTester.viewedArticleIds.sort()).toEqual([1, 2, 3]);
 
       // 既読化を実行
       hookTester.markViewedArticlesAsRead();
@@ -265,6 +284,23 @@ describe('useViewedArticles', () => {
       expect(mockFeedService.markArticleAsRead).toHaveBeenCalledWith(1);
       expect(mockFeedService.markArticleAsRead).toHaveBeenCalledWith(2);
       expect(mockFeedService.markArticleAsRead).toHaveBeenCalledWith(3);
+    });
+  });
+
+  describe('hasViewedArticlesプロパティ', () => {
+    it('閲覧済み記事の有無を正しく反映する', () => {
+      const hookTester = new HookTester(mockFeedService);
+
+      // 初期状態
+      expect(hookTester.hasViewedArticles).toBe(false);
+
+      // 記事を追加
+      hookTester.recordArticleView(1);
+      expect(hookTester.hasViewedArticles).toBe(true);
+
+      // 既読化してクリア
+      hookTester.markViewedArticlesAsRead();
+      expect(hookTester.hasViewedArticles).toBe(false);
     });
   });
 });
