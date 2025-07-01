@@ -95,14 +95,6 @@ export function App() {
     }
   }, [articlesError, addError, clearErrorsBySource]);
 
-  // 自動既読機能（現在は使用していないが、将来の拡張用に残す）
-  // const { markCurrentArticleAsRead } = useAutoMarkAsRead({
-  //   articles,
-  //   selectedArticleIndex,
-  //   feedService,
-  //   onArticleMarkedAsRead: undefined,
-  // });
-
   const handleFeedSelectionChange = useCallback(
     (index: number) => {
       // 閲覧済み記事をまとめて既読化
