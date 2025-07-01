@@ -135,20 +135,24 @@ describe('App - 自動既読機能', () => {
   it('フィード移動時に選択中の未読記事を既読にする', async () => {
     const { stdin, unmount } = render(<App />);
 
-    // 少し待ってから操作（初期化が完了するまで）
-    await new Promise((resolve) => setTimeout(resolve, 100));
-
-    // 初期状態で記事1が選択されている（未読）
-    // フィード移動時に既読化される
+    // 初期化が完了するまで待機
+    await vi.waitFor(
+      () => {
+        expect(mockFeedService.getArticles).toHaveBeenCalled();
+      },
+      { timeout: 1000 }
+    );
 
     // sキーでフィード2に移動
     stdin.write('s');
 
-    // 少し待ってから確認
-    await new Promise((resolve) => setTimeout(resolve, 100));
-
-    // 記事1が既読にマークされる
-    expect(mockFeedService.markArticleAsRead).toHaveBeenCalledWith(1);
+    // 記事1が既読にマークされるまで待機
+    await vi.waitFor(
+      () => {
+        expect(mockFeedService.markArticleAsRead).toHaveBeenCalledWith(1);
+      },
+      { timeout: 1000 }
+    );
 
     // クリーンアップ
     unmount();
@@ -171,17 +175,20 @@ describe('App - 自動既読機能', () => {
 
     const { stdin, unmount } = render(<App />);
 
-    // 初期化待ち
-    await new Promise((resolve) => setTimeout(resolve, 100));
-
     // markArticleAsReadの呼び出し状況をクリア（初期化時の呼び出しを無視）
     vi.clearAllMocks();
 
     // sキーでフィード移動
     stdin.write('s');
 
-    // 少し待ってから確認
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    // フィード変更処理が完了するまで少し待機
+    await vi.waitFor(
+      () => {
+        // 他のフィードサービスの呼び出しがあることを確認（フィード移動が完了していることの指標）
+        expect(mockFeedService.getArticles).toHaveBeenCalled();
+      },
+      { timeout: 1000 }
+    );
 
     // 記事がフィルタリングされているので markArticleAsRead は呼ばれない
     expect(mockFeedService.markArticleAsRead).not.toHaveBeenCalled();
@@ -193,17 +200,24 @@ describe('App - 自動既読機能', () => {
   it('qキーでの終了時に選択中の未読記事を既読にする', async () => {
     const { stdin, unmount } = render(<App />);
 
-    // 初期化待ち
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    // 初期化が完了するまで待機
+    await vi.waitFor(
+      () => {
+        expect(mockFeedService.getArticles).toHaveBeenCalled();
+      },
+      { timeout: 1000 }
+    );
 
     // qキーで終了
     stdin.write('q');
 
-    // 少し待ってから確認
-    await new Promise((resolve) => setTimeout(resolve, 100));
-
-    // 選択中の記事1が既読にマークされる
-    expect(mockFeedService.markArticleAsRead).toHaveBeenCalledWith(1);
+    // 選択中の記事1が既読にマークされるまで待機
+    await vi.waitFor(
+      () => {
+        expect(mockFeedService.markArticleAsRead).toHaveBeenCalledWith(1);
+      },
+      { timeout: 1000 }
+    );
 
     // クリーンアップ
     unmount();
