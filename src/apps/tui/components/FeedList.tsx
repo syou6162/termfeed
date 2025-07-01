@@ -86,7 +86,11 @@ export const FeedList = memo(function FeedList({ feeds, selectedIndex }: FeedLis
     );
   }
 
-  const totalUnreadCount = feeds.reduce((total, feed) => total + feed.unreadCount, 0);
+  const totalUnreadCount = feedSections.reduce(
+    (total, section) =>
+      total + section.items.reduce((sectionTotal, item) => sectionTotal + item.unreadCount, 0),
+    0
+  );
 
   return (
     <Box flexDirection="column" paddingX={0} paddingY={1} width="100%" flexGrow={1}>

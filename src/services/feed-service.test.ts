@@ -49,7 +49,7 @@ describe('FeedService', () => {
         feed: {
           url: 'https://example.com/rss.xml',
           title: 'Test Feed',
-
+          rating: 0,
           description: 'Test Description',
           last_updated_at: new Date(),
         },
@@ -82,7 +82,7 @@ describe('FeedService', () => {
         feed: {
           url: 'https://example.com/rss.xml',
           title: 'Test Feed',
-
+          rating: 0,
           description: 'Test Description',
           last_updated_at: new Date(),
         },
@@ -111,7 +111,7 @@ describe('FeedService', () => {
         feed: {
           url: 'https://example.com/rss.xml',
           title: 'Test Feed',
-
+          rating: 0,
           description: 'Test Description',
           last_updated_at: new Date(),
         },
@@ -153,7 +153,7 @@ describe('FeedService', () => {
       const feed = feedModel.create({
         url: 'https://example.com/rss.xml',
         title: 'Test Feed',
-
+        rating: 0,
         description: 'Test Description',
       });
 
@@ -228,7 +228,7 @@ describe('FeedService', () => {
       const feed = feedModel.create({
         url: 'https://example.com/rss.xml',
         title: 'Test Feed',
-
+        rating: 0,
         description: 'Test Description',
       });
 
@@ -246,7 +246,7 @@ describe('FeedService', () => {
         feed: {
           url: 'https://example.com/rss.xml',
           title: 'Test Feed',
-
+          rating: 0,
           description: 'Test Description',
           last_updated_at: new Date(),
         },
@@ -281,7 +281,7 @@ describe('FeedService', () => {
       const feed = feedModel.create({
         url: 'https://example.com/rss.xml',
         title: 'Test Feed',
-
+        rating: 0,
         description: 'Test Description',
       });
 
@@ -599,7 +599,7 @@ describe('FeedService', () => {
       const feed = feedModel.create({
         url: 'https://example.com/rss.xml',
         title: 'Test Feed',
-
+        rating: 0,
         description: 'Test Description',
       });
       feedId = feed.id!;
@@ -693,7 +693,7 @@ describe('FeedService', () => {
       const feed = feedModel.create({
         url: 'https://example.com/rss.xml',
         title: 'Test Feed',
-
+        rating: 0,
         description: 'Test Description',
       });
 
@@ -723,7 +723,7 @@ describe('FeedService', () => {
       const feed = feedModel.create({
         url: 'https://example.com/rss.xml',
         title: 'Test Feed',
-
+        rating: 0,
         description: 'Test Description',
       });
 
@@ -738,7 +738,7 @@ describe('FeedService', () => {
       const feed = feedModel.create({
         url: 'https://example.com/rss.xml',
         title: 'Test Feed',
-
+        rating: 0,
         description: 'Test Description',
       });
 
