@@ -123,21 +123,6 @@ TUIでは未読記事の閲覧、お気に入り管理、ブラウザで開く�
 
 TUIではリアルタイムで更新状況を確認でき、新着記事を即座に閲覧できます。
 
-#### 記事の操作
-
-```bash
-# 記事を既読にする
-termfeed read <ARTICLE_ID>
-
-# 記事を未読に戻す
-termfeed unread <ARTICLE_ID>
-
-# お気に入りに追加/削除（トグル）
-termfeed favorite <ARTICLE_ID>
-
-# 記事の詳細を表示
-termfeed show <ARTICLE_ID>
-```
 
 #### フィードのエクスポート/インポート
 
