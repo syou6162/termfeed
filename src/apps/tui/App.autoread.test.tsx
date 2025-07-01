@@ -114,11 +114,16 @@ describe('App - 自動既読機能', () => {
 
     // モックのリセット
     vi.clearAllMocks();
+
+    // markArticleAsReadのモック実装を再設定（重要！）
+    mockFeedService.markArticleAsRead.mockImplementation(() => undefined);
+
     mockFeedService.getFeedList.mockReturnValue([
       { id: 1, title: 'Test Feed 1', url: 'https://example.com/feed1.rss' },
       { id: 2, title: 'Test Feed 2', url: 'https://example.com/feed2.rss' },
     ]);
     mockFeedService.getUnreadCount.mockReturnValue(2);
+    mockFeedService.getUnreadCountsForAllFeeds.mockReturnValue({ 1: 2, 2: 1 });
     mockFeedService.getArticles.mockReturnValue([
       {
         id: 1,
@@ -141,7 +146,6 @@ describe('App - 自動既読機能', () => {
         author: 'Test Author 2',
       },
     ]);
-    mockFeedService.markArticleAsRead.mockClear();
   });
 
   afterEach(() => {
