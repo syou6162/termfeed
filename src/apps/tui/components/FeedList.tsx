@@ -109,6 +109,7 @@ export const FeedList = memo(function FeedList({ feeds, selectedIndex }: FeedLis
                 borderStyle="round"
                 borderColor={isCurrentSection ? 'cyan' : 'gray'}
                 flexDirection="column"
+                width="100%"
               >
                 <Box
                   flexDirection="row"
