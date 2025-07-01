@@ -95,42 +95,52 @@ export const FeedList = memo(function FeedList({ feeds, selectedIndex }: FeedLis
       </Text>
       <Box marginTop={1}>
         <Box flexDirection="column">
-          {feedSections.map((section) => (
-            <Box
-              key={section.rating}
-              marginTop={1}
-              paddingX={1}
-              paddingY={1}
-              borderStyle="round"
-              borderColor="cyan"
-              flexDirection="column"
-            >
+          {feedSections.map((section) => {
+            // 現在選択中のフィードが属するセクションかどうかを判定
+            const selectedFeed = feeds[selectedIndex];
+            const isCurrentSection = selectedFeed && section.rating === selectedFeed.rating;
+
+            return (
               <Box
-                flexDirection="row"
-                alignItems="center"
-                justifyContent="space-between"
-                marginBottom={1}
+                key={section.rating}
+                marginTop={1}
+                paddingX={1}
+                paddingY={1}
+                borderStyle="round"
+                borderColor={isCurrentSection ? 'cyan' : 'gray'}
+                flexDirection="column"
               >
-                <Box flexDirection="row" alignItems="center">
-                  <Text bold color="yellow">
-                    {'★'.repeat(section.rating || 0)}
-                    {section.rating === 0 ? '評価なし' : ''}
+                <Box
+                  flexDirection="row"
+                  alignItems="center"
+                  justifyContent="space-between"
+                  marginBottom={isCurrentSection ? 1 : 0}
+                >
+                  <Box flexDirection="row" alignItems="center">
+                    <Text bold color={isCurrentSection ? 'yellow' : 'gray'}>
+                      {'★'.repeat(section.rating || 0)}
+                      {section.rating === 0 ? '評価なし' : ''}
+                    </Text>
+                  </Box>
+                  <Text color="gray" dimColor>
+                    {section.items.reduce((total, item) => total + item.unreadCount, 0)}件
                   </Text>
                 </Box>
-                <Text color="gray" dimColor>
-                  {section.items.reduce((total, item) => total + item.unreadCount, 0)}件
-                </Text>
+                {/* 現在のセクションのみフィード一覧を表示 */}
+                {isCurrentSection &&
+                  section.items.map((item, _index) => {
+                    const globalIndex = allItems.findIndex(
+                      (globalItem) => globalItem.id === item.id
+                    );
+                    return (
+                      <Box key={`${section.rating}-${item.id}`}>
+                        {renderFeedItem(item, globalIndex === selectedIndex)}
+                      </Box>
+                    );
+                  })}
               </Box>
-              {section.items.map((item, _index) => {
-                const globalIndex = allItems.findIndex((globalItem) => globalItem.id === item.id);
-                return (
-                  <Box key={`${section.rating}-${item.id}`}>
-                    {renderFeedItem(item, globalIndex === selectedIndex)}
-                  </Box>
-                );
-              })}
-            </Box>
-          ))}
+            );
+          })}
         </Box>
       </Box>
     </Box>
