@@ -147,13 +147,16 @@ describe('App - 自動既読機能', () => {
   it('フィード移動時に選択中の未読記事を既読にする', async () => {
     const { stdin, unmount } = render(<App />);
 
-    // 初期化が完了するまで待機
+    // 初期化が完了し、最初の記事が閲覧記録されるまで待機
     await vi.waitFor(
       () => {
         expect(mockFeedService.getArticles).toHaveBeenCalled();
       },
       { timeout: 1000 }
     );
+
+    // 記事の表示が完了するまで少し待機（useEffectの実行を待つ）
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // sキーでフィード2に移動
     stdin.write('s');
