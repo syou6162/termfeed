@@ -57,6 +57,7 @@ export class FeedService implements IFeedService {
       url: crawlResult.feed.url,
       title: crawlResult.feed.title,
       description: crawlResult.feed.description,
+      rating: 0,
     };
 
     const feed = this.feedModel.create(createFeedInput);
@@ -285,5 +286,14 @@ export class FeedService implements IFeedService {
 
   getUnreadCountsForAllFeeds(): { [feedId: number]: number } {
     return this.articleModel.getUnreadCountsByFeedIds();
+  }
+
+  setFeedRating(feedId: number, rating: number): boolean {
+    const feed = this.feedModel.findById(feedId);
+    if (!feed) {
+      throw new FeedNotFoundError(`Feed not found: ${feedId}`, feedId);
+    }
+
+    return this.feedModel.setRating(feedId, rating);
   }
 }

@@ -30,6 +30,7 @@ export type FeedService = {
   getFeedById(feedId: number): Feed | null;
   getArticleById(articleId: number): Article | null;
   getUnreadCountsForAllFeeds(): { [feedId: number]: number };
+  setFeedRating(feedId: number, rating: number): boolean;
 };
 
 // ArticleServiceの型定義

@@ -5,6 +5,7 @@ export type Feed = {
   url: string;
   title: string;
   description?: string;
+  rating: number;
   last_updated_at: Date;
   created_at: Date;
 };
@@ -46,6 +47,7 @@ export type CreateFeedInput = {
   url: string;
   title: string;
   description?: string;
+  rating: number;
 };
 
 export type UpdateArticleInput = {
