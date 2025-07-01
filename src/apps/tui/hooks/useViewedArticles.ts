@@ -66,6 +66,7 @@ export function useViewedArticles(feedService: FeedService) {
     markViewedArticlesAsRead,
     getViewedCount,
     isArticleViewed,
+    hasViewedArticles: viewedArticleIds.size > 0,
     viewedArticleIds: Array.from(viewedArticleIds), // テスト用
   };
 }
