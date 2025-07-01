@@ -18,11 +18,19 @@ export class FeedModel {
     `);
 
     try {
-      const result = stmt.run(feed.url, feed.title, feed.description || null, feed.rating, now, now);
+      const result = stmt.run(
+        feed.url,
+        feed.title,
+        feed.description || null,
+        feed.rating ?? 0,
+        now,
+        now
+      );
 
       return {
         id: result.lastInsertRowid as number,
         ...feed,
+        rating: feed.rating ?? 0,
         last_updated_at: unixSecondsToDate(now),
         created_at: unixSecondsToDate(now),
       };

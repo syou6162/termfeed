@@ -1,0 +1,20 @@
+https://b.hatena.ne.jp/hotentry.rss|はてなブックマーク - 人気エントリー - 総合
+https://tech-blog.rakus.co.jp/rss|RAKUS Developers Blog | ラクス エンジニアブログ
+https://syu-m-5151.hatenablog.com/rss|じゃあ、おうちで学べる 
+https://christina04.hatenablog.com/rss|Carpe Diem
+https://tech.andpad.co.jp/rss|ANDPAD Tech Blog
+https://blog.shibayu36.org/rss|$shibayu36->blog;
+https://tech.smarthr.jp/rss|SmartHR Tech Blog
+https://devblog.thebase.in/rss|BASEプロダクトチームブログ
+https://tech.layerx.co.jp/rss|LayerX エンジニアブログ
+https://techblog.zozo.com/rss|ZOZO TECH BLOG
+https://www.m3tech.blog/rss|エムスリーテックブログ
+https://www.pospome.work/rss|pospomeのプログラミング日記
+https://www.memory-lovers.blog/rss|くらげになりたい。
+https://blog.magnolia.tech/rss|Magnolia Tech
+https://zenn.dev/topics/react/feed|Zennの「React」のフィード
+https://zenn.dev/topics/python/feed|Zennの「Python」のフィード
+https://dev.classmethod.jp/feed/|DevelopersIO
+https://gigazine.net/news/rss_2.0/|GIGAZINE
+https://zenn.dev/yasuhisa/feed|やすひささんのフィード
+https://www.publickey1.jp/atom.xml|Publickey

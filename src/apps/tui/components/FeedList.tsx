@@ -94,18 +94,23 @@ export const FeedList = memo(function FeedList({ feeds, selectedIndex }: FeedLis
         フィード一覧 ({feeds.length}件)
       </Text>
       {selectedFeed && (
-        <Text color="yellow" marginTop={1}>
-          現在: レーティング {selectedRating} (★{selectedRating}☆{5 - selectedRating})
-        </Text>
+        <Box marginTop={1}>
+          <Text color="yellow">
+            現在: レーティング {selectedRating} (★{selectedRating}☆{5 - selectedRating})
+          </Text>
+        </Box>
       )}
       <Box marginTop={1}>
         <Box flexDirection="column">
           {feedSections.map((section) => (
             <Box key={section.rating} flexDirection="column">
-              <Text bold color="cyan" marginTop={1}>
-                ── レーティング {section.rating} ({'★'.repeat(section.rating)}{'☆'.repeat(5 - section.rating)}) ──
-              </Text>
-              {section.items.map((item, index) => {
+              <Box marginTop={1}>
+                <Text bold color="cyan">
+                  ── レーティング {section.rating} ({'★'.repeat(section.rating)}
+                  {'☆'.repeat(5 - section.rating)}) ──
+                </Text>
+              </Box>
+              {section.items.map((item, _index) => {
                 const globalIndex = allItems.findIndex((globalItem) => globalItem.id === item.id);
                 return (
                   <Box key={`${section.rating}-${item.id}`}>

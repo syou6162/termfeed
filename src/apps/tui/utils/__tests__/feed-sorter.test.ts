@@ -9,6 +9,7 @@ describe('feed-sorter', () => {
       url: `https://example.com/feed${id}.rss`,
       title,
       description: `${title} description`,
+      rating: 0,
       last_updated_at: new Date('2024-01-01'),
       created_at: new Date('2024-01-01'),
       unreadCount,

@@ -11,8 +11,8 @@ vi.mock('../cli/utils/database.js', () => ({
 
 const mockFeedService = {
   getFeedList: vi.fn(() => [
-    { id: 1, title: 'Test Feed 1', url: 'https://example.com/feed1.rss' },
-    { id: 2, title: 'Test Feed 2', url: 'https://example.com/feed2.rss' },
+    { id: 1, title: 'Test Feed 1', rating: 0, url: 'https://example.com/feed1.rss' },
+    { id: 2, title: 'Test Feed 2', rating: 0, url: 'https://example.com/feed2.rss' },
   ]),
   getUnreadCount: vi.fn(() => 5),
   getUnreadFeeds: vi.fn(),
@@ -73,8 +73,8 @@ describe('App', () => {
 
     // モックのリセットと再設定
     const mockFeeds = [
-      { id: 1, title: 'Test Feed 1', url: 'https://example.com/feed1.rss' },
-      { id: 2, title: 'Test Feed 2', url: 'https://example.com/feed2.rss' },
+      { id: 1, title: 'Test Feed 1', rating: 0, url: 'https://example.com/feed1.rss' },
+      { id: 2, title: 'Test Feed 2', rating: 0, url: 'https://example.com/feed2.rss' },
     ];
     mockFeedService.getFeedList.mockReturnValue(mockFeeds);
     mockFeedService.getUnreadCount.mockReturnValue(5);

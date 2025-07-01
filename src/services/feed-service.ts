@@ -57,7 +57,7 @@ export class FeedService implements IFeedService {
       url: crawlResult.feed.url,
       title: crawlResult.feed.title,
       description: crawlResult.feed.description,
-      rating: 0,
+      // rating: 0 は省略（デフォルト値を使用）
     };
 
     const feed = this.feedModel.create(createFeedInput);
@@ -244,8 +244,8 @@ export class FeedService implements IFeedService {
   }
 
   /**
-   * 未読記事があるフィードのみを取得（未読件数でソート済み）
-   * @returns 未読記事があるフィードと未読件数の配列（未読件数の多い順）
+   * 未読記事があるフィードのみを取得（レーティング・未読件数でソート済み）
+   * @returns 未読記事があるフィードと未読件数の配列（レーティング優先、未読件数副次）
    */
   getUnreadFeeds(): Array<Feed & { unreadCount: number }> {
     const allFeeds = this.feedModel.findAll();
@@ -258,8 +258,13 @@ export class FeedService implements IFeedService {
         unreadCount: feed.id ? unreadCounts[feed.id] || 0 : 0,
       }))
       .filter((feed) => feed.unreadCount > 0)
-      // 未読件数の多い順にソート
-      .sort((a, b) => b.unreadCount - a.unreadCount);
+      // レーティング優先、同じレーティングの場合は未読件数でソート
+      .sort((a, b) => {
+        if (a.rating !== b.rating) {
+          return b.rating - a.rating; // レーティング降順
+        }
+        return b.unreadCount - a.unreadCount; // 未読件数降順
+      });
 
     return feedsWithUnread;
   }

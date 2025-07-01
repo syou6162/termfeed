@@ -47,7 +47,7 @@ export type CreateFeedInput = {
   url: string;
   title: string;
   description?: string;
-  rating: number;
+  rating?: number;
 };
 
 export type UpdateArticleInput = {

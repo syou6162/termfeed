@@ -58,6 +58,7 @@ const mockFeeds: Feed[] = [
     id: 1,
     url: 'https://example.com/feed1.rss',
     title: 'Test Feed 1',
+    rating: 0,
     description: 'Test feed 1 description',
     last_updated_at: new Date('2024-01-01'),
     created_at: new Date('2024-01-01'),

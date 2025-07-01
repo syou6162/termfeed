@@ -42,6 +42,7 @@ describe('FeedModel', () => {
       const feedInput: CreateFeedInput = {
         url: 'https://example.com/feed.xml',
         title: 'Example Feed',
+        rating: 0,
         description: 'This is an example feed',
       };
 
@@ -59,6 +60,7 @@ describe('FeedModel', () => {
       const feedInput: CreateFeedInput = {
         url: 'https://example.com/feed2.xml',
         title: 'Another Feed',
+        rating: 0,
       };
 
       const feed = feedModel.create(feedInput);
@@ -75,6 +77,7 @@ describe('FeedModel', () => {
       const feedInput: CreateFeedInput = {
         url: 'https://example.com/feed.xml',
         title: 'Example Feed',
+        rating: 0,
       };
 
       const created = feedModel.create(feedInput);
@@ -97,6 +100,7 @@ describe('FeedModel', () => {
       const feedInput: CreateFeedInput = {
         url: 'https://example.com/unique-feed.xml',
         title: 'Unique Feed',
+        rating: 0,
       };
 
       feedModel.create(feedInput);
@@ -208,6 +212,7 @@ describe('FeedModel', () => {
       const feedInput: CreateFeedInput = {
         url: 'https://example.com/feed.xml',
         title: 'Test Feed',
+        rating: 0,
       };
 
       const created = feedModel.create(feedInput);
