@@ -317,13 +317,28 @@ describe('App Integration Tests', () => {
       // vキーを押す
       stdin.write('v');
 
-      // ブラウザが開かれることを確認
+      // プラットフォームに応じたブラウザコマンドが呼ばれることを確認
       await vi.waitFor(() => {
-        expect(spawn).toHaveBeenCalledWith(
-          'open',
-          ['-g', 'https://example.com/article1'],
-          expect.objectContaining({ stdio: 'ignore', detached: true })
-        );
+        const platform = process.platform;
+        if (platform === 'darwin') {
+          expect(spawn).toHaveBeenCalledWith(
+            'open',
+            ['-g', 'https://example.com/article1'],
+            expect.objectContaining({ stdio: 'ignore', detached: true })
+          );
+        } else if (platform === 'win32') {
+          expect(spawn).toHaveBeenCalledWith(
+            'cmd',
+            ['/c', 'start', '/min', 'https://example.com/article1'],
+            expect.objectContaining({ stdio: 'ignore', detached: true })
+          );
+        } else {
+          expect(spawn).toHaveBeenCalledWith(
+            'xdg-open',
+            ['https://example.com/article1'],
+            expect.objectContaining({ stdio: 'ignore', detached: true })
+          );
+        }
       });
     });
 
