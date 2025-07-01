@@ -1,5 +1,5 @@
 import { Box, Text, useApp, useStdout } from 'ink';
-import { useCallback, useEffect, useState, useMemo } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ArticleList } from './components/ArticleList.js';
 import { FeedList } from './components/FeedList.js';
 import { TwoPaneLayout } from './components/TwoPaneLayout.js';
@@ -11,6 +11,7 @@ import { useArticleManager } from './hooks/useArticleManager.js';
 import { useAutoMarkAsRead } from './hooks/useAutoMarkAsRead.js';
 import { useErrorManager } from './hooks/useErrorManager.js';
 import { openUrlInBrowser } from './utils/browser.js';
+import { ERROR_SOURCES } from './types/error.js';
 
 export function App() {
   const { exit } = useApp();
@@ -61,31 +62,35 @@ export function App() {
   const errorManager = useErrorManager();
 
   // エラーを統合管理
-  const { addError, clearErrors } = errorManager;
+  const { addError, clearErrorsBySource } = errorManager;
+
+  // フィードエラーの管理
   useEffect(() => {
-    clearErrors();
     if (error) {
       addError({
-        source: 'feed',
+        source: ERROR_SOURCES.FEED,
         message: error,
         timestamp: new Date(),
         recoverable: true,
       });
+    } else {
+      clearErrorsBySource(ERROR_SOURCES.FEED);
     }
+  }, [error, addError, clearErrorsBySource]);
+
+  // 記事エラーの管理
+  useEffect(() => {
     if (articlesError) {
       addError({
-        source: 'article',
+        source: ERROR_SOURCES.ARTICLE,
         message: articlesError,
         timestamp: new Date(),
         recoverable: true,
       });
+    } else {
+      clearErrorsBySource(ERROR_SOURCES.ARTICLE);
     }
-  }, [error, articlesError, addError, clearErrors]);
-
-  const displayError = useMemo(() => {
-    const latestError = errorManager.getLatestError();
-    return latestError?.message || '';
-  }, [errorManager]);
+  }, [articlesError, addError, clearErrorsBySource]);
 
   // 自動既読機能
   const { markCurrentArticleAsRead } = useAutoMarkAsRead({
@@ -111,7 +116,7 @@ export function App() {
         await openUrlInBrowser(selectedArticle.url);
       } catch (error) {
         addError({
-          source: 'network',
+          source: ERROR_SOURCES.NETWORK,
           message: error instanceof Error ? error.message : 'ブラウザの起動に失敗しました',
           timestamp: new Date(),
           recoverable: true,
@@ -144,7 +149,7 @@ export function App() {
     selectedFeedIndex,
     onArticleSelectionChange: setSelectedArticleIndex,
     onFeedSelectionChange: handleFeedSelectionChange,
-    onOpenInBrowser: handleArticleSelect,
+    onOpenInBrowser: () => void handleArticleSelect(),
     onRefreshAll: () => void updateAllFeeds(),
     onToggleFavorite: toggleFavorite,
     onToggleHelp: () => setShowHelp((prev) => !prev),
@@ -184,21 +189,39 @@ export function App() {
     );
   }
 
-  if (displayError) {
+  if (errorManager.hasError) {
+    const latestError = errorManager.getLatestError();
     return (
       <Box flexDirection="column" padding={1}>
         <Text bold color="red">
           エラーが発生しました
         </Text>
-        <Text color="red">{displayError}</Text>
-        {errorManager.errors.length > 1 && (
-          <Text color="gray" dimColor>
-            他に{errorManager.errors.length - 1}件のエラーがあります
-          </Text>
+        {latestError && (
+          <>
+            <Text color="red">
+              [{latestError.source.toUpperCase()}] {latestError.message}
+            </Text>
+            <Text color="gray" dimColor>
+              発生時刻: {latestError.timestamp.toLocaleTimeString('ja-JP')}
+            </Text>
+          </>
         )}
-        <Text color="gray">
-          r: 再試行 | {failedFeeds.length > 0 ? 'e: エラー詳細 | ' : ''}q: 終了
-        </Text>
+        {errorManager.errors.length > 1 && (
+          <Box marginTop={1} flexDirection="column">
+            <Text color="yellow">エラー履歴 ({errorManager.errors.length}件):</Text>
+            {errorManager.errors.slice(-3).map((err, index) => (
+              <Text key={index} color="gray" dimColor>
+                • [{err.source}]{' '}
+                {err.message.length > 40 ? err.message.substring(0, 40) + '...' : err.message}
+              </Text>
+            ))}
+          </Box>
+        )}
+        <Box marginTop={1}>
+          <Text color="gray">
+            r: 再試行 | {failedFeeds.length > 0 ? 'e: エラー詳細 | ' : ''}q: 終了
+          </Text>
+        </Box>
         {showFailedFeeds && failedFeeds.length > 0 && (
           <Box marginTop={1} flexDirection="column">
             <Text bold color="yellow">

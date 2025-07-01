@@ -45,9 +45,12 @@ export function useArticleManager(
         setIsLoading(true);
         setError('');
 
-        const allArticles = feedService.getArticles({ feed_id: feedId, limit: TUI_CONFIG.DEFAULT_ARTICLE_LIMIT });
-        // 未読記事のみをフィルタリング
-        const unreadArticles = allArticles ? allArticles.filter((article) => !article.is_read) : [];
+        const allArticles = feedService.getArticles({
+          feed_id: feedId,
+          limit: TUI_CONFIG.DEFAULT_ARTICLE_LIMIT,
+        });
+        // 未読記事のみをフィルタリング（防御的プログラミング）
+        const unreadArticles = (allArticles || []).filter((article) => !article.is_read);
         setArticles(unreadArticles);
         setSelectedArticleIndex(0);
         setScrollOffset(0); // スクロール位置をリセット

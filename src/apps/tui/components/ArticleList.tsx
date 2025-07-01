@@ -56,6 +56,26 @@ export const ArticleList = memo(function ArticleList({
   const totalHeight = stdout?.rows || TUI_CONFIG.DEFAULT_TERMINAL_HEIGHT;
   const availableLines = Math.max(1, totalHeight - TUI_CONFIG.ARTICLE_FIXED_LINES);
 
+  // articlesは既に未読記事のみ
+  const unreadCount = articles.length;
+  const currentUnreadIndex = articles.findIndex((article) => article.id === selectedArticle?.id);
+  const unreadPosition = currentUnreadIndex !== -1 ? currentUnreadIndex + 1 : 0;
+
+  // useMemoは条件分岐の前に配置（Reactフックのルール）
+  const publishedDate = useMemo(
+    () =>
+      selectedArticle?.published_at
+        ? selectedArticle.published_at.toLocaleDateString('ja-JP', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          })
+        : '',
+    [selectedArticle?.published_at]
+  );
+
   if (articles.length === 0) {
     return (
       <Box flexDirection="column" height="100%" width="100%" padding={1} flexShrink={0}>
@@ -75,11 +95,6 @@ export const ArticleList = memo(function ArticleList({
       </Box>
     );
   }
-
-  // articlesは既に未読記事のみ
-  const unreadCount = articles.length;
-  const currentUnreadIndex = articles.findIndex((article) => article.id === selectedArticle?.id);
-  const unreadPosition = currentUnreadIndex !== -1 ? currentUnreadIndex + 1 : 0;
 
   // 記事詳細を直接レンダリング（renderArticleDetail関数を使わない）
   if (!selectedArticle) {
@@ -114,17 +129,6 @@ export const ArticleList = memo(function ArticleList({
   }
 
   const content = selectedArticle.content || '';
-  const publishedDate = useMemo(
-    () =>
-      selectedArticle.published_at.toLocaleDateString('ja-JP', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      }),
-    [selectedArticle.published_at]
-  );
 
   // スクロール位置に基づいて表示する行を選択
   const visibleLines = contentLines.slice(scrollOffset, scrollOffset + availableLines);

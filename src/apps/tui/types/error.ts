@@ -1,8 +1,20 @@
 /**
+ * エラーソースの定義（拡張可能）
+ */
+export const ERROR_SOURCES = {
+  FEED: 'feed',
+  ARTICLE: 'article',
+  NETWORK: 'network',
+  DATABASE: 'database',
+} as const;
+
+export type ErrorSource = (typeof ERROR_SOURCES)[keyof typeof ERROR_SOURCES];
+
+/**
  * TUIアプリケーションのエラー情報
  */
 export interface ErrorInfo {
-  source: 'feed' | 'article' | 'network' | 'database';
+  source: ErrorSource;
   message: string;
   timestamp: Date;
   recoverable: boolean;

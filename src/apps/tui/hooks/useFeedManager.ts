@@ -132,11 +132,14 @@ export function useFeedManager(feedService: FeedService): FeedManagerState & Fee
 
   const setSelectedFeedIndexWithId = useCallback(
     (index: number) => {
-      if (feeds[index]?.id) {
-        setSelection({ index, id: feeds[index].id });
-      } else {
-        setSelection({ index, id: null });
-      }
+      // 境界チェック: インデックスを安全な範囲に制限
+      const safeIndex = Math.max(0, Math.min(index, Math.max(0, feeds.length - 1)));
+      const feed = feeds[safeIndex];
+
+      setSelection({
+        index: safeIndex,
+        id: feed?.id ?? null,
+      });
     },
     [feeds]
   );
