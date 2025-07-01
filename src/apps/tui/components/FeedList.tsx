@@ -56,14 +56,12 @@ export const FeedList = memo(function FeedList({ feeds, selectedIndex }: FeedLis
     const prefix = isSelected ? '>' : ' ';
     const unreadMarker = item.isRead === false ? '● ' : '';
     const selectedStyle = isSelected ? { color: 'blue', bold: true } : {};
-    const ratingStars = '★'.repeat(item.rating) + '☆'.repeat(5 - item.rating);
 
     return (
       <Text key={item.id} {...selectedStyle}>
         {prefix} {unreadMarker}
         {item.displayText}
         <Text color="gray"> ({item.badge})</Text>
-        <Text color="yellow"> {ratingStars}</Text>
       </Text>
     );
   };
@@ -109,7 +107,11 @@ export const FeedList = memo(function FeedList({ feeds, selectedIndex }: FeedLis
               </Text>
               {section.items.map((item, index) => {
                 const globalIndex = allItems.findIndex((globalItem) => globalItem.id === item.id);
-                return renderFeedItem(item, globalIndex === selectedIndex);
+                return (
+                  <Box key={`${section.rating}-${item.id}`}>
+                    {renderFeedItem(item, globalIndex === selectedIndex)}
+                  </Box>
+                );
               })}
             </Box>
           ))}
