@@ -147,6 +147,13 @@ export class MockFeedService implements FeedService {
     return counts;
   }
 
+  getUnreadFeeds(): Array<Feed & { unreadCount: number }> {
+    // モック実装: 全フィードに未読件数5を付けてソートして返す
+    return this.feeds
+      .map((feed) => ({ ...feed, unreadCount: 5 }))
+      .sort((a, b) => b.unreadCount - a.unreadCount);
+  }
+
   async validateFeedUrl(url: string): Promise<{ title: string; description?: string }> {
     await new Promise((resolve) => setTimeout(resolve, 5));
     return {

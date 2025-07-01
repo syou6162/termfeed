@@ -15,6 +15,7 @@ const mockFeedService = {
     { id: 2, title: 'Test Feed 2', url: 'https://example.com/feed2.rss' },
   ]),
   getUnreadCount: vi.fn(() => 5),
+  getUnreadFeeds: vi.fn(),
   getArticles: vi.fn(() => [
     {
       id: 1,
@@ -71,11 +72,15 @@ describe('App', () => {
     console.log = vi.fn();
 
     // モックのリセットと再設定
-    mockFeedService.getFeedList.mockReturnValue([
+    const mockFeeds = [
       { id: 1, title: 'Test Feed 1', url: 'https://example.com/feed1.rss' },
       { id: 2, title: 'Test Feed 2', url: 'https://example.com/feed2.rss' },
-    ]);
+    ];
+    mockFeedService.getFeedList.mockReturnValue(mockFeeds);
     mockFeedService.getUnreadCount.mockReturnValue(5);
+    mockFeedService.getUnreadFeeds.mockReturnValue(
+      mockFeeds.map((feed) => ({ ...feed, unreadCount: 5 }))
+    );
     mockFeedService.getArticles.mockReturnValue([
       {
         id: 1,

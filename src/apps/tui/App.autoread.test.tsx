@@ -48,6 +48,10 @@ const createMockFeedService = () => ({
   ]),
   getUnreadCount: vi.fn(() => 2),
   getUnreadCountsForAllFeeds: vi.fn(() => ({ 1: 2, 2: 1 })),
+  getUnreadFeeds: vi.fn(() => [
+    { id: 1, title: 'Test Feed 1', url: 'https://example.com/feed1.rss', unreadCount: 2 },
+    { id: 2, title: 'Test Feed 2', url: 'https://example.com/feed2.rss', unreadCount: 1 },
+  ]),
   getArticles: vi.fn(() => [
     {
       id: 1,
@@ -135,6 +139,8 @@ describe('App - 自動既読機能', () => {
     await new Promise((resolve) => setTimeout(resolve, 50));
 
     // 初期状態で記事1が選択されている（未読）
+    // 記事が閲覧済みとして記録される
+
     // sキーでフィード2に移動
     stdin.write('s');
 

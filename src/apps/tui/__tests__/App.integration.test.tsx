@@ -14,6 +14,7 @@ vi.mock('child_process', () => ({
 const mockFeedService = {
   getFeedList: vi.fn(),
   getUnreadCountsForAllFeeds: vi.fn(),
+  getUnreadFeeds: vi.fn(),
   getArticles: vi.fn(),
   markArticleAsRead: vi.fn(),
   toggleArticleFavorite: vi.fn(),
@@ -104,7 +105,7 @@ const mockArticles: Article[] = [
   },
 ];
 
-const mockUnreadCounts = {
+const mockUnreadCounts: { [feedId: number]: number } = {
   1: 2,
   2: 0,
 };
@@ -117,6 +118,9 @@ describe('App Integration Tests', () => {
     // デフォルトのモック実装を設定
     mockFeedService.getFeedList.mockReturnValue(mockFeeds);
     mockFeedService.getUnreadCountsForAllFeeds.mockReturnValue(mockUnreadCounts);
+    mockFeedService.getUnreadFeeds.mockReturnValue(
+      mockFeeds.map((feed) => ({ ...feed, unreadCount: mockUnreadCounts[feed.id] || 0 }))
+    );
     mockFeedService.getArticles.mockReturnValue(mockArticles);
     mockFeedService.markArticleAsRead.mockImplementation(() => {});
     mockFeedService.toggleArticleFavorite.mockImplementation(() => {});
@@ -460,6 +464,11 @@ describe('App Integration Tests', () => {
       const isolatedFeedService = {
         getFeedList: vi.fn().mockReturnValue(mockFeeds),
         getUnreadCountsForAllFeeds: vi.fn().mockReturnValue(mockUnreadCounts),
+        getUnreadFeeds: vi
+          .fn()
+          .mockReturnValue(
+            mockFeeds.map((feed) => ({ ...feed, unreadCount: mockUnreadCounts[feed.id] || 0 }))
+          ),
         getArticles: vi.fn().mockReturnValue([]),
         markArticleAsRead: vi.fn(),
         toggleArticleFavorite: vi.fn(),
