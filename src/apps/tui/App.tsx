@@ -189,8 +189,12 @@ export function App() {
     selectedFeedIndex,
     onArticleSelectionChange: setSelectedArticleIndex,
     onFeedSelectionChange: handleFeedSelectionChange,
-    onOpenInBrowser: () => void handleArticleSelect(),
-    onRefreshAll: () => void updateAllFeeds(),
+    onOpenInBrowser: () => {
+      void handleArticleSelect();
+    },
+    onRefreshAll: () => {
+      void updateAllFeeds();
+    },
     onToggleFavorite: toggleFavorite,
     onToggleHelp: () => setShowHelp((prev) => !prev),
     onQuit: handleQuit,
