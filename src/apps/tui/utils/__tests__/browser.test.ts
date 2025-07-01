@@ -99,8 +99,8 @@ describe('browser utilities', () => {
       mockSpawn.mockReturnValue(mockChildProcess as any);
     });
 
-    it('有効なURLでブラウザを起動する', () => {
-      openUrlInBrowser('https://example.com');
+    it('有効なURLでブラウザを起動する', async () => {
+      await openUrlInBrowser('https://example.com');
 
       expect(mockSpawn).toHaveBeenCalledWith(
         expect.any(String),
@@ -113,13 +113,13 @@ describe('browser utilities', () => {
       expect(mockChildProcess.unref).toHaveBeenCalled();
     });
 
-    it('無効なURLでエラーをスローする', () => {
-      expect(() => openUrlInBrowser('invalid-url')).toThrow('無効なURLです: invalid-url');
+    it('無効なURLでエラーをスローする', async () => {
+      await expect(openUrlInBrowser('invalid-url')).rejects.toThrow('無効なURLです: invalid-url');
       expect(mockSpawn).not.toHaveBeenCalled();
     });
 
-    it('URLの前後の空白を削除する', () => {
-      openUrlInBrowser('  https://example.com  ');
+    it('URLの前後の空白を削除する', async () => {
+      await openUrlInBrowser('  https://example.com  ');
 
       expect(mockSpawn).toHaveBeenCalledWith(
         expect.any(String),
@@ -128,44 +128,44 @@ describe('browser utilities', () => {
       );
     });
 
-    it('エラーハンドラを設定する', () => {
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-      openUrlInBrowser('https://example.com');
+    it('ブラウザ起動エラーをrejectする', async () => {
+      mockChildProcess.on.mockImplementation((event, handler) => {
+        if (event === 'error') {
+          // process.nextTickで実行されるため、即座にエラーを発生させる
+          process.nextTick(() => {
+            handler(new Error('Test error'));
+          });
+        }
+        return mockChildProcess;
+      });
 
-      // エラーハンドラが設定されていることを確認
-      expect(mockChildProcess.on).toHaveBeenCalledWith('error', expect.any(Function));
-
-      // エラーハンドラを実行
-      const errorHandler = mockChildProcess.on.mock.calls[0][1] as (error: Error) => void;
-      const testError = new Error('Test error');
-      errorHandler(testError);
-
-      expect(consoleErrorSpy).toHaveBeenCalledWith('ブラウザの起動に失敗しました:', 'Test error');
-      consoleErrorSpy.mockRestore();
+      await expect(openUrlInBrowser('https://example.com')).rejects.toThrow(
+        'ブラウザの起動に失敗しました: Test error'
+      );
     });
 
-    it('各プラットフォームで正しいコマンドを使用する', () => {
+    it('各プラットフォームで正しいコマンドを使用する', async () => {
       const platforms = [
         { platform: 'darwin', expectedCommand: 'open' },
         { platform: 'win32', expectedCommand: 'cmd' },
         { platform: 'linux', expectedCommand: 'xdg-open' },
       ];
 
-      platforms.forEach(({ platform, expectedCommand }) => {
+      for (const { platform, expectedCommand } of platforms) {
         vi.clearAllMocks();
         Object.defineProperty(process, 'platform', {
           value: platform,
           configurable: true,
         });
 
-        openUrlInBrowser('https://example.com');
+        await openUrlInBrowser('https://example.com');
 
         expect(mockSpawn).toHaveBeenCalledWith(
           expectedCommand,
           expect.any(Array),
           expect.any(Object)
         );
-      });
+      }
     });
   });
 });

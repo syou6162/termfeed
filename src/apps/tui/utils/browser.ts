@@ -34,24 +34,35 @@ export function getBrowserCommand(url: string): BrowserCommand {
   }
 }
 
-export function openUrlInBrowser(url: string): void {
-  const trimmedUrl = url.trim();
+export function openUrlInBrowser(url: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const trimmedUrl = url.trim();
 
-  if (!validateUrl(trimmedUrl)) {
-    throw new Error(`無効なURLです: ${trimmedUrl}`);
-  }
+    if (!validateUrl(trimmedUrl)) {
+      reject(new Error(`無効なURLです: ${trimmedUrl}`));
+      return;
+    }
 
-  const { command, args } = getBrowserCommand(trimmedUrl);
+    const { command, args } = getBrowserCommand(trimmedUrl);
 
-  const childProcess = spawn(command, args, {
-    stdio: 'ignore',
-    detached: true,
+    const childProcess = spawn(command, args, {
+      stdio: 'ignore',
+      detached: true,
+    });
+
+    let hasError = false;
+    
+    childProcess.on('error', (error) => {
+      hasError = true;
+      reject(new Error(`ブラウザの起動に失敗しました: ${error.message}`));
+    });
+
+    // spawnイベントが完了するまで少し待つ
+    process.nextTick(() => {
+      if (!hasError) {
+        childProcess.unref();
+        resolve();
+      }
+    });
   });
-
-  childProcess.on('error', (error) => {
-    console.error('ブラウザの起動に失敗しました:', error.message);
-  });
-
-  // プロセスを親から切り離す
-  childProcess.unref();
 }

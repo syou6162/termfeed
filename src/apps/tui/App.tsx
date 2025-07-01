@@ -56,15 +56,16 @@ export function App() {
   } = useArticleManager(feedService, selectedFeedId);
 
   const isLoading = feedsLoading || articlesLoading;
-  
+
   // エラー管理
   const errorManager = useErrorManager();
-  
+
   // エラーを統合管理
+  const { addError, clearErrors } = errorManager;
   useEffect(() => {
-    errorManager.clearErrors();
+    clearErrors();
     if (error) {
-      errorManager.addError({
+      addError({
         source: 'feed',
         message: error,
         timestamp: new Date(),
@@ -72,15 +73,15 @@ export function App() {
       });
     }
     if (articlesError) {
-      errorManager.addError({
+      addError({
         source: 'article',
         message: articlesError,
         timestamp: new Date(),
         recoverable: true,
       });
     }
-  }, [error, articlesError, errorManager]);
-  
+  }, [error, articlesError, addError, clearErrors]);
+
   const displayError = useMemo(() => {
     const latestError = errorManager.getLatestError();
     return latestError?.message || '';
@@ -103,16 +104,21 @@ export function App() {
     [markCurrentArticleAsRead, setSelectedFeedIndex]
   );
 
-  const handleArticleSelect = useCallback(() => {
+  const handleArticleSelect = useCallback(async () => {
     const selectedArticle = articles[selectedArticleIndex];
     if (selectedArticle?.url) {
       try {
-        openUrlInBrowser(selectedArticle.url);
+        await openUrlInBrowser(selectedArticle.url);
       } catch (error) {
-        console.error(error instanceof Error ? error.message : '不明なエラー');
+        addError({
+          source: 'network',
+          message: error instanceof Error ? error.message : 'ブラウザの起動に失敗しました',
+          timestamp: new Date(),
+          recoverable: true,
+        });
       }
     }
-  }, [articles, selectedArticleIndex]);
+  }, [articles, selectedArticleIndex, addError]);
 
   const handleQuit = useCallback(() => {
     markCurrentArticleAsRead();
