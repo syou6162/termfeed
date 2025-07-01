@@ -92,21 +92,25 @@ export const FeedList = memo(function FeedList({ feeds, selectedIndex }: FeedLis
       <Box marginTop={1}>
         <Box flexDirection="column">
           {feedSections.map((section) => (
-            <Box key={section.rating} flexDirection="column">
+            <Box
+              key={section.rating}
+              marginTop={1}
+              paddingX={1}
+              paddingY={1}
+              borderStyle="round"
+              borderColor="cyan"
+              flexDirection="column"
+            >
               <Box
-                marginTop={1}
-                paddingX={1}
-                paddingY={0}
-                borderStyle="round"
-                borderColor="cyan"
                 flexDirection="row"
                 alignItems="center"
                 justifyContent="space-between"
+                marginBottom={1}
               >
                 <Box flexDirection="row" alignItems="center">
                   <Text bold color="yellow">
-                    {'⭐'.repeat(section.rating)}
-                    {'☆'.repeat(5 - section.rating)}
+                    {'⭐'.repeat(section.rating || 0)}
+                    {section.rating === 0 ? '評価なし' : ''}
                   </Text>
                 </Box>
                 <Text color="gray" dimColor>
