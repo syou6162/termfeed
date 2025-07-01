@@ -7,6 +7,7 @@ type FeedListItem = {
   displayText: string;
   badge: string;
   rating: number;
+  unreadCount: number;
   isRead?: boolean;
   isFavorite?: boolean;
 };
@@ -29,6 +30,7 @@ export const FeedList = memo(function FeedList({ feeds, selectedIndex }: FeedLis
       displayText: feed.title,
       badge: feed.unreadCount > 0 ? `${feed.unreadCount}件` : '0件',
       rating: feed.rating,
+      unreadCount: feed.unreadCount,
       isRead: feed.unreadCount === 0,
     }));
 
@@ -114,7 +116,7 @@ export const FeedList = memo(function FeedList({ feeds, selectedIndex }: FeedLis
                   </Text>
                 </Box>
                 <Text color="gray" dimColor>
-                  {section.items.length}件
+                  {section.items.reduce((total, item) => total + item.unreadCount, 0)}件
                 </Text>
               </Box>
               {section.items.map((item, _index) => {
