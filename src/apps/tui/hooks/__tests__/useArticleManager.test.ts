@@ -70,8 +70,8 @@ describe('useArticleManager Unit Tests', () => {
   });
 
   it('未読記事のみがフィルタリングされることを確認', () => {
-    const allArticles = mockFeedService.getArticles({ feed_id: 1, limit: 100 });
-    const unreadArticles = allArticles.filter((article: Article) => !article.is_read);
+    const allArticles = mockFeedService.getArticles({ feed_id: 1, limit: 100 }) as Article[];
+    const unreadArticles = allArticles.filter((article) => !article.is_read);
 
     expect(unreadArticles.length).toBe(2);
     expect(unreadArticles[0].id).toBe(1);
@@ -98,9 +98,11 @@ describe('useArticleManager Unit Tests', () => {
       throw new Error('記事の取得に失敗しました');
     });
 
-    expect(() => mockFeedService.getArticles({ feed_id: 1, limit: 100 })).toThrow(
-      '記事の取得に失敗しました'
-    );
+    expect(() => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const result = mockFeedService.getArticles({ feed_id: 1, limit: 100 });
+      return result as Article[];
+    }).toThrow('記事の取得に失敗しました');
   });
 
   it('スクロール計算が正しく行われることを確認', () => {

@@ -52,7 +52,7 @@ describe('useAutoMarkAsRead Unit Tests', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockFeedService.markArticleAsRead.mockImplementation(() => {});
-    
+
     // process.on/offをモック
     process.on = vi.fn();
     process.off = vi.fn();
@@ -89,7 +89,7 @@ describe('useAutoMarkAsRead Unit Tests', () => {
   });
 
   it('記事IDがない場合は既読処理をスキップする', () => {
-    const articleWithoutId: Article = {
+    const articleWithoutId = {
       ...mockArticles[0],
       id: undefined,
     };
@@ -104,7 +104,7 @@ describe('useAutoMarkAsRead Unit Tests', () => {
 
   it('エラーが発生してもクラッシュしない', () => {
     const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    
+
     mockFeedService.markArticleAsRead.mockImplementation(() => {
       throw new Error('既読化エラー');
     });
@@ -121,10 +121,7 @@ describe('useAutoMarkAsRead Unit Tests', () => {
       }
     }
 
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      '記事の既読化に失敗しました:',
-      expect.any(Error)
-    );
+    expect(consoleErrorSpy).toHaveBeenCalledWith('記事の既読化に失敗しました:', expect.any(Error));
 
     consoleErrorSpy.mockRestore();
   });
@@ -135,7 +132,7 @@ describe('useAutoMarkAsRead Unit Tests', () => {
       const handleExit = () => {
         // 既読化処理
       };
-      
+
       process.on('SIGINT', handleExit);
       process.on('SIGTERM', handleExit);
     };
