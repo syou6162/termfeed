@@ -6,6 +6,7 @@ import type { Feed, Article } from '@/types';
 const mockFeedService = {
   getFeedList: vi.fn(),
   getUnreadCountsForAllFeeds: vi.fn(),
+  getUnreadFeeds: vi.fn(),
   getArticles: vi.fn(),
   markArticleAsRead: vi.fn(),
   toggleArticleFavorite: vi.fn(),
@@ -88,6 +89,9 @@ describe('App Basic Tests', () => {
     // デフォルトのモック実装
     mockFeedService.getFeedList.mockReturnValue(mockFeeds);
     mockFeedService.getUnreadCountsForAllFeeds.mockReturnValue({ 1: 1 });
+    mockFeedService.getUnreadFeeds.mockReturnValue(
+      mockFeeds.map((feed) => ({ ...feed, unreadCount: 1 }))
+    );
     mockFeedService.getArticles.mockReturnValue(mockArticles);
     mockFeedService.markArticleAsRead.mockImplementation(() => {});
     mockFeedService.toggleArticleFavorite.mockImplementation(() => {});
@@ -135,8 +139,7 @@ describe('App Basic Tests', () => {
 
     // useEffectの非同期処理を待つ
     await vi.waitFor(() => {
-      expect(mockFeedService.getFeedList).toHaveBeenCalled();
-      expect(mockFeedService.getUnreadCountsForAllFeeds).toHaveBeenCalled();
+      expect(mockFeedService.getUnreadFeeds).toHaveBeenCalled();
     });
 
     // getArticlesは遅れて呼ばれる可能性があるので別途待つ

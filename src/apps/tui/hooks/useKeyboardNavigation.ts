@@ -106,34 +106,30 @@ export function useKeyboardNavigation({
 
       // 記事ナビゲーション (j/k)
       if (key.upArrow || input === 'k') {
-        if (articleCount > 0) {
-          const newIndex = selectedArticleIndex > 0 ? selectedArticleIndex - 1 : articleCount - 1;
-          onArticleSelectionChange(newIndex);
+        if (articleCount > 0 && selectedArticleIndex > 0) {
+          onArticleSelectionChange(selectedArticleIndex - 1);
         }
         return;
       }
 
       if (key.downArrow || input === 'j') {
-        if (articleCount > 0) {
-          const newIndex = selectedArticleIndex < articleCount - 1 ? selectedArticleIndex + 1 : 0;
-          onArticleSelectionChange(newIndex);
+        if (articleCount > 0 && selectedArticleIndex < articleCount - 1) {
+          onArticleSelectionChange(selectedArticleIndex + 1);
         }
         return;
       }
 
       // フィードナビゲーション (s/a)
       if (input === 's') {
-        if (feedCount > 0) {
-          const newIndex = selectedFeedIndex < feedCount - 1 ? selectedFeedIndex + 1 : 0;
-          onFeedSelectionChange(newIndex);
+        if (feedCount > 0 && selectedFeedIndex < feedCount - 1) {
+          onFeedSelectionChange(selectedFeedIndex + 1);
         }
         return;
       }
 
       if (input === 'a') {
-        if (feedCount > 0) {
-          const newIndex = selectedFeedIndex > 0 ? selectedFeedIndex - 1 : feedCount - 1;
-          onFeedSelectionChange(newIndex);
+        if (feedCount > 0 && selectedFeedIndex > 0) {
+          onFeedSelectionChange(selectedFeedIndex - 1);
         }
         return;
       }

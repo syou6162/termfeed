@@ -19,6 +19,7 @@ export type FeedService = {
   markAllAsRead(feedId?: number): void;
   getUnreadCount(feedId?: number): number;
   getFeedList(): Feed[];
+  getUnreadFeeds(): Array<Feed & { unreadCount: number }>;
   getArticles(options?: {
     feed_id?: number;
     is_read?: boolean;

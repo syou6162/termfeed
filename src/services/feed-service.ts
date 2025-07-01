@@ -242,6 +242,27 @@ export class FeedService implements IFeedService {
     return this.feedModel.findAll();
   }
 
+  /**
+   * 未読記事があるフィードのみを取得（未読件数でソート済み）
+   * @returns 未読記事があるフィードと未読件数の配列（未読件数の多い順）
+   */
+  getUnreadFeeds(): Array<Feed & { unreadCount: number }> {
+    const allFeeds = this.feedModel.findAll();
+    const unreadCounts = this.articleModel.getUnreadCountsByFeedIds();
+
+    // 未読記事があるフィードのみをフィルタリング
+    const feedsWithUnread = allFeeds
+      .map((feed) => ({
+        ...feed,
+        unreadCount: feed.id ? unreadCounts[feed.id] || 0 : 0,
+      }))
+      .filter((feed) => feed.unreadCount > 0)
+      // 未読件数の多い順にソート
+      .sort((a, b) => b.unreadCount - a.unreadCount);
+
+    return feedsWithUnread;
+  }
+
   getArticles(
     options: {
       feed_id?: number;

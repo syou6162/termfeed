@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import type { FeedService } from '../../../services/feed-service.js';
 import type { UpdateProgress, FeedUpdateFailure } from '../../../types/index.js';
-import { sortFeedsByUnreadCount, type FeedWithUnreadCount } from '../utils/feed-sorter.js';
+import type { FeedWithUnreadCount } from '../utils/feed-sorter.js';
 import type { FeedSelection } from '../types/feed.js';
 
 export type FeedManagerState = {
@@ -45,28 +45,21 @@ export function useFeedManager(feedService: FeedService): FeedManagerState & Fee
       setIsLoading(true);
       setError('');
 
-      const allFeeds = feedService.getFeedList();
-      const unreadCounts = feedService.getUnreadCountsForAllFeeds();
-      const feedsWithUnreadCount = allFeeds.map((feed) => {
-        const unreadCount = feed.id ? unreadCounts[feed.id] || 0 : 0;
-        return { ...feed, unreadCount };
-      });
+      // 未読記事があるフィードをソート済みで取得
+      const feeds = feedService.getUnreadFeeds();
 
-      // 未読件数でソート
-      const sortedFeeds = sortFeedsByUnreadCount(feedsWithUnreadCount);
-
-      setFeeds(sortedFeeds);
+      setFeeds(feeds);
 
       // ソート後に選択中のフィードのインデックスを更新
       setSelection((currentSelection) => {
         if (currentSelection.id) {
-          const newIndex = sortedFeeds.findIndex((feed) => feed.id === currentSelection.id);
+          const newIndex = feeds.findIndex((feed) => feed.id === currentSelection.id);
           if (newIndex !== -1) {
             return { index: newIndex, id: currentSelection.id };
           }
-        } else if (sortedFeeds.length > 0 && sortedFeeds[0].id) {
+        } else if (feeds.length > 0 && feeds[0].id) {
           // 初回読み込み時は最初のフィードを選択
-          return { index: 0, id: sortedFeeds[0].id };
+          return { index: 0, id: feeds[0].id };
         }
         return currentSelection;
       });
