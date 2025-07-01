@@ -93,11 +93,11 @@ export const FeedList = memo(function FeedList({ feeds, selectedIndex }: FeedLis
         <Box flexDirection="column">
           {feedSections.map((section) => (
             <Box key={section.rating} flexDirection="column">
-              <Box 
-                marginTop={1} 
-                paddingX={1} 
+              <Box
+                marginTop={1}
+                paddingX={1}
                 paddingY={0}
-                borderStyle="round" 
+                borderStyle="round"
                 borderColor="cyan"
                 flexDirection="row"
                 alignItems="center"
@@ -105,7 +105,8 @@ export const FeedList = memo(function FeedList({ feeds, selectedIndex }: FeedLis
               >
                 <Box flexDirection="row" alignItems="center">
                   <Text bold color="yellow">
-                    {'★'.repeat(section.rating)}{'☆'.repeat(5 - section.rating)}
+                    {'⭐'.repeat(section.rating)}
+                    {'☆'.repeat(5 - section.rating)}
                   </Text>
                 </Box>
                 <Text color="gray" dimColor>
