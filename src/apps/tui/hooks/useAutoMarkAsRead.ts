@@ -1,6 +1,6 @@
 import { useCallback, useEffect } from 'react';
-import type { Article } from '@/types';
-import type { FeedService } from '@/services/feed-service.js';
+import type { Article } from '../../../types/index.js';
+import type { FeedService } from '../../../services/feed-service.js';
 
 type UseAutoMarkAsReadProps = {
   articles: Article[];

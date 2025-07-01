@@ -32,8 +32,8 @@ export function App() {
     loadFeeds,
     updateAllFeeds,
     setSelectedFeedIndex,
-    handleCancelUpdate,
-    handleToggleFailedFeeds,
+    cancelUpdate,
+    toggleFailedFeeds,
   } = useFeedManager(feedService);
 
   // 記事管理
@@ -42,21 +42,20 @@ export function App() {
     selectedArticleIndex,
     scrollOffset,
     isLoading: articlesLoading,
+    error: articlesError,
     loadArticles,
     setSelectedArticleIndex,
     setScrollOffset,
-    handleToggleFavorite,
-    handleScrollDown,
-    handleScrollUp,
-    handlePageDown,
-    handlePageUp,
-    handleScrollToEnd,
-  } = useArticleManager(feedService, selectedFeedId, () => {
-    // エラーハンドリングをuseFeedManagerと統合
-    // console.errorは削除して、エラーは画面に表示させる
-  });
+    toggleFavorite,
+    scrollDown,
+    scrollUp,
+    pageDown,
+    pageUp,
+    scrollToEnd,
+  } = useArticleManager(feedService, selectedFeedId);
 
   const isLoading = feedsLoading || articlesLoading;
+  const combinedError = error || articlesError;
 
   // 自動既読機能
   const { markCurrentArticleAsRead } = useAutoMarkAsRead({
@@ -71,18 +70,14 @@ export function App() {
     },
   });
 
-  // フィード選択変更時の処理
   const handleFeedSelectionChange = useCallback(
     (index: number) => {
-      // フィード移動前に現在選択中の記事を既読にする
       markCurrentArticleAsRead();
       setSelectedFeedIndex(index);
-      // loadArticlesはuseEffectで自動的に呼ばれる
     },
     [markCurrentArticleAsRead, setSelectedFeedIndex]
   );
 
-  // ブラウザで記事を開く
   const handleArticleSelect = useCallback(() => {
     const selectedArticle = articles[selectedArticleIndex];
     if (selectedArticle?.url) {
@@ -94,27 +89,10 @@ export function App() {
     }
   }, [articles, selectedArticleIndex]);
 
-  // アプリ終了時の処理
   const handleQuit = useCallback(() => {
-    // TUI終了前に現在選択中の記事を既読にする
     markCurrentArticleAsRead();
     exit();
   }, [markCurrentArticleAsRead, exit]);
-
-  // エラー時の進捗表示を管理
-  useEffect(() => {
-    let timeoutId: ReturnType<typeof setTimeout>;
-    if (error && updateProgress) {
-      timeoutId = setTimeout(() => {
-        // updateProgressはuseFeedManager内で管理されるので、ここでは何もしない
-      }, 2000);
-    }
-    return () => {
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
-    };
-  }, [error, updateProgress]);
 
   // 初期化時に最初のフィードの記事を読み込み
   useEffect(() => {
@@ -137,17 +115,17 @@ export function App() {
     onFeedSelectionChange: handleFeedSelectionChange,
     onOpenInBrowser: handleArticleSelect,
     onRefreshAll: () => void updateAllFeeds(),
-    onToggleFavorite: handleToggleFavorite,
+    onToggleFavorite: toggleFavorite,
     onToggleHelp: () => setShowHelp((prev) => !prev),
     onQuit: handleQuit,
-    onScrollDown: handleScrollDown,
-    onScrollUp: handleScrollUp,
-    onPageDown: () => handlePageDown(stdout?.rows),
-    onPageUp: () => handlePageUp(stdout?.rows),
+    onScrollDown: scrollDown,
+    onScrollUp: scrollUp,
+    onPageDown: () => pageDown(stdout?.rows),
+    onPageUp: () => pageUp(stdout?.rows),
     onScrollOffsetChange: setScrollOffset,
-    onScrollToEnd: handleScrollToEnd,
-    onCancel: handleCancelUpdate,
-    onToggleFailedFeeds: handleToggleFailedFeeds,
+    onScrollToEnd: scrollToEnd,
+    onCancel: cancelUpdate,
+    onToggleFailedFeeds: toggleFailedFeeds,
   });
 
   if (isLoading) {
@@ -175,13 +153,13 @@ export function App() {
     );
   }
 
-  if (error) {
+  if (combinedError) {
     return (
       <Box flexDirection="column" padding={1}>
         <Text bold color="red">
           エラーが発生しました
         </Text>
-        <Text color="red">{error}</Text>
+        <Text color="red">{combinedError}</Text>
         <Text color="gray">
           r: 再試行 | {failedFeeds.length > 0 ? 'e: エラー詳細 | ' : ''}q: 終了
         </Text>

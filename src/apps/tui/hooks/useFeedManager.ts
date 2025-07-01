@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
-import type { FeedService } from '@/services/feed-service.js';
-import type { UpdateProgress, FeedUpdateFailure } from '@/types';
+import type { FeedService } from '../../../services/feed-service.js';
+import type { UpdateProgress, FeedUpdateFailure } from '../../../types/index.js';
 import { sortFeedsByUnreadCount, type FeedWithUnreadCount } from '../utils/feed-sorter.js';
 
 export type FeedManagerState = {
@@ -19,8 +19,8 @@ export type FeedManagerActions = {
   loadFeeds: () => void;
   updateAllFeeds: () => Promise<void>;
   setSelectedFeedIndex: (index: number) => void;
-  handleCancelUpdate: () => void;
-  handleToggleFailedFeeds: () => void;
+  cancelUpdate: () => void;
+  toggleFailedFeeds: () => void;
 };
 
 /**
@@ -120,17 +120,17 @@ export function useFeedManager(feedService: FeedService): FeedManagerState & Fee
     }
   }, [feedService, loadFeeds]);
 
-  const handleCancelUpdate = useCallback(() => {
+  const cancelUpdate = useCallback(() => {
     if (abortController) {
       abortController.abort();
     }
   }, [abortController]);
 
-  const handleToggleFailedFeeds = useCallback(() => {
+  const toggleFailedFeeds = useCallback(() => {
     setShowFailedFeeds((prev) => !prev);
   }, []);
 
-  const handleSetSelectedFeedIndex = useCallback(
+  const setSelectedFeedIndexWithId = useCallback(
     (index: number) => {
       setSelectedFeedIndex(index);
       if (feeds[index]?.id) {
@@ -155,8 +155,8 @@ export function useFeedManager(feedService: FeedService): FeedManagerState & Fee
     // Actions
     loadFeeds,
     updateAllFeeds,
-    setSelectedFeedIndex: handleSetSelectedFeedIndex,
-    handleCancelUpdate,
-    handleToggleFailedFeeds,
+    setSelectedFeedIndex: setSelectedFeedIndexWithId,
+    cancelUpdate,
+    toggleFailedFeeds,
   };
 }

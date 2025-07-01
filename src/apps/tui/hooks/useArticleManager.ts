@@ -1,24 +1,25 @@
 import { useState, useCallback } from 'react';
-import type { Article } from '@/types';
-import type { FeedService } from '@/services/feed-service.js';
+import type { Article } from '../../../types/index.js';
+import type { FeedService } from '../../../services/feed-service.js';
 
 export type ArticleManagerState = {
   articles: Article[];
   selectedArticleIndex: number;
   scrollOffset: number;
   isLoading: boolean;
+  error: string;
 };
 
 export type ArticleManagerActions = {
   loadArticles: (feedId: number) => void;
   setSelectedArticleIndex: (index: number) => void;
   setScrollOffset: (offset: number) => void;
-  handleToggleFavorite: () => void;
-  handleScrollDown: () => void;
-  handleScrollUp: () => void;
-  handlePageDown: (totalHeight?: number) => void;
-  handlePageUp: (totalHeight?: number) => void;
-  handleScrollToEnd: () => void;
+  toggleFavorite: () => void;
+  scrollDown: () => void;
+  scrollUp: () => void;
+  pageDown: (totalHeight?: number) => void;
+  pageUp: (totalHeight?: number) => void;
+  scrollToEnd: () => void;
 };
 
 /**
@@ -29,36 +30,38 @@ export type ArticleManagerActions = {
  */
 export function useArticleManager(
   feedService: FeedService,
-  currentFeedId: number | null,
-  onError: (error: string) => void
+  currentFeedId: number | null
 ): ArticleManagerState & ArticleManagerActions {
   const [articles, setArticles] = useState<Article[]>([]);
   const [selectedArticleIndex, setSelectedArticleIndex] = useState(0);
   const [scrollOffset, setScrollOffset] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string>('');
 
   const loadArticles = useCallback(
     (feedId: number) => {
       try {
         setIsLoading(true);
-        onError(''); // エラーをクリア
+        setError('');
 
         const allArticles = feedService.getArticles({ feed_id: feedId, limit: 100 });
         // 未読記事のみをフィルタリング
-        const unreadArticles = allArticles.filter((article) => !article.is_read);
+        const unreadArticles = allArticles ? allArticles.filter((article) => !article.is_read) : [];
         setArticles(unreadArticles);
         setSelectedArticleIndex(0);
         setScrollOffset(0); // スクロール位置をリセット
       } catch (err) {
-        onError(err instanceof Error ? err.message : '記事の読み込みに失敗しました');
+        const errorMessage = err instanceof Error ? err.message : '記事の読み込みに失敗しました';
+        setError(errorMessage);
+        console.error('記事の読み込みに失敗しました:', err);
       } finally {
         setIsLoading(false);
       }
     },
-    [feedService, onError]
+    [feedService]
   );
 
-  const handleToggleFavorite = useCallback(() => {
+  const toggleFavorite = useCallback(() => {
     const selectedArticle = articles[selectedArticleIndex];
     if (selectedArticle?.id && currentFeedId) {
       try {
@@ -66,34 +69,34 @@ export function useArticleManager(
         // 記事リストを再読み込み
         loadArticles(currentFeedId);
       } catch (err) {
-        onError(err instanceof Error ? err.message : 'お気に入り状態の更新に失敗しました');
+        console.error('お気に入り状態の更新に失敗しました:', err);
       }
     }
-  }, [articles, selectedArticleIndex, currentFeedId, loadArticles, feedService, onError]);
+  }, [articles, selectedArticleIndex, currentFeedId, loadArticles, feedService]);
 
-  const handleScrollDown = useCallback(() => {
+  const scrollDown = useCallback(() => {
     setScrollOffset((prev) => prev + 1);
   }, []);
 
-  const handleScrollUp = useCallback(() => {
+  const scrollUp = useCallback(() => {
     setScrollOffset((prev) => Math.max(0, prev - 1));
   }, []);
 
-  const handlePageDown = useCallback((totalHeight: number = 24) => {
+  const pageDown = useCallback((totalHeight: number = 24) => {
     // 実際の表示行数分スクロール
     const fixedLines = 16; // ArticleListと同じ固定行数
     const availableLines = Math.max(1, totalHeight - fixedLines);
     setScrollOffset((prev) => prev + availableLines);
   }, []);
 
-  const handlePageUp = useCallback((totalHeight: number = 24) => {
+  const pageUp = useCallback((totalHeight: number = 24) => {
     // 実際の表示行数分スクロール
     const fixedLines = 16; // ArticleListと同じ固定行数
     const availableLines = Math.max(1, totalHeight - fixedLines);
     setScrollOffset((prev) => Math.max(0, prev - availableLines));
   }, []);
 
-  const handleScrollToEnd = useCallback(() => {
+  const scrollToEnd = useCallback(() => {
     // 記事の最後にジャンプするため、大きな値を設定
     // ArticleListコンポーネントで実際の最大値に調整される
     setScrollOffset(999999);
@@ -105,16 +108,17 @@ export function useArticleManager(
     selectedArticleIndex,
     scrollOffset,
     isLoading,
+    error,
 
     // Actions
     loadArticles,
     setSelectedArticleIndex,
     setScrollOffset,
-    handleToggleFavorite,
-    handleScrollDown,
-    handleScrollUp,
-    handlePageDown,
-    handlePageUp,
-    handleScrollToEnd,
+    toggleFavorite,
+    scrollDown,
+    scrollUp,
+    pageDown,
+    pageUp,
+    scrollToEnd,
   };
 }

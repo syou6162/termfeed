@@ -1,10 +1,6 @@
 import { Box, Text } from 'ink';
-import type { Feed } from '@/types';
 import { SelectableList } from './SelectableList.js';
-
-type FeedWithUnreadCount = Feed & {
-  unreadCount: number;
-};
+import type { FeedWithUnreadCount } from '../utils/feed-sorter.js';
 
 type FeedListItem = {
   id: number;

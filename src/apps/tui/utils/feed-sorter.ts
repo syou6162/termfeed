@@ -1,4 +1,4 @@
-import type { Feed } from '@/types';
+import type { Feed } from '../../../types/index.js';
 
 export type FeedWithUnreadCount = Feed & {
   unreadCount: number;

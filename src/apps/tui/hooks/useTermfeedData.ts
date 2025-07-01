@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
-import { FeedModel } from '@/models/feed.js';
-import { ArticleModel } from '@/models/article.js';
-import { FeedService } from '@/services/feed-service.js';
-import { createDatabaseManager } from '@/apps/cli/utils/database.js';
+import { FeedModel } from '../../../models/feed.js';
+import { ArticleModel } from '../../../models/article.js';
+import { FeedService } from '../../../services/feed-service.js';
+import { createDatabaseManager } from '../../cli/utils/database.js';
 
 export type TermfeedData = {
   feedService: FeedService;
