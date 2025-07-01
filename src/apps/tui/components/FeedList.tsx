@@ -70,7 +70,7 @@ export const FeedList = memo(function FeedList({ feeds, selectedIndex }: FeedLis
 
   if (feeds.length === 0) {
     return (
-      <Box flexDirection="column" padding={1}>
+      <Box flexDirection="column" paddingX={0} paddingY={1}>
         <Text bold color="blue">
           フィード一覧
         </Text>
@@ -89,7 +89,7 @@ export const FeedList = memo(function FeedList({ feeds, selectedIndex }: FeedLis
   const totalUnreadCount = feeds.reduce((total, feed) => total + feed.unreadCount, 0);
 
   return (
-    <Box flexDirection="column" padding={1}>
+    <Box flexDirection="column" paddingX={0} paddingY={1}>
       <Text bold color="blue">
         フィード一覧 ({totalUnreadCount}件)
       </Text>
@@ -104,7 +104,7 @@ export const FeedList = memo(function FeedList({ feeds, selectedIndex }: FeedLis
               <Box
                 key={section.rating}
                 marginTop={1}
-                paddingX={1}
+                paddingX={0}
                 paddingY={1}
                 borderStyle="round"
                 borderColor={isCurrentSection ? 'cyan' : 'gray'}
@@ -116,6 +116,7 @@ export const FeedList = memo(function FeedList({ feeds, selectedIndex }: FeedLis
                   alignItems="center"
                   justifyContent="space-between"
                   marginBottom={isCurrentSection ? 1 : 0}
+                  paddingX={1}
                 >
                   <Box flexDirection="row" alignItems="center">
                     <Text bold color={isCurrentSection ? 'yellow' : 'gray'}>
@@ -134,7 +135,7 @@ export const FeedList = memo(function FeedList({ feeds, selectedIndex }: FeedLis
                       (globalItem) => globalItem.id === item.id
                     );
                     return (
-                      <Box key={`${section.rating}-${item.id}`}>
+                      <Box key={`${section.rating}-${item.id}`} paddingX={1}>
                         {renderFeedItem(item, globalIndex === selectedIndex)}
                       </Box>
                     );
