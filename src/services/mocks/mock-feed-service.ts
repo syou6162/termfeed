@@ -13,6 +13,7 @@ export class MockFeedService implements FeedService {
       url: 'https://example.com/feed1.xml',
       title: 'Example Feed 1',
       description: 'A sample RSS feed for testing',
+      rating: 0,
       last_updated_at: new Date(),
       created_at: new Date(),
     },
@@ -21,6 +22,7 @@ export class MockFeedService implements FeedService {
       url: 'https://example.com/feed2.xml',
       title: 'Example Feed 2',
       description: 'Another sample RSS feed',
+      rating: 0,
       last_updated_at: new Date(),
       created_at: new Date(),
     },
@@ -28,6 +30,7 @@ export class MockFeedService implements FeedService {
       id: 3,
       url: 'https://example.com/feed3.xml',
       title: 'Example Feed 3',
+      rating: 0,
       last_updated_at: new Date(),
       created_at: new Date(),
     },
@@ -44,6 +47,7 @@ export class MockFeedService implements FeedService {
       url,
       title: `Feed ${this.nextId}`,
       description: `Description for ${url}`,
+      rating: 0,
       last_updated_at: new Date(),
       created_at: new Date(),
     };
@@ -165,5 +169,17 @@ export class MockFeedService implements FeedService {
   async getAllFeeds(): Promise<Feed[]> {
     await new Promise((resolve) => setTimeout(resolve, 5));
     return [...this.feeds];
+  }
+
+  setFeedRating(feedId: number, rating: number): boolean {
+    const feed = this.feeds.find((f) => f.id === feedId);
+    if (!feed) {
+      return false;
+    }
+    if (rating < 0 || rating > 5) {
+      throw new Error('Rating must be between 0 and 5');
+    }
+    feed.rating = rating;
+    return true;
   }
 }
