@@ -30,7 +30,6 @@ export class FeedModel {
       return {
         id: result.lastInsertRowid as number,
         ...feed,
-        rating: feed.rating ?? 0,
         last_updated_at: unixSecondsToDate(now),
         created_at: unixSecondsToDate(now),
       };

@@ -186,12 +186,14 @@ describe('FeedService', () => {
         url: 'https://example.com/rss.xml',
         title: 'Old Title',
         description: 'Old Description',
+        rating: 0,
       });
 
       const mockCrawlResult = {
         feed: {
           url: 'https://example.com/rss.xml',
           title: 'New Title',
+          rating: 0,
           description: 'New Description',
           last_updated_at: new Date(),
         },
@@ -298,19 +300,21 @@ describe('FeedService', () => {
         url: 'https://example.com/rss1.xml',
         title: 'Feed 1',
         description: 'Description 1',
+        rating: 0,
       });
 
       const feed2 = feedModel.create({
         url: 'https://example.com/rss2.xml',
         title: 'Feed 2',
         description: 'Description 2',
+        rating: 0,
       });
 
       const mockCrawlResult = {
         feed: {
           url: 'https://example.com/rss.xml',
           title: 'Updated Feed',
-
+          rating: 0,
           description: 'Updated Description',
           last_updated_at: new Date(),
         },
@@ -340,12 +344,14 @@ describe('FeedService', () => {
         url: 'https://example.com/rss1.xml',
         title: 'Feed 1',
         description: 'Description 1',
+        rating: 0,
       });
 
       feedModel.create({
         url: 'https://example.com/rss2.xml',
         title: 'Feed 2',
         description: 'Description 2',
+        rating: 0,
       });
 
       // 最初の呼び出しでエラー、2回目は成功
@@ -391,19 +397,21 @@ describe('FeedService', () => {
         url: 'https://example.com/rss1.xml',
         title: 'Feed 1',
         description: 'Description 1',
+        rating: 0,
       });
 
       feedModel.create({
         url: 'https://example.com/rss2.xml',
         title: 'Feed 2',
         description: 'Description 2',
+        rating: 0,
       });
 
       const mockCrawlResult = {
         feed: {
           url: 'https://example.com/rss.xml',
           title: 'Updated Feed',
-
+          rating: 0,
           description: 'Updated Description',
           last_updated_at: new Date(),
         },
@@ -446,19 +454,21 @@ describe('FeedService', () => {
         url: 'https://example.com/rss1.xml',
         title: 'Feed 1',
         description: 'Description 1',
+        rating: 0,
       });
 
       feedModel.create({
         url: 'https://example.com/rss2.xml',
         title: 'Feed 2',
         description: 'Description 2',
+        rating: 0,
       });
 
       const mockCrawlResult = {
         feed: {
           url: 'https://example.com/rss.xml',
           title: 'Updated Feed',
-
+          rating: 0,
           description: 'Updated Description',
           last_updated_at: new Date(),
         },
@@ -496,12 +506,14 @@ describe('FeedService', () => {
         url: 'https://example.com/rss1.xml',
         title: 'Feed 1',
         description: 'Description 1',
+        rating: 0,
       });
 
       feedModel.create({
         url: 'https://example.com/rss2.xml',
         title: 'Feed 2',
         description: 'Description 2',
+        rating: 0,
       });
 
       // 全ての更新が失敗
@@ -534,12 +546,14 @@ describe('FeedService', () => {
         url: 'https://example.com/rss1.xml',
         title: 'Feed 1',
         description: 'Description 1',
+        rating: 0,
       });
 
       feedModel.create({
         url: 'https://example.com/rss2.xml',
         title: 'Feed 2',
         description: 'Description 2',
+        rating: 0,
       });
 
       const abortController = new AbortController();
@@ -567,6 +581,7 @@ describe('FeedService', () => {
         url: 'https://example.com/rss1.xml',
         title: 'Feed 1',
         description: 'Description 1',
+        rating: 0,
       });
 
       // キャンセルエラーをモック
@@ -677,12 +692,14 @@ describe('FeedService', () => {
         url: 'https://example.com/rss1.xml',
         title: 'Feed 1',
         description: 'Description 1',
+        rating: 0,
       });
 
       feedModel.create({
         url: 'https://example.com/rss2.xml',
         title: 'Feed 2',
         description: 'Description 2',
+        rating: 0,
       });
 
       const feeds = feedService.getFeedList();
@@ -764,18 +781,21 @@ describe('FeedService', () => {
         url: 'https://example.com/rss1.xml',
         title: 'Feed 1',
         description: 'Description 1',
+        rating: 0,
       });
 
       const feed2 = feedModel.create({
         url: 'https://example.com/rss2.xml',
         title: 'Feed 2',
         description: 'Description 2',
+        rating: 0,
       });
 
       const feed3 = feedModel.create({
         url: 'https://example.com/rss3.xml',
         title: 'Feed 3',
         description: 'Description 3',
+        rating: 0,
       });
 
       // feed4は記事なしのフィードとして使用
@@ -783,6 +803,7 @@ describe('FeedService', () => {
         url: 'https://example.com/rss4.xml',
         title: 'Feed 4',
         description: 'Description 4',
+        rating: 0,
       });
 
       // feed1: 未読記事2件
@@ -845,6 +866,7 @@ describe('FeedService', () => {
         url: 'https://example.com/rss1.xml',
         title: 'Feed 1',
         description: 'Description 1',
+        rating: 0,
       });
 
       // feed2は記事なしのフィードとして使用
@@ -852,6 +874,7 @@ describe('FeedService', () => {
         url: 'https://example.com/rss2.xml',
         title: 'Feed 2',
         description: 'Description 2',
+        rating: 0,
       });
 
       // feed1: 既読記事のみ

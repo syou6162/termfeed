@@ -57,7 +57,7 @@ export class FeedService implements IFeedService {
       url: crawlResult.feed.url,
       title: crawlResult.feed.title,
       description: crawlResult.feed.description,
-      // rating: 0 は省略（デフォルト値を使用）
+      rating: 0,
     };
 
     const feed = this.feedModel.create(createFeedInput);
