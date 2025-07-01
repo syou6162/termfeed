@@ -294,8 +294,8 @@ export function App() {
 
   return (
     <TwoPaneLayout
-      leftWidth={20}
-      rightWidth={80}
+      leftWidth={30}
+      rightWidth={70}
       leftPane={<FeedList feeds={feeds} selectedIndex={selectedFeedIndex} />}
       rightPane={
         <ArticleList
