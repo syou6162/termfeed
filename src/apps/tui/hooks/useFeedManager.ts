@@ -52,8 +52,11 @@ export function useFeedManager(feedService: FeedService): FeedManagerState & Fee
         return { ...feed, unreadCount };
       });
 
+      // 未読件数が0のフィードをフィルタリング
+      const feedsWithUnread = feedsWithUnreadCount.filter((feed) => feed.unreadCount > 0);
+
       // 未読件数でソート
-      const sortedFeeds = sortFeedsByUnreadCount(feedsWithUnreadCount);
+      const sortedFeeds = sortFeedsByUnreadCount(feedsWithUnread);
 
       setFeeds(sortedFeeds);
 
