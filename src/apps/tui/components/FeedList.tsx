@@ -84,22 +84,11 @@ export const FeedList = memo(function FeedList({ feeds, selectedIndex }: FeedLis
     );
   }
 
-  // 現在選択中のフィードのレーティングを取得
-  const selectedFeed = feeds[selectedIndex];
-  const selectedRating = selectedFeed?.rating ?? 0;
-
   return (
     <Box flexDirection="column" padding={1}>
       <Text bold color="blue">
         フィード一覧 ({feeds.length}件)
       </Text>
-      {selectedFeed && (
-        <Box marginTop={1}>
-          <Text color="yellow">
-            現在: レーティング {selectedRating} (★{selectedRating}☆{5 - selectedRating})
-          </Text>
-        </Box>
-      )}
       <Box marginTop={1}>
         <Box flexDirection="column">
           {feedSections.map((section) => (
