@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import type { ErrorInfo, UseErrorManagerReturn } from '@/types';
+import type { ErrorInfo, UseErrorManagerReturn } from '../types/error.js';
 
 /**
  * エラー状態を統一的に管理するカスタムフック

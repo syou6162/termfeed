@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import type { FeedService } from '../../../services/feed-service.js';
 import type { UpdateProgress, FeedUpdateFailure } from '../../../types/index.js';
 import { sortFeedsByUnreadCount, type FeedWithUnreadCount } from '../utils/feed-sorter.js';
-import type { FeedSelection } from '@/types';
+import type { FeedSelection } from '../types/feed.js';
 
 export type FeedManagerState = {
   feeds: FeedWithUnreadCount[];

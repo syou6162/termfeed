@@ -1,7 +1,7 @@
 // すべての型定義を再エクスポート
 
 // ドメインモデル
-export type { Feed, Article, CreateFeedInput, UpdateArticleInput } from './domain';
+export type { Feed, Article, CreateFeedInput, UpdateArticleInput } from './domain.js';
 
 // データ転送オブジェクト
 export type {
@@ -11,7 +11,7 @@ export type {
   FeedUpdateResult,
   AddFeedResult,
   UpdateAllFeedsResult,
-} from './dto';
+} from './dto.js';
 
 // オプション型
 export type {
@@ -24,16 +24,7 @@ export type {
   UpdateProgress,
   UpdateProgressCallback,
   UpdateCancelledResult,
-  // TUI固有の型
-  ErrorSource,
-  ErrorInfo,
-  UseErrorManagerReturn,
-  FeedSelection,
-  ArticleSelection,
-} from './options';
-
-// TUI固有の定数
-export { ERROR_SOURCES } from './options';
+} from './options.js';
 
 // サービス型
-export type { FeedService, ArticleService, RSSCrawler } from './services';
+export type { FeedService, ArticleService, RSSCrawler } from './services.js';
