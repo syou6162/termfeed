@@ -40,7 +40,8 @@ vi.spyOn(process, 'off').mockImplementation((event: string | symbol, handler: Ev
   return process;
 });
 
-const mockFeedService = {
+// モックサービスを関数として定義して、毎回新しいインスタンスを返す
+const createMockFeedService = () => ({
   getFeedList: vi.fn(() => [
     { id: 1, title: 'Test Feed 1', url: 'https://example.com/feed1.rss' },
     { id: 2, title: 'Test Feed 2', url: 'https://example.com/feed2.rss' },
@@ -73,7 +74,9 @@ const mockFeedService = {
   markArticleAsRead: vi.fn(),
   markArticleAsUnread: vi.fn(),
   toggleArticleFavorite: vi.fn(),
-};
+});
+
+let mockFeedService = createMockFeedService();
 
 vi.mock('../../services/feed-service.js', () => ({
   FeedService: vi.fn(() => mockFeedService),
@@ -114,34 +117,9 @@ describe('App - 自動既読機能', () => {
 
     // モックのリセット
     vi.clearAllMocks();
-    mockFeedService.getFeedList.mockReturnValue([
-      { id: 1, title: 'Test Feed 1', url: 'https://example.com/feed1.rss' },
-      { id: 2, title: 'Test Feed 2', url: 'https://example.com/feed2.rss' },
-    ]);
-    mockFeedService.getUnreadCount.mockReturnValue(2);
-    mockFeedService.getArticles.mockReturnValue([
-      {
-        id: 1,
-        title: 'Test Article 1',
-        url: 'https://example.com/article1',
-        is_read: false,
-        is_favorite: false,
-        published_at: new Date('2024-01-01'),
-        content: 'Test content 1',
-        author: 'Test Author',
-      },
-      {
-        id: 2,
-        title: 'Test Article 2',
-        url: 'https://example.com/article2',
-        is_read: false,
-        is_favorite: false,
-        published_at: new Date('2024-01-02'),
-        content: 'Test content 2',
-        author: 'Test Author 2',
-      },
-    ]);
-    mockFeedService.markArticleAsRead.mockClear();
+
+    // 新しいモックサービスインスタンスを作成
+    mockFeedService = createMockFeedService();
   });
 
   afterEach(() => {
