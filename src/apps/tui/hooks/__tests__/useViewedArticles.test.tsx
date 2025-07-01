@@ -160,10 +160,9 @@ describe('useViewedArticles', () => {
         expect(lastFrame()).toContain('Count: 3');
       });
 
-      // IDsはSetなので順序が保証されないため、個別にチェック
-      expect(lastFrame()).toMatch(/IDs: .*1/);
-      expect(lastFrame()).toMatch(/IDs: .*2/);
-      expect(lastFrame()).toMatch(/IDs: .*3/);
+      // IDsの確実なアサーション
+      const ids = actions!.viewedArticleIds.sort();
+      expect(ids).toEqual([1, 2, 3]);
 
       // 既読化を実行
       actions!.markViewedArticlesAsRead();
@@ -365,10 +364,9 @@ describe('useViewedArticles', () => {
         expect(lastFrame()).toContain('Count: 3');
       });
 
-      // IDsはSetなので順序が保証されないため、個別にチェック
-      expect(lastFrame()).toMatch(/IDs: .*1/);
-      expect(lastFrame()).toMatch(/IDs: .*2/);
-      expect(lastFrame()).toMatch(/IDs: .*3/);
+      // IDsの確実なアサーション
+      const ids = actions!.viewedArticleIds.sort();
+      expect(ids).toEqual([1, 2, 3]);
 
       // 既読化を実行
       actions!.markViewedArticlesAsRead();
