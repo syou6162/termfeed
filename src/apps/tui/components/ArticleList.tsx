@@ -1,7 +1,8 @@
 import { Box, Text, useStdout } from 'ink';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo, useMemo } from 'react';
 import type { Article } from '../../../types/index.js';
 import { convertHtmlToText } from '../utils/html.js';
+import { TUI_CONFIG } from '../config/constants.js';
 
 type ArticleListProps = {
   articles: Article[];
@@ -10,7 +11,7 @@ type ArticleListProps = {
   onScrollOffsetChange: (offset: number) => void;
 };
 
-export function ArticleList({
+export const ArticleList = memo(function ArticleList({
   articles,
   selectedArticle,
   scrollOffset,
@@ -42,9 +43,8 @@ export function ArticleList({
 
   // スクロールオフセットを最大値に制限
   useEffect(() => {
-    const totalHeight = stdout?.rows || 24;
-    const fixedLines = 16;
-    const availableLines = Math.max(1, totalHeight - fixedLines);
+    const totalHeight = stdout?.rows || TUI_CONFIG.DEFAULT_TERMINAL_HEIGHT;
+    const availableLines = Math.max(1, totalHeight - TUI_CONFIG.ARTICLE_FIXED_LINES);
     const maxOffset = Math.max(0, totalLines - availableLines);
 
     if (scrollOffset > maxOffset) {
@@ -53,19 +53,8 @@ export function ArticleList({
   }, [scrollOffset, totalLines, stdout?.rows, onScrollOffsetChange]);
 
   // ターミナルの高さから表示可能な行数を計算
-  const totalHeight = stdout?.rows || 24;
-
-  // 固定要素の行数
-  // - フッター（ヘルプ・件数）: 2行
-  // - ヘッダー（タイトル）: 2行
-  // - ヘッダー（日付）: 1行
-  // - ヘッダー（URL）: 1行
-  // - ステータス: 2行
-  // - 各種マージン・パディング: 4行
-  // - 境界線: 2行
-  // - 安全マージン: 2行
-  const fixedLines = 16;
-  const availableLines = Math.max(1, totalHeight - fixedLines);
+  const totalHeight = stdout?.rows || TUI_CONFIG.DEFAULT_TERMINAL_HEIGHT;
+  const availableLines = Math.max(1, totalHeight - TUI_CONFIG.ARTICLE_FIXED_LINES);
 
   if (articles.length === 0) {
     return (
@@ -125,13 +114,17 @@ export function ArticleList({
   }
 
   const content = selectedArticle.content || '';
-  const publishedDate = selectedArticle.published_at.toLocaleDateString('ja-JP', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  const publishedDate = useMemo(
+    () =>
+      selectedArticle.published_at.toLocaleDateString('ja-JP', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      }),
+    [selectedArticle.published_at]
+  );
 
   // スクロール位置に基づいて表示する行を選択
   const visibleLines = contentLines.slice(scrollOffset, scrollOffset + availableLines);
@@ -199,4 +192,4 @@ export function ArticleList({
       </Box>
     </Box>
   );
-}
+});

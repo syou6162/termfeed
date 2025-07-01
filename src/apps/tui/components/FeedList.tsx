@@ -1,4 +1,5 @@
 import { Box, Text } from 'ink';
+import { memo, useMemo } from 'react';
 import { SelectableList } from './SelectableList.js';
 import type { FeedWithUnreadCount } from '../utils/feed-sorter.js';
 
@@ -16,13 +17,17 @@ type FeedListProps = {
   onFeedSelect?: (feed: FeedWithUnreadCount) => void;
 };
 
-export function FeedList({ feeds, selectedIndex }: FeedListProps) {
-  const feedItems: FeedListItem[] = feeds.map((feed) => ({
-    id: feed.id || 0,
-    displayText: feed.title,
-    badge: feed.unreadCount > 0 ? `${feed.unreadCount}件` : '0件',
-    isRead: feed.unreadCount === 0,
-  }));
+export const FeedList = memo(function FeedList({ feeds, selectedIndex }: FeedListProps) {
+  const feedItems: FeedListItem[] = useMemo(
+    () =>
+      feeds.map((feed) => ({
+        id: feed.id || 0,
+        displayText: feed.title,
+        badge: feed.unreadCount > 0 ? `${feed.unreadCount}件` : '0件',
+        isRead: feed.unreadCount === 0,
+      })),
+    [feeds]
+  );
 
   const renderFeedItem = (item: FeedListItem, isSelected: boolean) => {
     const prefix = isSelected ? '>' : ' ';
@@ -70,4 +75,4 @@ export function FeedList({ feeds, selectedIndex }: FeedListProps) {
       </Box>
     </Box>
   );
-}
+});

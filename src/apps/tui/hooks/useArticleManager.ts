@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import type { Article } from '../../../types/index.js';
 import type { FeedService } from '../../../services/feed-service.js';
+import { TUI_CONFIG } from '../config/constants.js';
 
 export type ArticleManagerState = {
   articles: Article[];
@@ -44,7 +45,7 @@ export function useArticleManager(
         setIsLoading(true);
         setError('');
 
-        const allArticles = feedService.getArticles({ feed_id: feedId, limit: 100 });
+        const allArticles = feedService.getArticles({ feed_id: feedId, limit: TUI_CONFIG.DEFAULT_ARTICLE_LIMIT });
         // 未読記事のみをフィルタリング
         const unreadArticles = allArticles ? allArticles.filter((article) => !article.is_read) : [];
         setArticles(unreadArticles);
@@ -82,17 +83,15 @@ export function useArticleManager(
     setScrollOffset((prev) => Math.max(0, prev - 1));
   }, []);
 
-  const pageDown = useCallback((totalHeight: number = 24) => {
+  const pageDown = useCallback((totalHeight: number = TUI_CONFIG.DEFAULT_TERMINAL_HEIGHT) => {
     // 実際の表示行数分スクロール
-    const fixedLines = 16; // ArticleListと同じ固定行数
-    const availableLines = Math.max(1, totalHeight - fixedLines);
+    const availableLines = Math.max(1, totalHeight - TUI_CONFIG.ARTICLE_FIXED_LINES);
     setScrollOffset((prev) => prev + availableLines);
   }, []);
 
-  const pageUp = useCallback((totalHeight: number = 24) => {
+  const pageUp = useCallback((totalHeight: number = TUI_CONFIG.DEFAULT_TERMINAL_HEIGHT) => {
     // 実際の表示行数分スクロール
-    const fixedLines = 16; // ArticleListと同じ固定行数
-    const availableLines = Math.max(1, totalHeight - fixedLines);
+    const availableLines = Math.max(1, totalHeight - TUI_CONFIG.ARTICLE_FIXED_LINES);
     setScrollOffset((prev) => Math.max(0, prev - availableLines));
   }, []);
 

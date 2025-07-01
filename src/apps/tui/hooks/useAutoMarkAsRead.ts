@@ -35,9 +35,23 @@ export function useAutoMarkAsRead({
 
   // Ctrl+C等での終了時にも既読処理を行う
   useEffect(() => {
+    // markCurrentArticleAsReadを安定した参照にするため、依存関係を減らす
+    const currentArticleRef = { current: articles[selectedArticleIndex] };
+    
     const handleExit = () => {
-      markCurrentArticleAsRead();
+      const currentArticle = currentArticleRef.current;
+      if (currentArticle && currentArticle.id && !currentArticle.is_read) {
+        try {
+          feedService.markArticleAsRead(currentArticle.id);
+          onArticleMarkedAsRead?.(currentArticle.id);
+        } catch (err) {
+          console.error('記事の既読化に失敗しました:', err);
+        }
+      }
     };
+
+    // refを更新
+    currentArticleRef.current = articles[selectedArticleIndex];
 
     process.on('SIGINT', handleExit);
     process.on('SIGTERM', handleExit);
@@ -47,7 +61,7 @@ export function useAutoMarkAsRead({
       process.off('SIGINT', handleExit);
       process.off('SIGTERM', handleExit);
     };
-  }, [markCurrentArticleAsRead]);
+  }, [articles, selectedArticleIndex, feedService, onArticleMarkedAsRead]);
 
   return {
     markCurrentArticleAsRead,

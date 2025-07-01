@@ -1,5 +1,5 @@
 import { Box, Text, useApp, useStdout } from 'ink';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useMemo } from 'react';
 import { ArticleList } from './components/ArticleList.js';
 import { FeedList } from './components/FeedList.js';
 import { TwoPaneLayout } from './components/TwoPaneLayout.js';
@@ -9,6 +9,7 @@ import { useTermfeedData } from './hooks/useTermfeedData.js';
 import { useFeedManager } from './hooks/useFeedManager.js';
 import { useArticleManager } from './hooks/useArticleManager.js';
 import { useAutoMarkAsRead } from './hooks/useAutoMarkAsRead.js';
+import { useErrorManager } from './hooks/useErrorManager.js';
 import { openUrlInBrowser } from './utils/browser.js';
 
 export function App() {
@@ -55,7 +56,35 @@ export function App() {
   } = useArticleManager(feedService, selectedFeedId);
 
   const isLoading = feedsLoading || articlesLoading;
-  const combinedError = error || articlesError;
+  
+  // エラー管理
+  const errorManager = useErrorManager();
+  
+  // エラーを統合管理
+  useEffect(() => {
+    errorManager.clearErrors();
+    if (error) {
+      errorManager.addError({
+        source: 'feed',
+        message: error,
+        timestamp: new Date(),
+        recoverable: true,
+      });
+    }
+    if (articlesError) {
+      errorManager.addError({
+        source: 'article',
+        message: articlesError,
+        timestamp: new Date(),
+        recoverable: true,
+      });
+    }
+  }, [error, articlesError, errorManager]);
+  
+  const displayError = useMemo(() => {
+    const latestError = errorManager.getLatestError();
+    return latestError?.message || '';
+  }, [errorManager]);
 
   // 自動既読機能
   const { markCurrentArticleAsRead } = useAutoMarkAsRead({
@@ -149,13 +178,18 @@ export function App() {
     );
   }
 
-  if (combinedError) {
+  if (displayError) {
     return (
       <Box flexDirection="column" padding={1}>
         <Text bold color="red">
           エラーが発生しました
         </Text>
-        <Text color="red">{combinedError}</Text>
+        <Text color="red">{displayError}</Text>
+        {errorManager.errors.length > 1 && (
+          <Text color="gray" dimColor>
+            他に{errorManager.errors.length - 1}件のエラーがあります
+          </Text>
+        )}
         <Text color="gray">
           r: 再試行 | {failedFeeds.length > 0 ? 'e: エラー詳細 | ' : ''}q: 終了
         </Text>

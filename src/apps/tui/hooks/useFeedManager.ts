@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import type { FeedService } from '../../../services/feed-service.js';
 import type { UpdateProgress, FeedUpdateFailure } from '../../../types/index.js';
 import { sortFeedsByUnreadCount, type FeedWithUnreadCount } from '../utils/feed-sorter.js';
+import type { FeedSelection } from '../types/feed.js';
 
 export type FeedManagerState = {
   feeds: FeedWithUnreadCount[];
@@ -31,8 +32,7 @@ export type FeedManagerActions = {
  */
 export function useFeedManager(feedService: FeedService): FeedManagerState & FeedManagerActions {
   const [feeds, setFeeds] = useState<FeedWithUnreadCount[]>([]);
-  const [selectedFeedIndex, setSelectedFeedIndex] = useState(0);
-  const [selectedFeedId, setSelectedFeedId] = useState<number | null>(null);
+  const [selection, setSelection] = useState<FeedSelection>({ index: 0, id: null });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>('');
   const [updateProgress, setUpdateProgress] = useState<UpdateProgress | null>(null);
@@ -58,21 +58,21 @@ export function useFeedManager(feedService: FeedService): FeedManagerState & Fee
       setFeeds(sortedFeeds);
 
       // ソート後に選択中のフィードのインデックスを更新
-      if (selectedFeedId) {
-        const newIndex = sortedFeeds.findIndex((feed) => feed.id === selectedFeedId);
+      if (selection.id) {
+        const newIndex = sortedFeeds.findIndex((feed) => feed.id === selection.id);
         if (newIndex !== -1) {
-          setSelectedFeedIndex(newIndex);
+          setSelection({ index: newIndex, id: selection.id });
         }
       } else if (sortedFeeds.length > 0 && sortedFeeds[0].id) {
         // 初回読み込み時は最初のフィードを選択
-        setSelectedFeedId(sortedFeeds[0].id);
+        setSelection({ index: 0, id: sortedFeeds[0].id });
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'フィードの読み込みに失敗しました');
     } finally {
       setIsLoading(false);
     }
-  }, [feedService, selectedFeedId]);
+  }, [feedService, selection.id]);
 
   const updateAllFeeds = useCallback(async () => {
     try {
@@ -132,9 +132,10 @@ export function useFeedManager(feedService: FeedService): FeedManagerState & Fee
 
   const setSelectedFeedIndexWithId = useCallback(
     (index: number) => {
-      setSelectedFeedIndex(index);
       if (feeds[index]?.id) {
-        setSelectedFeedId(feeds[index].id);
+        setSelection({ index, id: feeds[index].id });
+      } else {
+        setSelection({ index, id: null });
       }
     },
     [feeds]
@@ -143,8 +144,8 @@ export function useFeedManager(feedService: FeedService): FeedManagerState & Fee
   return {
     // State
     feeds,
-    selectedFeedIndex,
-    selectedFeedId,
+    selectedFeedIndex: selection.index,
+    selectedFeedId: selection.id,
     isLoading,
     error,
     updateProgress,
