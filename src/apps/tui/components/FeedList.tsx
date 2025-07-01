@@ -109,7 +109,7 @@ export const FeedList = memo(function FeedList({ feeds, selectedIndex }: FeedLis
               >
                 <Box flexDirection="row" alignItems="center">
                   <Text bold color="yellow">
-                    {'⭐'.repeat(section.rating || 0)}
+                    {'★'.repeat(section.rating || 0)}
                     {section.rating === 0 ? '評価なし' : ''}
                   </Text>
                 </Box>
