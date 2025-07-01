@@ -13,12 +13,19 @@ export class FeedModel {
   public create(feed: CreateFeedInput): Feed {
     const now = nowInUnixSeconds();
     const stmt = this.db.getDb().prepare(`
-      INSERT INTO feeds (url, title, description, last_updated_at, created_at)
-      VALUES (?, ?, ?, ?, ?)
+      INSERT INTO feeds (url, title, description, rating, last_updated_at, created_at)
+      VALUES (?, ?, ?, ?, ?, ?)
     `);
 
     try {
-      const result = stmt.run(feed.url, feed.title, feed.description || null, now, now);
+      const result = stmt.run(
+        feed.url,
+        feed.title,
+        feed.description || null,
+        feed.rating ?? 0,
+        now,
+        now
+      );
 
       return {
         id: result.lastInsertRowid as number,
@@ -42,6 +49,7 @@ export class FeedModel {
       url: string;
       title: string;
       description?: string;
+      rating: number;
       last_updated_at: number;
       created_at: number;
     };
@@ -51,6 +59,7 @@ export class FeedModel {
       url: data.url,
       title: data.title,
       description: data.description,
+      rating: data.rating,
       last_updated_at: unixSecondsToDate(data.last_updated_at),
       created_at: unixSecondsToDate(data.created_at),
     };
@@ -76,7 +85,7 @@ export class FeedModel {
 
   public findAll(): Feed[] {
     const stmt = this.db.getDb().prepare(`
-      SELECT * FROM feeds ORDER BY created_at DESC
+      SELECT * FROM feeds ORDER BY rating DESC, created_at DESC
     `);
 
     const rows = stmt.all();
@@ -84,7 +93,7 @@ export class FeedModel {
   }
 
   public update(id: number, updates: Partial<Feed>): Feed | null {
-    const allowedFields = ['title', 'description', 'last_updated_at'];
+    const allowedFields = ['title', 'description', 'rating', 'last_updated_at'];
     const updateFields: string[] = [];
     const updateValues: unknown[] = [];
 
@@ -134,5 +143,20 @@ export class FeedModel {
     `);
 
     stmt.run(nowInUnixSeconds(), id);
+  }
+
+  public setRating(id: number, rating: number): boolean {
+    if (rating < 0 || rating > 5) {
+      throw new Error('Rating must be between 0 and 5');
+    }
+
+    const stmt = this.db.getDb().prepare(`
+      UPDATE feeds 
+      SET rating = ?
+      WHERE id = ?
+    `);
+
+    const result = stmt.run(rating, id);
+    return result.changes > 0;
   }
 }

@@ -35,6 +35,7 @@ export function HelpOverlay({ isVisible }: HelpOverlayProps) {
         <Text> s 次のフィードに移動</Text>
         <Text> a 前のフィードに移動</Text>
         <Text> r 全フィードを更新</Text>
+        <Text> 0-5 フィードにレーティングを設定 (0=なし, 5=最高)</Text>
       </Box>
 
       <Box marginTop={1} flexDirection="column">

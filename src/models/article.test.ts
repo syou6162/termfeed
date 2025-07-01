@@ -26,6 +26,7 @@ describe('ArticleModel', () => {
     const feed = feedModel.create({
       url: 'https://example.com/test-feed.xml',
       title: 'Test Feed',
+      rating: 0,
     });
     testFeedId = feed.id!;
   });
@@ -184,6 +185,7 @@ describe('ArticleModel', () => {
       const anotherFeed = feedModel.create({
         url: 'https://example.com/another-feed.xml',
         title: 'Another Feed',
+        rating: 0,
       });
 
       articleModel.create({
@@ -443,6 +445,7 @@ describe('ArticleModel', () => {
       const anotherFeed = feedModel.create({
         url: 'https://example.com/another-feed.xml',
         title: 'Another Feed',
+        rating: 0,
       });
 
       // 各フィードに2つずつ記事を作成

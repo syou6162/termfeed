@@ -31,6 +31,7 @@ type KeyboardNavigationProps = {
   onScrollToEnd?: () => void;
   onCancel?: () => void;
   onToggleFailedFeeds?: () => void;
+  onSetFeedRating?: (rating: number) => void;
 };
 
 export function useKeyboardNavigation({
@@ -53,6 +54,7 @@ export function useKeyboardNavigation({
   onScrollToEnd,
   onCancel,
   onToggleFailedFeeds,
+  onSetFeedRating,
 }: KeyboardNavigationProps) {
   const handleInput = useCallback(
     (input: string, key: KeyEvent) => {
@@ -77,6 +79,13 @@ export function useKeyboardNavigation({
       // ヘルプ表示トグル
       if (input === '?') {
         onToggleHelp?.();
+        return;
+      }
+
+      // フィードレーティング設定 (数字キー 0-5)
+      if (/^[0-5]$/.test(input)) {
+        const rating = parseInt(input, 10);
+        onSetFeedRating?.(rating);
         return;
       }
 
@@ -165,6 +174,7 @@ export function useKeyboardNavigation({
       onScrollToEnd,
       onCancel,
       onToggleFailedFeeds,
+      onSetFeedRating,
     ]
   );
 

@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS feeds (
   url TEXT NOT NULL UNIQUE,
   title TEXT NOT NULL,
   description TEXT,
+  rating INTEGER NOT NULL DEFAULT 0,
   last_updated_at INTEGER NOT NULL,
   created_at INTEGER NOT NULL
 );
@@ -30,4 +31,5 @@ CREATE INDEX IF NOT EXISTS idx_articles_feed_id ON articles(feed_id);
 CREATE INDEX IF NOT EXISTS idx_articles_published_at ON articles(published_at DESC);
 CREATE INDEX IF NOT EXISTS idx_articles_is_read ON articles(is_read);
 CREATE INDEX IF NOT EXISTS idx_articles_is_favorite ON articles(is_favorite);
+CREATE INDEX IF NOT EXISTS idx_feeds_rating ON feeds(rating DESC);
 

@@ -18,6 +18,7 @@ describe('rm command E2E', () => {
       url: 'https://example.com/feed.rss',
       title: 'Test Feed',
       description: 'Test Description',
+      rating: 0,
     });
 
     // 記事も追加
@@ -87,10 +88,12 @@ describe('rm command E2E', () => {
     const feed1 = context.feedModel.create({
       url: 'https://example.com/feed1.rss',
       title: 'Feed 1',
+      rating: 0,
     });
     const feed2 = context.feedModel.create({
       url: 'https://example.com/feed2.rss',
       title: 'Feed 2',
+      rating: 0,
     });
 
     // Act - feed1のみを削除

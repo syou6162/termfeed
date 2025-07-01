@@ -167,6 +167,27 @@ export function App() {
     exit();
   }, [markViewedArticlesAsRead, exit]);
 
+  const handleSetFeedRating = useCallback(
+    (rating: number) => {
+      const selectedFeed = feeds[selectedFeedIndex];
+      if (selectedFeed?.id) {
+        try {
+          feedService.setFeedRating(selectedFeed.id, rating);
+          // フィード一覧を再読み込みすることで、useFeedManagerが自動的に選択状態を同期
+          loadFeeds();
+        } catch (error) {
+          addError({
+            source: ERROR_SOURCES.NETWORK,
+            message: error instanceof Error ? error.message : 'レーティング設定に失敗しました',
+            timestamp: new Date(),
+            recoverable: true,
+          });
+        }
+      }
+    },
+    [feeds, selectedFeedIndex, feedService, loadFeeds, addError]
+  );
+
   // 初期化時に最初のフィードの記事を読み込み
   useEffect(() => {
     loadFeeds();
@@ -210,6 +231,7 @@ export function App() {
     onScrollToEnd: scrollToEnd,
     onCancel: cancelUpdate,
     onToggleFailedFeeds: toggleFailedFeeds,
+    onSetFeedRating: handleSetFeedRating,
   });
 
   if (isLoading) {
