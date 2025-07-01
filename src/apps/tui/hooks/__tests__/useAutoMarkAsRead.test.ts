@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { Article } from '@/types';
 
 // モックのFeedService
@@ -46,22 +46,9 @@ const mockArticles: Article[] = [
 ];
 
 describe('useAutoMarkAsRead Unit Tests', () => {
-  const originalProcessOn = process.on;
-  const originalProcessOff = process.off;
-
   beforeEach(() => {
     vi.clearAllMocks();
     mockFeedService.markArticleAsRead.mockImplementation(() => {});
-
-    // process.on/offをモック
-    process.on = vi.fn();
-    process.off = vi.fn();
-  });
-
-  afterEach(() => {
-    // process.on/offを元に戻す
-    process.on = originalProcessOn;
-    process.off = originalProcessOff;
   });
 
   it('未読記事を既読にマークする', () => {
@@ -124,22 +111,5 @@ describe('useAutoMarkAsRead Unit Tests', () => {
     expect(consoleErrorSpy).toHaveBeenCalledWith('記事の既読化に失敗しました:', expect.any(Error));
 
     consoleErrorSpy.mockRestore();
-  });
-
-  it('プロセスイベントハンドラーが登録される', () => {
-    // useEffectのシミュレート
-    const setupProcessHandlers = () => {
-      const handleExit = () => {
-        // 既読化処理
-      };
-
-      process.on('SIGINT', handleExit);
-      process.on('SIGTERM', handleExit);
-    };
-
-    setupProcessHandlers();
-
-    expect(process.on).toHaveBeenCalledWith('SIGINT', expect.any(Function));
-    expect(process.on).toHaveBeenCalledWith('SIGTERM', expect.any(Function));
   });
 });

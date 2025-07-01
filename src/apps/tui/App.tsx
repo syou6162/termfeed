@@ -1,5 +1,5 @@
 import { Box, Text, useApp, useStdout } from 'ink';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
 import { ArticleList } from './components/ArticleList.js';
 import { FeedList } from './components/FeedList.js';
 import { TwoPaneLayout } from './components/TwoPaneLayout.js';
@@ -124,6 +124,46 @@ export function App() {
       }
     }
   }, [articles, selectedArticleIndex, addError]);
+
+  // 現在の記事の参照を保持（プロセス終了時の既読化用）
+  const currentArticleRef = useRef<{
+    article: (typeof articles)[number] | null;
+    feedService: typeof feedService;
+  }>({
+    article: null,
+    feedService,
+  });
+
+  // 現在の記事を更新
+  useEffect(() => {
+    const currentArticle = articles[selectedArticleIndex] || null;
+    currentArticleRef.current = {
+      article: currentArticle,
+      feedService,
+    };
+  }, [articles, selectedArticleIndex, feedService]);
+
+  // プロセス終了時の既読化処理（アプリ全体で1回だけ登録）
+  useEffect(() => {
+    const handleExit = () => {
+      const { article, feedService } = currentArticleRef.current;
+      if (article && article.id && !article.is_read) {
+        try {
+          feedService.markArticleAsRead(article.id);
+        } catch (err) {
+          console.error('終了時の記事既読化に失敗しました:', err);
+        }
+      }
+    };
+
+    process.on('SIGINT', handleExit);
+    process.on('SIGTERM', handleExit);
+
+    return () => {
+      process.off('SIGINT', handleExit);
+      process.off('SIGTERM', handleExit);
+    };
+  }, []); // 空の依存配列 = アプリ起動時に1回だけ実行
 
   const handleQuit = useCallback(() => {
     markCurrentArticleAsRead();
