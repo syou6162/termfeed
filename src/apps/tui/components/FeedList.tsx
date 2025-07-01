@@ -70,7 +70,7 @@ export const FeedList = memo(function FeedList({ feeds, selectedIndex }: FeedLis
 
   if (feeds.length === 0) {
     return (
-      <Box flexDirection="column" paddingX={0} paddingY={1}>
+      <Box flexDirection="column" paddingX={0} paddingY={1} width="100%" flexGrow={1}>
         <Text bold color="blue">
           フィード一覧
         </Text>
@@ -89,12 +89,12 @@ export const FeedList = memo(function FeedList({ feeds, selectedIndex }: FeedLis
   const totalUnreadCount = feeds.reduce((total, feed) => total + feed.unreadCount, 0);
 
   return (
-    <Box flexDirection="column" paddingX={0} paddingY={1}>
+    <Box flexDirection="column" paddingX={0} paddingY={1} width="100%" flexGrow={1}>
       <Text bold color="blue">
         フィード一覧 ({totalUnreadCount}件)
       </Text>
-      <Box marginTop={1}>
-        <Box flexDirection="column">
+      <Box marginTop={1} width="100%">
+        <Box flexDirection="column" width="100%">
           {feedSections.map((section) => {
             // 現在選択中のフィードが属するセクションかどうかを判定
             const selectedFeed = feeds[selectedIndex];
