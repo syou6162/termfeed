@@ -97,6 +97,28 @@ describe('PinService', () => {
       expect(result2).toBe(true);
       expect(pinService.getPinCount()).toBe(2);
     });
+
+    it('同じ記事に複数回ピンを立てようとしても重複しない', () => {
+      // 最初のピン
+      const result1 = pinService.togglePin(testArticleId1);
+      expect(result1).toBe(true);
+      expect(pinService.getPinCount()).toBe(1);
+
+      // 同じ記事に再度ピンを立てようとする（実際はトグルなので外れる）
+      const result2 = pinService.togglePin(testArticleId1);
+      expect(result2).toBe(false);
+      expect(pinService.getPinCount()).toBe(0);
+
+      // もう一度ピンを立てる
+      const result3 = pinService.togglePin(testArticleId1);
+      expect(result3).toBe(true);
+      expect(pinService.getPinCount()).toBe(1);
+
+      // ピンされた記事を確認
+      const pinnedArticles = pinService.getPinnedArticles();
+      expect(pinnedArticles).toHaveLength(1);
+      expect(pinnedArticles[0].id).toBe(testArticleId1);
+    });
   });
 
   describe('getPinnedArticles', () => {

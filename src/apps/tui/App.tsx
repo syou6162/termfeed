@@ -22,8 +22,8 @@ export function App() {
   const [temporaryMessage, setTemporaryMessage] = useState<string | null>(null);
 
   // データベースとサービスを初期化
-  const { feedService, db } = useTermfeedData();
-  const pinService = useMemo(() => new PinService(db), [db]);
+  const { feedService, databaseManager } = useTermfeedData();
+  const pinService = useMemo(() => new PinService(databaseManager), [databaseManager]);
 
   // フィード管理
   const {
