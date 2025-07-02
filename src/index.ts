@@ -1,9 +1,5 @@
-#!/usr/bin/env node
-
 import { Command } from 'commander';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
-import { readFileSync } from 'fs';
+import { createRequire } from 'module';
 import {
   createAddCommand,
   createRmCommand,
@@ -13,11 +9,12 @@ import {
   createMcpServerCommand,
 } from './apps/cli/commands/index.js';
 
-// package.jsonからバージョンを動的に読み込む
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const packageJsonPath = join(__dirname, '../package.json');
-const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8')) as { version: string };
+// 標準的な方法でpackage.jsonを読み込む
+const require = createRequire(import.meta.url);
+const packageJson = require('../package.json') as { version: string; name: string };
+
 export const VERSION = packageJson.version;
+export { packageJson };
 
 /**
  * CLIのメインプログラムを作成します。
@@ -42,8 +39,8 @@ export function createMainProgram(): Command {
   return program;
 }
 
-// Main CLI entry point
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
+// CLI実行用のデフォルトエクスポート
+export default function runCLI() {
   const program = createMainProgram();
   program.parse();
 }
