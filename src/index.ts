@@ -26,7 +26,8 @@ export function createMainProgram(): Command {
   program
     .name('termfeed')
     .description('A terminal-based RSS reader with Vim-like keybindings')
-    .version(VERSION);
+    .version(VERSION)
+    .addHelpCommand('help [command]', 'Display help for command');
 
   // Register subcommands
   program.addCommand(createAddCommand());
