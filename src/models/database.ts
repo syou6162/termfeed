@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import { fileURLToPath } from 'url';
+import { createRequire } from 'module';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -44,10 +45,20 @@ export class DatabaseManager {
   }
 
   public migrate(): void {
-    // 開発時とビルド後で異なるパスを試行
-    let schemaPath = path.join(__dirname, 'schema.sql');
-    if (!fs.existsSync(schemaPath)) {
-      schemaPath = path.join(__dirname, '..', '..', 'src', 'models', 'schema.sql');
+    // NPMパッケージの標準的なリソース解決方法
+    const require = createRequire(import.meta.url);
+
+    let schemaPath: string;
+    try {
+      // まずパッケージとしてのパスを試す
+      schemaPath = require.resolve('termfeed/src/models/schema.sql');
+    } catch {
+      // 開発環境では相対パスで解決
+      schemaPath = path.join(__dirname, 'schema.sql');
+      if (!fs.existsSync(schemaPath)) {
+        // ソースディレクトリを試す
+        schemaPath = path.join(__dirname, '..', '..', 'src', 'models', 'schema.sql');
+      }
     }
 
     const schema = fs.readFileSync(schemaPath, 'utf8');

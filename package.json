@@ -9,7 +9,7 @@
   },
   "scripts": {
     "dev": "tsx src/index.ts",
-    "build": "tsc && node scripts/postbuild.js",
+    "build": "tsc",
     "start": "node dist/index.js",
     "test": "vitest",
     "test:run": "vitest run",
@@ -43,6 +43,7 @@
   "homepage": "https://github.com/syou6162/termfeed#readme",
   "files": [
     "dist/",
+    "src/models/schema.sql",
     "README.md",
     "LICENSE"
   ],

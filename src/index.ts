@@ -16,10 +16,28 @@ import {
 // ESモジュールでpackage.jsonを読み込む
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const packageJson = JSON.parse(readFileSync(join(__dirname, '../package.json'), 'utf-8')) as {
-  version: string;
-};
 
+// NPMパッケージなど異なる環境でもpackage.jsonを見つけられるようにする
+function findPackageJson(): { version: string } {
+  const possiblePaths = [
+    join(__dirname, '../package.json'),
+    join(__dirname, '../../package.json'),
+    join(process.cwd(), 'package.json'),
+  ];
+
+  for (const path of possiblePaths) {
+    try {
+      return JSON.parse(readFileSync(path, 'utf-8')) as { version: string };
+    } catch {
+      // このパスでは見つからなかった、次を試す
+    }
+  }
+
+  // フォールバック値
+  return { version: 'unknown' };
+}
+
+const packageJson = findPackageJson();
 export const VERSION = packageJson.version;
 
 /**
@@ -46,15 +64,5 @@ export function createMainProgram(): Command {
 }
 
 // Main CLI entry point
-// npmやnpx経由で実行される場合、process.argv[1]はシンボリックリンクを指すことがあるため、
-// パスの末尾も確認して実行を検出する
-const isMainModule =
-  process.argv[1] &&
-  (process.argv[1] === fileURLToPath(import.meta.url) ||
-    process.argv[1].endsWith('/termfeed') ||
-    process.argv[1].endsWith('\\termfeed'));
-
-if (isMainModule) {
-  const program = createMainProgram();
-  program.parse();
-}
+const program = createMainProgram();
+program.parse();
