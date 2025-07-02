@@ -148,12 +148,8 @@ describe('browser utils', () => {
 
       const promise = openUrlInBrowser(urls);
 
-      // タイマーを進める
-      vi.advanceTimersByTime(200);
-      await vi.runOnlyPendingTimersAsync();
-
       // Promiseが拒否されることを確認し、エラー詳細も検証
-      await expect(promise).rejects.toMatchObject({
+      const expectPromise = expect(promise).rejects.toMatchObject({
         message: '一部のURLを開けませんでした (1/2件失敗): invalid-url',
         result: {
           succeeded: ['https://valid.com'],
@@ -167,6 +163,13 @@ describe('browser utils', () => {
           ],
         },
       } as Error & { result: unknown });
+
+      // タイマーを進める
+      vi.advanceTimersByTime(200);
+      await vi.runOnlyPendingTimersAsync();
+
+      // expectの結果を待つ
+      await expectPromise;
     });
 
     it('ブラウザ起動エラーがあっても他のURLは処理する', async () => {
@@ -191,12 +194,8 @@ describe('browser utils', () => {
 
       const promise = openUrlInBrowser(urls);
 
-      // タイマーを進める
-      vi.advanceTimersByTime(200);
-      await vi.runOnlyPendingTimersAsync();
-
       // Promiseが拒否されることを確認し、エラー詳細も検証
-      await expect(promise).rejects.toMatchObject({
+      const expectPromise = expect(promise).rejects.toMatchObject({
         message: '一部のURLを開けませんでした (1/2件失敗): https://fail.com',
         result: {
           succeeded: ['https://success.com'],
@@ -210,6 +209,13 @@ describe('browser utils', () => {
           ],
         },
       } as Error & { result: unknown });
+
+      // タイマーを進める
+      vi.advanceTimersByTime(200);
+      await vi.runOnlyPendingTimersAsync();
+
+      // expectの結果を待つ
+      await expectPromise;
     });
 
     it('空の配列を渡した場合は何もしない', async () => {
