@@ -10,7 +10,6 @@ type ArticleListProps = {
   scrollOffset: number;
   onScrollOffsetChange: (offset: number) => void;
   isPinned?: boolean;
-  pinnedCount?: number;
 };
 
 export const ArticleList = memo(function ArticleList({
@@ -19,7 +18,6 @@ export const ArticleList = memo(function ArticleList({
   scrollOffset,
   onScrollOffsetChange,
   isPinned = false,
-  pinnedCount = 0,
 }: ArticleListProps) {
   const { stdout } = useStdout();
   const [contentLines, setContentLines] = useState<string[]>([]);
@@ -195,7 +193,6 @@ export const ArticleList = memo(function ArticleList({
         <Box>
           <Text color="gray">
             {unreadPosition > 0 ? `${unreadPosition}/${unreadCount}件` : `未読${unreadCount}件`}
-            {pinnedCount > 0 && ` | ピン${pinnedCount}件`}
           </Text>
         </Box>
       </Box>

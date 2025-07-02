@@ -19,6 +19,7 @@ export function App() {
   const { exit } = useApp();
   const { stdout } = useStdout();
   const [showHelp, setShowHelp] = useState(false);
+  const [temporaryMessage, setTemporaryMessage] = useState<string | null>(null);
 
   // データベースとサービスを初期化
   const { feedService, db } = useTermfeedData();
@@ -71,13 +72,23 @@ export function App() {
   const currentArticle = articles[selectedArticleIndex];
 
   // ピン管理
-  const { pinnedCount, isPinned, togglePin, getPinnedArticles } = usePinManager({
-    pinService,
-    currentArticleId: currentArticle?.id,
-  });
+  const { pinnedCount, isPinned, togglePin, getPinnedArticles, refreshPinnedState } = usePinManager(
+    {
+      pinService,
+      currentArticleId: currentArticle?.id,
+    }
+  );
 
   // エラーを統合管理
   const { addError, clearErrorsBySource } = errorManager;
+
+  // 一時的なメッセージを表示する関数
+  const showTemporaryMessage = useCallback((message: string, duration = 3000) => {
+    setTemporaryMessage(message);
+    setTimeout(() => {
+      setTemporaryMessage(null);
+    }, duration);
+  }, []);
 
   // フィードエラーの管理
   useEffect(() => {
@@ -156,12 +167,7 @@ export function App() {
   const handleOpenAllPinned = useCallback(async () => {
     const pinnedArticles = getPinnedArticles();
     if (pinnedArticles.length === 0) {
-      addError({
-        source: ERROR_SOURCES.ARTICLE,
-        message: 'ピンした記事がありません',
-        timestamp: new Date(),
-        recoverable: true,
-      });
+      showTemporaryMessage('📌 ピンした記事がありません');
       return;
     }
 
@@ -170,6 +176,8 @@ export function App() {
       await openUrlInBrowser(urls);
       // ピンをクリア
       pinService.clearAllPins();
+      // ピン状態を更新
+      refreshPinnedState();
     } catch (error) {
       addError({
         source: ERROR_SOURCES.NETWORK,
@@ -178,7 +186,7 @@ export function App() {
         recoverable: true,
       });
     }
-  }, [getPinnedArticles, pinService, addError]);
+  }, [getPinnedArticles, pinService, showTemporaryMessage, refreshPinnedState]);
 
   // pキー: ピンのトグル
   const handleTogglePin = useCallback(() => {
@@ -371,20 +379,30 @@ export function App() {
   }
 
   return (
-    <TwoPaneLayout
-      leftWidth={30}
-      rightWidth={70}
-      leftPane={<FeedList feeds={feeds} selectedIndex={selectedFeedIndex} />}
-      rightPane={
-        <ArticleList
-          articles={articles}
-          selectedArticle={selectedArticle}
-          scrollOffset={scrollOffset}
-          onScrollOffsetChange={setScrollOffset}
-          isPinned={isPinned}
-          pinnedCount={pinnedCount}
-        />
-      }
-    />
+    <>
+      <TwoPaneLayout
+        leftWidth={30}
+        rightWidth={70}
+        leftPane={
+          <FeedList feeds={feeds} selectedIndex={selectedFeedIndex} pinnedCount={pinnedCount} />
+        }
+        rightPane={
+          <ArticleList
+            articles={articles}
+            selectedArticle={selectedArticle}
+            scrollOffset={scrollOffset}
+            onScrollOffsetChange={setScrollOffset}
+            isPinned={isPinned}
+          />
+        }
+      />
+      {temporaryMessage && (
+        <Box position="absolute" marginLeft={2} marginTop={2}>
+          <Box borderStyle="round" padding={1}>
+            <Text color="yellow">{temporaryMessage}</Text>
+          </Box>
+        </Box>
+      )}
+    </>
   );
 }
