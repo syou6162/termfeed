@@ -139,7 +139,6 @@ export function useFeedManager(feedService: FeedService): FeedManagerState & Fee
     [feeds]
   );
 
-  // デバッグ: 返す直前のfeedsの値を確認
   const result = {
     // State
     feeds,
