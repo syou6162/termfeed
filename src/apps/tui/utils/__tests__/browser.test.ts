@@ -114,7 +114,9 @@ describe('browser utilities', () => {
     });
 
     it('無効なURLでエラーをスローする', async () => {
-      await expect(openUrlInBrowser('invalid-url')).rejects.toThrow('一部のURLを開けませんでした (1/1件失敗): invalid-url');
+      await expect(openUrlInBrowser('invalid-url')).rejects.toThrow(
+        '一部のURLを開けませんでした (1/1件失敗): invalid-url'
+      );
       expect(mockSpawn).not.toHaveBeenCalled();
     });
 
