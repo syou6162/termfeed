@@ -110,10 +110,25 @@ describe('browser utils', () => {
       await vi.runOnlyPendingTimersAsync();
 
       await expect(promise).resolves.toBeUndefined();
-      expect(spawn).toHaveBeenCalledWith('open', ['-g', 'https://example.com'], {
-        stdio: 'ignore',
-        detached: true,
-      });
+
+      // プラットフォームに応じた期待値を設定
+      const platform = process.platform;
+      if (platform === 'darwin') {
+        expect(spawn).toHaveBeenCalledWith('open', ['-g', 'https://example.com'], {
+          stdio: 'ignore',
+          detached: true,
+        });
+      } else if (platform === 'win32') {
+        expect(spawn).toHaveBeenCalledWith('cmd', ['/c', 'start', '/min', 'https://example.com'], {
+          stdio: 'ignore',
+          detached: true,
+        });
+      } else {
+        expect(spawn).toHaveBeenCalledWith('xdg-open', ['https://example.com'], {
+          stdio: 'ignore',
+          detached: true,
+        });
+      }
     });
 
     it('複数のURLを順次開ける', async () => {
