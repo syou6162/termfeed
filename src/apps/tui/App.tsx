@@ -1,5 +1,5 @@
 import { Box, Text, useApp, useStdout } from 'ink';
-import { useCallback, useEffect, useState, useRef } from 'react';
+import { useCallback, useEffect, useState, useRef, useMemo } from 'react';
 import { ArticleList } from './components/ArticleList.js';
 import { FeedList } from './components/FeedList.js';
 import { TwoPaneLayout } from './components/TwoPaneLayout.js';
@@ -22,7 +22,7 @@ export function App() {
 
   // データベースとサービスを初期化
   const { feedService, db } = useTermfeedData();
-  const pinService = new PinService(db);
+  const pinService = useMemo(() => new PinService(db), [db]);
 
   // フィード管理
   const {
