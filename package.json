@@ -5,10 +5,10 @@
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "termfeed": "./dist/index.js"
+    "termfeed": "./dist/cli.js"
   },
   "scripts": {
-    "dev": "tsx src/index.ts",
+    "dev": "tsx src/cli.ts",
     "build": "tsc",
     "start": "node dist/index.js",
     "test": "vitest",
@@ -43,6 +43,7 @@
   "homepage": "https://github.com/syou6162/termfeed#readme",
   "files": [
     "dist/",
+    "src/models/schema.sql",
     "README.md",
     "LICENSE"
   ],
