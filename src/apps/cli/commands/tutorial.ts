@@ -1,8 +1,6 @@
 import { Command } from 'commander';
-import { DatabaseManager } from '../../../models/database.js';
-import { FeedModel } from '../../../models/feed.js';
-import { ArticleModel } from '../../../models/article.js';
-import { FeedService } from '../../../services/feed-service.js';
+import { createDatabaseManager } from '../utils/database.js';
+import { createServices } from '../utils/services.js';
 import { render } from 'ink';
 import React from 'react';
 import { App } from '../../tui/App.js';
@@ -22,13 +20,11 @@ export function createTutorialCommand(): Command {
     .description('Start RSS reader in tutorial mode (using in-memory database)')
     .action(async () => {
       // インメモリDBを使用してDatabaseManagerを初期化
-      const databaseManager = new DatabaseManager(':memory:');
+      const databaseManager = createDatabaseManager(':memory:');
       databaseManager.migrate();
 
-      // モデルとサービスの初期化
-      const feedModel = new FeedModel(databaseManager);
-      const articleModel = new ArticleModel(databaseManager);
-      const feedService = new FeedService(feedModel, articleModel);
+      // サービス層の初期化
+      const { feedService } = createServices(databaseManager);
 
       // サンプルフィードの登録とクロール
       for (const feedUrl of SAMPLE_FEEDS) {
