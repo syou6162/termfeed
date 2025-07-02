@@ -1,0 +1,97 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`help command E2E > should match add command help snapshot 1`] = `
+"Usage: termfeed add [options] <url>
+
+Add a new RSS feed
+
+Arguments:
+  url                  RSS feed URL to add
+
+Options:
+  -t, --title <title>  Custom title for the feed
+  -h, --help           display help for command
+"
+`;
+
+exports[`help command E2E > should match export command help snapshot 1`] = `
+"Usage: termfeed export [options] [file]
+
+Export feed subscriptions to OPML or text file
+
+Arguments:
+  file                   output file path (default: subscriptions.opml)
+
+Options:
+  -f, --format <format>  Export format (opml or text) (default: "auto")
+  -h, --help             display help for command
+"
+`;
+
+exports[`help command E2E > should match help output snapshot 1`] = `
+"Usage: termfeed [options] [command]
+
+A terminal-based RSS reader with Vim-like keybindings
+
+Options:
+  -V, --version            output the version number
+  -h, --help               display help for command
+
+Commands:
+  add [options] <url>      Add a new RSS feed
+  rm <feedId>              Remove RSS feed by ID
+  tui                      Start RSS reader in TUI mode
+  export [options] [file]  Export feed subscriptions to OPML or text file
+  import [options] <file>  Import feed subscriptions from OPML or text file
+  mcp-server               Start MCP server to expose termfeed data to LLM
+                           agents
+  help [command]           Display help for command
+"
+`;
+
+exports[`help command E2E > should match import command help snapshot 1`] = `
+"Usage: termfeed import [options] <file>
+
+Import feed subscriptions from OPML or text file
+
+Arguments:
+  file                   file to import
+
+Options:
+  -f, --format <format>  Import format (opml or text) (default: "auto")
+  -h, --help             display help for command
+"
+`;
+
+exports[`help command E2E > should match mcp-server command help snapshot 1`] = `
+"Usage: termfeed mcp-server [options]
+
+Start MCP server to expose termfeed data to LLM agents
+
+Options:
+  -h, --help  display help for command
+"
+`;
+
+exports[`help command E2E > should match rm command help snapshot 1`] = `
+"Usage: termfeed rm [options] <feedId>
+
+Remove RSS feed by ID
+
+Arguments:
+  feedId      Feed ID to remove
+
+Options:
+  -h, --help  display help for command
+"
+`;
+
+exports[`help command E2E > should match tui command help snapshot 1`] = `
+"Usage: termfeed tui [options]
+
+Start RSS reader in TUI mode
+
+Options:
+  -h, --help  display help for command
+"
+`;

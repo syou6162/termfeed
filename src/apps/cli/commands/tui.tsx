@@ -5,7 +5,7 @@ import { App } from '../../tui/App.js';
 export function createTuiCommand(): Command {
   const tuiCommand = new Command('tui');
 
-  tuiCommand.description('TUIモードでRSSリーダーを起動').action(() => {
+  tuiCommand.description('Start RSS reader in TUI mode').action(() => {
     try {
       // TUIアプリケーション内でマイグレーションが実行される
 

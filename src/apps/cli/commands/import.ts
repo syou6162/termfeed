@@ -13,7 +13,7 @@ import { createDatabaseManager } from '../utils/database.js';
 export const importCommand = new Command('import')
   .description('Import feed subscriptions from OPML or text file')
   .argument('<file>', 'file to import')
-  .option('-f, --format <format>', 'import format (opml or text)', 'auto')
+  .option('-f, --format <format>', 'Import format (opml or text)', 'auto')
   .action(async (file: string, options?: { format?: string }) => {
     let dbManager: DatabaseManager | null = null;
 
