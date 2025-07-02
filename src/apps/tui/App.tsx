@@ -13,7 +13,7 @@ import { useViewedArticles } from './hooks/useViewedArticles.js';
 import { usePinManager } from './hooks/usePinManager.js';
 import { openUrlInBrowser } from './utils/browser.js';
 import { ERROR_SOURCES } from './types/error.js';
-import { PinService } from '@/services/pin.js';
+import { PinService } from '../../services/pin.js';
 
 export function App() {
   const { exit } = useApp();

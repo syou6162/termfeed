@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { PinService } from '@/services/pin.js';
-import type { Article } from '@/types';
+import { PinService } from '../../../services/pin.js';
+import type { Article } from '../../../types/index.js';
 
 type UsePinManagerProps = {
   pinService: PinService;

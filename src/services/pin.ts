@@ -1,7 +1,7 @@
-import { DatabaseManager } from '@/models/database.js';
-import { PinModel } from '@/models/pin.js';
-import { ArticleModel } from '@/models/article.js';
-import type { Article } from '@/types';
+import { DatabaseManager } from '../models/database.js';
+import { PinModel } from '../models/pin.js';
+import { ArticleModel } from '../models/article.js';
+import type { Article } from '../types/index.js';
 
 export class PinService {
   private pinModel: PinModel;

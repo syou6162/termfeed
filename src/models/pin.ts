@@ -1,5 +1,5 @@
 import { DatabaseManager } from './database.js';
-import type { Pin } from '@/types';
+import type { Pin } from '../types/index.js';
 import { nowInUnixSeconds, unixSecondsToDate } from './utils/timestamp.js';
 
 export class PinModel {

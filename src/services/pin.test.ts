@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { DatabaseManager } from '@/models/database.js';
+import { DatabaseManager } from '../models/database.js';
 import { PinService } from './pin.js';
-import { ArticleModel } from '@/models/article.js';
-import { FeedModel } from '@/models/feed.js';
+import { ArticleModel } from '../models/article.js';
+import { FeedModel } from '../models/feed.js';
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
