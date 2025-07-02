@@ -18,7 +18,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // NPMパッケージなど異なる環境でもpackage.jsonを見つけられるようにする
-function findPackageJson(): { version: string } {
+function findPackageJson(): { version: string; name?: string } {
   const possiblePaths = [
     join(__dirname, '../package.json'),
     join(__dirname, '../../package.json'),
@@ -27,17 +27,21 @@ function findPackageJson(): { version: string } {
 
   for (const path of possiblePaths) {
     try {
-      return JSON.parse(readFileSync(path, 'utf-8')) as { version: string };
+      return JSON.parse(readFileSync(path, 'utf-8')) as { version: string; name?: string };
     } catch {
       // このパスでは見つからなかった、次を試す
     }
   }
 
   // フォールバック値
-  return { version: 'unknown' };
+  console.warn('Warning: package.json not found, version may be incorrect');
+  return {
+    version: process.env.npm_package_version || '0.0.0',
+    name: process.env.npm_package_name || 'termfeed',
+  };
 }
 
-const packageJson = findPackageJson();
+export const packageJson = findPackageJson();
 export const VERSION = packageJson.version;
 
 /**
