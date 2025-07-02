@@ -1,6 +1,6 @@
 {
   "name": "termfeed",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A terminal-based RSS reader with Vim-like keybindings",
   "type": "module",
   "main": "dist/index.js",
@@ -19,7 +19,8 @@
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,md}\"",
     "typecheck": "tsc --noEmit",
     "migrate": "tsx src/apps/cli/migrate.ts",
-    "prepare": "npm run build"
+    "prepare": "npm run build",
+    "prepublishOnly": "npm run build && npm run test:run && npm run typecheck"
   },
   "keywords": [
     "rss",
@@ -30,8 +31,21 @@
     "tui",
     "vim"
   ],
-  "author": "",
+  "author": "syou6162 <syou6162@gmail.com>",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/syou6162/termfeed.git"
+  },
+  "bugs": {
+    "url": "https://github.com/syou6162/termfeed/issues"
+  },
+  "homepage": "https://github.com/syou6162/termfeed#readme",
+  "files": [
+    "dist/",
+    "README.md",
+    "LICENSE"
+  ],
   "engines": {
     "node": ">=18.0.0"
   },
