@@ -2,8 +2,8 @@
 
 import { Command } from 'commander';
 import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
 import { readFileSync } from 'fs';
+import { join, dirname } from 'path';
 import {
   createAddCommand,
   createRmCommand,
@@ -13,14 +13,13 @@ import {
   createMcpServerCommand,
 } from './apps/cli/commands/index.js';
 
-// package.jsonからバージョンを動的に読み込む
+// ESモジュールでpackage.jsonを読み込む
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-// src/index.ts または dist/index.js のどちらから実行されても対応
-const packageJsonPath = __filename.includes('/dist/')
-  ? join(__dirname, '../../package.json')
-  : join(__dirname, '../package.json');
-const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8')) as { version: string };
+const packageJson = JSON.parse(readFileSync(join(__dirname, '../package.json'), 'utf-8')) as {
+  version: string;
+};
+
 export const VERSION = packageJson.version;
 
 /**
@@ -47,7 +46,15 @@ export function createMainProgram(): Command {
 }
 
 // Main CLI entry point
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
+// npmやnpx経由で実行される場合、process.argv[1]はシンボリックリンクを指すことがあるため、
+// パスの末尾も確認して実行を検出する
+const isMainModule =
+  process.argv[1] &&
+  (process.argv[1] === fileURLToPath(import.meta.url) ||
+    process.argv[1].endsWith('/termfeed') ||
+    process.argv[1].endsWith('\\termfeed'));
+
+if (isMainModule) {
   const program = createMainProgram();
   program.parse();
 }
