@@ -7,6 +7,7 @@ import {
   exportCommand,
   importCommand,
   createMcpServerCommand,
+  createTutorialCommand,
 } from './apps/cli/commands/index.js';
 
 // 標準的な方法でpackage.jsonを読み込む
@@ -36,6 +37,7 @@ export function createMainProgram(): Command {
   program.addCommand(exportCommand);
   program.addCommand(importCommand);
   program.addCommand(createMcpServerCommand());
+  program.addCommand(createTutorialCommand());
 
   return program;
 }
