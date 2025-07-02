@@ -34,6 +34,11 @@ export function getBrowserCommand(url: string): BrowserCommand {
   }
 }
 
+export type OpenUrlResult = {
+  succeeded: string[];
+  failed: Array<{ url: string; error: Error }>;
+};
+
 export function openUrlInBrowser(url: string | string[]): Promise<void> {
   // 単一URLの場合は配列に変換
   const urls = Array.isArray(url) ? url : [url];
@@ -43,15 +48,24 @@ export function openUrlInBrowser(url: string | string[]): Promise<void> {
     return Promise.resolve();
   }
 
-  // 各URLを順次開く
+  const result: OpenUrlResult = {
+    succeeded: [],
+    failed: [],
+  };
+
+  // 各URLを順次開く（Promise.allSettledで一部失敗しても続行）
   const openPromises = urls.map((singleUrl, index) => {
-    return new Promise<void>((resolve, reject) => {
+    return new Promise<{ url: string; success: boolean; error?: Error }>((resolve) => {
       // 少し遅延を入れて順次開く（同時に大量に開くのを防ぐ）
       setTimeout(() => {
         const trimmedUrl = singleUrl.trim();
 
         if (!validateUrl(trimmedUrl)) {
-          reject(new Error(`無効なURLです: ${trimmedUrl}`));
+          resolve({
+            url: singleUrl,
+            success: false,
+            error: new Error(`無効なURLです: ${trimmedUrl}`),
+          });
           return;
         }
 
@@ -66,19 +80,43 @@ export function openUrlInBrowser(url: string | string[]): Promise<void> {
 
         childProcess.on('error', (error) => {
           hasError = true;
-          reject(new Error(`ブラウザの起動に失敗しました: ${error.message}`));
+          resolve({
+            url: singleUrl,
+            success: false,
+            error: new Error(`ブラウザの起動に失敗しました: ${error.message}`),
+          });
         });
 
         // spawnイベントが完了するまで少し待つ
         process.nextTick(() => {
           if (!hasError) {
             childProcess.unref();
-            resolve();
+            resolve({ url: singleUrl, success: true });
           }
         });
       }, index * 100); // 100ms間隔で開く
     });
   });
 
-  return Promise.all(openPromises).then(() => undefined);
+  return Promise.all(openPromises).then((results) => {
+    // 結果を集計
+    results.forEach((res) => {
+      if (res.success) {
+        result.succeeded.push(res.url);
+      } else {
+        result.failed.push({ url: res.url, error: res.error! });
+      }
+    });
+
+    // 失敗があった場合はエラーをスロー（成功したURLの情報も含む）
+    if (result.failed.length > 0) {
+      const failedUrls = result.failed.map((f) => f.url).join(', ');
+      const error = new Error(
+        `一部のURLを開けませんでした (${result.failed.length}/${urls.length}件失敗): ${failedUrls}`
+      ) as Error & { result: OpenUrlResult };
+      // エラーオブジェクトに詳細情報を付加
+      error.result = result;
+      throw error;
+    }
+  });
 }

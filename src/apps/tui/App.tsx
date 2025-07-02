@@ -11,7 +11,7 @@ import { useArticleManager } from './hooks/useArticleManager.js';
 import { useErrorManager } from './hooks/useErrorManager.js';
 import { useViewedArticles } from './hooks/useViewedArticles.js';
 import { usePinManager } from './hooks/usePinManager.js';
-import { openUrlInBrowser } from './utils/browser.js';
+import { openUrlInBrowser, type OpenUrlResult } from './utils/browser.js';
 import { ERROR_SOURCES } from './types/error.js';
 import { PinService } from '../../services/pin.js';
 
@@ -174,19 +174,35 @@ export function App() {
     const urls = pinnedArticles.map((article) => article.url);
     try {
       await openUrlInBrowser(urls);
-      // ピンをクリア
+      // すべて成功した場合はピンをクリア
       pinService.clearAllPins();
       // ピン状態を更新
       refreshPinnedState();
     } catch (error) {
+      // エラーがOpenUrlResultを含むかチェック
+      const openUrlError = error as Error & { result?: OpenUrlResult };
+
+      // 一部でも成功していればピンをクリア
+      if (openUrlError.result?.succeeded?.length && openUrlError.result.succeeded.length > 0) {
+        pinService.clearAllPins();
+        refreshPinnedState();
+      }
+
+      // エラーメッセージをより詳細に
+      let errorMessage = error instanceof Error ? error.message : 'ブラウザの起動に失敗しました';
+      if (openUrlError.result?.failed?.length && openUrlError.result.failed.length > 0) {
+        const failedUrls = openUrlError.result.failed.map((f) => f.url).join(', ');
+        errorMessage = `一部のURLを開けませんでした (${openUrlError.result.failed.length}件失敗): ${failedUrls}`;
+      }
+
       addError({
         source: ERROR_SOURCES.NETWORK,
-        message: error instanceof Error ? error.message : 'ブラウザの起動に失敗しました',
+        message: errorMessage,
         timestamp: new Date(),
         recoverable: true,
       });
     }
-  }, [getPinnedArticles, pinService, showTemporaryMessage, refreshPinnedState]);
+  }, [getPinnedArticles, pinService, showTemporaryMessage, refreshPinnedState, addError]);
 
   // pキー: ピンのトグル
   const handleTogglePin = useCallback(() => {
