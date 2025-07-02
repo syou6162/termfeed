@@ -50,28 +50,11 @@ export class DatabaseManager {
 
     let schemaPath: string;
 
-    // package.jsonを動的に検索してパッケージ名を取得
-    let packageName = 'termfeed';
-    const possiblePackageJsonPaths = [
-      path.join(__dirname, '../../package.json'),
-      path.join(__dirname, '../../../package.json'),
-    ];
-
-    for (const packageJsonPath of possiblePackageJsonPaths) {
-      try {
-        const pkg = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8')) as { name?: string };
-        if (pkg.name) {
-          packageName = pkg.name;
-          break;
-        }
-      } catch {
-        // 次のパスを試す
-      }
-    }
-
     try {
-      // まずパッケージとしてのパスを試す
-      schemaPath = require.resolve(`${packageName}/src/models/schema.sql`);
+      // NPMパッケージとしてインストールされている場合
+      const innerRequire = createRequire(import.meta.url);
+      const { name } = innerRequire('../../package.json') as { name: string };
+      schemaPath = require.resolve(`${name}/src/models/schema.sql`);
     } catch {
       // 開発環境では相対パスで解決
       schemaPath = path.join(__dirname, 'schema.sql');

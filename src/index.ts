@@ -1,9 +1,5 @@
-#!/usr/bin/env node
-
 import { Command } from 'commander';
-import { fileURLToPath } from 'url';
-import { readFileSync } from 'fs';
-import { join, dirname } from 'path';
+import { createRequire } from 'module';
 import {
   createAddCommand,
   createRmCommand,
@@ -13,36 +9,12 @@ import {
   createMcpServerCommand,
 } from './apps/cli/commands/index.js';
 
-// ESモジュールでpackage.jsonを読み込む
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+// 標準的な方法でpackage.jsonを読み込む
+const require = createRequire(import.meta.url);
+const packageJson = require('../package.json') as { version: string; name: string };
 
-// NPMパッケージなど異なる環境でもpackage.jsonを見つけられるようにする
-function findPackageJson(): { version: string; name?: string } {
-  const possiblePaths = [
-    join(__dirname, '../package.json'),
-    join(__dirname, '../../package.json'),
-    join(process.cwd(), 'package.json'),
-  ];
-
-  for (const path of possiblePaths) {
-    try {
-      return JSON.parse(readFileSync(path, 'utf-8')) as { version: string; name?: string };
-    } catch {
-      // このパスでは見つからなかった、次を試す
-    }
-  }
-
-  // フォールバック値
-  console.warn('Warning: package.json not found, version may be incorrect');
-  return {
-    version: process.env.npm_package_version || '0.0.0',
-    name: process.env.npm_package_name || 'termfeed',
-  };
-}
-
-export const packageJson = findPackageJson();
 export const VERSION = packageJson.version;
+export { packageJson };
 
 /**
  * CLIのメインプログラムを作成します。
