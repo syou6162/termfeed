@@ -64,10 +64,16 @@ export function createTutorialCommand(): Command {
       console.log();
 
       // TUIモードを起動
-      // TODO: インメモリDBを使用したAppコンポーネントを起動する必要がある
-      // 現在のAppコンポーネントは内部でcreateeDatabaseManagerを使用しているため、
-      // インメモリDB対応のためにリファクタリングが必要
-      render(React.createElement(App));
+      try {
+        // @ts-expect-error - カスタムpropsを渡すため
+        render(React.createElement(App, { databaseManager }));
+      } catch (error) {
+        console.error(
+          'チュートリアルTUIの起動に失敗しました:',
+          error instanceof Error ? error.message : error
+        );
+        process.exit(1);
+      }
     });
 
   return command;
