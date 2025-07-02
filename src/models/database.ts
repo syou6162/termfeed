@@ -49,15 +49,11 @@ export class DatabaseManager {
     const require = createRequire(import.meta.url);
 
     let schemaPath: string;
-
     try {
       // NPMパッケージとしてインストールされている場合
-      const innerRequire = createRequire(import.meta.url);
-      const { name } = innerRequire('../../package.json') as { name: string };
-      schemaPath = require.resolve(`${name}/src/models/schema.sql`);
+      schemaPath = require.resolve('termfeed/src/models/schema.sql');
     } catch {
       // 開発環境・ローカルビルドでは常にsrcディレクトリを参照
-      // package.jsonのfilesフィールドで`src/models/schema.sql`を含めているため
       schemaPath = path.join(__dirname, '..', '..', 'src', 'models', 'schema.sql');
     }
 
