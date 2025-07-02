@@ -4,7 +4,7 @@ import * as path from 'path';
 import chalk from 'chalk';
 import { OPMLService, ExportFormat } from '../../../services/opml.js';
 import { createDatabaseManager } from '../utils/database.js';
-import { createServices } from '../utils/services.js';
+import { createModelsAndServices } from '../../../services/factory.js';
 
 export const exportCommand = new Command('export')
   .description('Export feed subscriptions to OPML or text file')
@@ -15,7 +15,7 @@ export const exportCommand = new Command('export')
 
     try {
       dbManager.migrate();
-      const { feedModel } = createServices(dbManager);
+      const { feedModel } = createModelsAndServices(dbManager);
 
       // すべてのフィードを取得
       const feeds = feedModel.findAll();

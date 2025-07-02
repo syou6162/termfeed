@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import { parsePositiveInteger } from '../utils/validation.js';
 import { createDatabaseManager } from '../utils/database.js';
-import { createServices } from '../utils/services.js';
+import { createFeedServices } from '../../../services/factory.js';
 
 export function createRmCommand(): Command {
   const command = new Command('rm');
@@ -15,7 +15,7 @@ export function createRmCommand(): Command {
       try {
         const id = parsePositiveInteger(feedId, 'feed ID');
 
-        const { feedService } = createServices(dbManager);
+        const feedService = createFeedServices(dbManager);
 
         const success = feedService.removeFeed(id);
         if (success) {

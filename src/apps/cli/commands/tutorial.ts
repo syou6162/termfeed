@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 import { createDatabaseManager } from '../utils/database.js';
-import { createServices } from '../utils/services.js';
+import { createFeedServices } from '../../../services/factory.js';
 import { render } from 'ink';
 import React from 'react';
 import { App } from '../../tui/App.js';
@@ -24,7 +24,7 @@ export function createTutorialCommand(): Command {
       databaseManager.migrate();
 
       // サービス層の初期化
-      const { feedService } = createServices(databaseManager);
+      const feedService = createFeedServices(databaseManager);
 
       // サンプルフィードの登録とクロール
       for (const feedUrl of SAMPLE_FEEDS) {

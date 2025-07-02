@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import { createMcpServer } from '../../mcp/server.js';
 import { createDatabaseManager } from '../utils/database.js';
-import { createServices } from '../utils/services.js';
+import { createModelsAndServices } from '../../../services/factory.js';
 
 export function createMcpServerCommand(): Command {
   const command = new Command('mcp-server');
@@ -11,7 +11,7 @@ export function createMcpServerCommand(): Command {
 
     try {
       dbManager.migrate();
-      const { feedModel, articleModel } = createServices(dbManager);
+      const { feedModel, articleModel } = createModelsAndServices(dbManager);
 
       console.error('Starting MCP server...');
 

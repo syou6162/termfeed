@@ -6,7 +6,7 @@ import { DatabaseManager } from '../../../models/database.js';
 import { OPMLService } from '../../../services/opml.js';
 import { DuplicateFeedError } from '../../../services/errors.js';
 import { createDatabaseManager } from '../utils/database.js';
-import { createServices } from '../utils/services.js';
+import { createFeedServices } from '../../../services/factory.js';
 
 export const importCommand = new Command('import')
   .description('Import feed subscriptions from OPML or text file')
@@ -58,7 +58,7 @@ export const importCommand = new Command('import')
       // データベースとサービスの初期化
       dbManager = createDatabaseManager();
       dbManager.migrate();
-      const { feedService } = createServices(dbManager);
+      const feedService = createFeedServices(dbManager);
 
       // 各URLを追加
       let successCount = 0;
