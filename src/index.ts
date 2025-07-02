@@ -2,6 +2,8 @@
 
 import { Command } from 'commander';
 import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import { readFileSync } from 'fs';
 import {
   createAddCommand,
   createRmCommand,
@@ -11,7 +13,11 @@ import {
   createMcpServerCommand,
 } from './apps/cli/commands/index.js';
 
-export const VERSION = '0.1.0';
+// package.jsonからバージョンを動的に読み込む
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const packageJsonPath = join(__dirname, '../package.json');
+const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8')) as { version: string };
+export const VERSION = packageJson.version;
 
 /**
  * CLIのメインプログラムを作成します。
