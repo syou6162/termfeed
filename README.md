@@ -46,6 +46,29 @@ termfeedは、ターミナル内で完全に動作するローカルRSSリーダ
 
 ## インストール
 
+### npxで実行（推奨）
+
+```bash
+# 最新版を直接実行
+npx termfeed tui
+
+# 特定のコマンドを実行
+npx termfeed add https://example.com/feed.rss
+npx termfeed update
+```
+
+### npmでグローバルインストール
+
+```bash
+# グローバルにインストール
+npm install -g termfeed
+
+# 実行
+termfeed tui
+```
+
+### ソースからビルド
+
 ```bash
 # リポジトリのクローン
 git clone https://github.com/syou6162/termfeed.git

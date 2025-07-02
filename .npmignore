@@ -1,0 +1,57 @@
+# Source files
+src/
+*.ts
+*.tsx
+!*.d.ts
+
+# Test files
+*.test.js
+*.test.d.ts
+*.test.js.map
+*.test.d.ts.map
+__tests__/
+test-helpers/
+vitest.config.ts
+coverage/
+
+# Development files
+.github/
+docs/
+.eslintrc*
+.prettierrc*
+tsconfig.json
+renovate.json
+CLAUDE.md
+
+# Map files
+*.map
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+
+# Temporary files
+*.tmp
+*.temp
+.tmp/
+.temp/
+
+# Database files (local development)
+*.db
+*.sqlite
+*.sqlite3
+
+# Log files
+*.log
+debug.log
+
+# Example/sample files
+feeds.txt
+subscriptions.opml
