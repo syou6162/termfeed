@@ -90,20 +90,10 @@ export function registerArticleResources(
       title: 'Article Details',
       description: 'Get full details of a specific article',
     },
-    (uri: unknown) => {
+    (uri: URL) => {
       // URIからIDを取得
       let articleId: number;
-      let uriString: string;
-
-      if (typeof uri === 'string') {
-        uriString = uri;
-      } else if (uri && typeof uri === 'object' && 'href' in uri) {
-        uriString = (uri as URL).href;
-      } else if (uri && typeof uri === 'object' && 'toString' in uri) {
-        uriString = (uri as { toString(): string }).toString();
-      } else {
-        uriString = '';
-      }
+      const uriString = uri.href;
 
       const match = uriString.match(/articles:\/\/article\/(\d+)/);
       articleId = match ? parseInt(match[1], 10) : 0;
