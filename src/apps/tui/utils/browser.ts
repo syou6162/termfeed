@@ -34,35 +34,51 @@ export function getBrowserCommand(url: string): BrowserCommand {
   }
 }
 
-export function openUrlInBrowser(url: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const trimmedUrl = url.trim();
+export function openUrlInBrowser(url: string | string[]): Promise<void> {
+  // 単一URLの場合は配列に変換
+  const urls = Array.isArray(url) ? url : [url];
 
-    if (!validateUrl(trimmedUrl)) {
-      reject(new Error(`無効なURLです: ${trimmedUrl}`));
-      return;
-    }
+  // URLが空の場合は何もしない
+  if (urls.length === 0) {
+    return Promise.resolve();
+  }
 
-    const { command, args } = getBrowserCommand(trimmedUrl);
+  // 各URLを順次開く
+  const openPromises = urls.map((singleUrl, index) => {
+    return new Promise<void>((resolve, reject) => {
+      // 少し遅延を入れて順次開く（同時に大量に開くのを防ぐ）
+      setTimeout(() => {
+        const trimmedUrl = singleUrl.trim();
 
-    const childProcess = spawn(command, args, {
-      stdio: 'ignore',
-      detached: true,
-    });
+        if (!validateUrl(trimmedUrl)) {
+          reject(new Error(`無効なURLです: ${trimmedUrl}`));
+          return;
+        }
 
-    let hasError = false;
+        const { command, args } = getBrowserCommand(trimmedUrl);
 
-    childProcess.on('error', (error) => {
-      hasError = true;
-      reject(new Error(`ブラウザの起動に失敗しました: ${error.message}`));
-    });
+        const childProcess = spawn(command, args, {
+          stdio: 'ignore',
+          detached: true,
+        });
 
-    // spawnイベントが完了するまで少し待つ
-    process.nextTick(() => {
-      if (!hasError) {
-        childProcess.unref();
-        resolve();
-      }
+        let hasError = false;
+
+        childProcess.on('error', (error) => {
+          hasError = true;
+          reject(new Error(`ブラウザの起動に失敗しました: ${error.message}`));
+        });
+
+        // spawnイベントが完了するまで少し待つ
+        process.nextTick(() => {
+          if (!hasError) {
+            childProcess.unref();
+            resolve();
+          }
+        });
+      }, index * 100); // 100ms間隔で開く
     });
   });
+
+  return Promise.all(openPromises).then(() => undefined);
 }
