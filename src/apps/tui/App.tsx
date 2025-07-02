@@ -10,8 +10,10 @@ import { useFeedManager } from './hooks/useFeedManager.js';
 import { useArticleManager } from './hooks/useArticleManager.js';
 import { useErrorManager } from './hooks/useErrorManager.js';
 import { useViewedArticles } from './hooks/useViewedArticles.js';
+import { usePinManager } from './hooks/usePinManager.js';
 import { openUrlInBrowser } from './utils/browser.js';
 import { ERROR_SOURCES } from './types/error.js';
+import { PinService } from '@/services/pin.js';
 
 export function App() {
   const { exit } = useApp();
@@ -19,7 +21,8 @@ export function App() {
   const [showHelp, setShowHelp] = useState(false);
 
   // データベースとサービスを初期化
-  const { feedService } = useTermfeedData();
+  const { feedService, db } = useTermfeedData();
+  const pinService = new PinService(db);
 
   // フィード管理
   const {
@@ -63,6 +66,15 @@ export function App() {
 
   // 閲覧済み記事の管理
   const { recordArticleView, markViewedArticlesAsRead } = useViewedArticles(feedService);
+
+  // 現在選択中の記事
+  const currentArticle = articles[selectedArticleIndex];
+
+  // ピン管理
+  const { pinnedCount, isPinned, togglePin, getPinnedArticles } = usePinManager({
+    pinService,
+    currentArticleId: currentArticle?.id,
+  });
 
   // エラーを統合管理
   const { addError, clearErrorsBySource } = errorManager;
@@ -123,7 +135,8 @@ export function App() {
     [articles, selectedArticleIndex, recordArticleView, setSelectedArticleIndex]
   );
 
-  const handleArticleSelect = useCallback(async () => {
+  // vキー: 現在の記事を開く
+  const handleOpenInBrowser = useCallback(async () => {
     const selectedArticle = articles[selectedArticleIndex];
     if (selectedArticle?.url) {
       try {
@@ -138,6 +151,41 @@ export function App() {
       }
     }
   }, [articles, selectedArticleIndex, addError]);
+
+  // oキー: ピンした記事をすべて開く
+  const handleOpenAllPinned = useCallback(async () => {
+    const pinnedArticles = getPinnedArticles();
+    if (pinnedArticles.length === 0) {
+      addError({
+        source: ERROR_SOURCES.ARTICLE,
+        message: 'ピンした記事がありません',
+        timestamp: new Date(),
+        recoverable: true,
+      });
+      return;
+    }
+
+    const urls = pinnedArticles.map((article) => article.url);
+    try {
+      await openUrlInBrowser(urls);
+      // ピンをクリア
+      pinService.clearAllPins();
+    } catch (error) {
+      addError({
+        source: ERROR_SOURCES.NETWORK,
+        message: error instanceof Error ? error.message : 'ブラウザの起動に失敗しました',
+        timestamp: new Date(),
+        recoverable: true,
+      });
+    }
+  }, [getPinnedArticles, pinService, addError]);
+
+  // pキー: ピンのトグル
+  const handleTogglePin = useCallback(() => {
+    if (currentArticle) {
+      togglePin();
+    }
+  }, [currentArticle, togglePin]);
 
   // 閲覧済み記事の参照を保持（プロセス終了時の既読化用）
   const markViewedArticlesAsReadRef = useRef(markViewedArticlesAsRead);
@@ -215,7 +263,7 @@ export function App() {
     onArticleSelectionChange: handleArticleSelectionChange,
     onFeedSelectionChange: handleFeedSelectionChange,
     onOpenInBrowser: () => {
-      void handleArticleSelect();
+      void handleOpenInBrowser();
     },
     onRefreshAll: () => {
       void updateAllFeeds();
@@ -232,6 +280,10 @@ export function App() {
     onCancel: cancelUpdate,
     onToggleFailedFeeds: toggleFailedFeeds,
     onSetFeedRating: handleSetFeedRating,
+    onTogglePin: handleTogglePin,
+    onOpenAllPinned: () => {
+      void handleOpenAllPinned();
+    },
   });
 
   if (isLoading) {
@@ -329,6 +381,8 @@ export function App() {
           selectedArticle={selectedArticle}
           scrollOffset={scrollOffset}
           onScrollOffsetChange={setScrollOffset}
+          isPinned={isPinned}
+          pinnedCount={pinnedCount}
         />
       }
     />

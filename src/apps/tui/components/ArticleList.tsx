@@ -9,6 +9,8 @@ type ArticleListProps = {
   selectedArticle?: Article;
   scrollOffset: number;
   onScrollOffsetChange: (offset: number) => void;
+  isPinned?: boolean;
+  pinnedCount?: number;
 };
 
 export const ArticleList = memo(function ArticleList({
@@ -16,6 +18,8 @@ export const ArticleList = memo(function ArticleList({
   selectedArticle,
   scrollOffset,
   onScrollOffsetChange,
+  isPinned = false,
+  pinnedCount = 0,
 }: ArticleListProps) {
   const { stdout } = useStdout();
   const [contentLines, setContentLines] = useState<string[]>([]);
@@ -175,7 +179,8 @@ export const ArticleList = memo(function ArticleList({
       <Box paddingX={1} marginTop={1}>
         <Text color="gray" dimColor>
           {selectedArticle.is_favorite ? '★お気に入り' : ''}
-          {scrollInfo && (selectedArticle.is_favorite ? ' | ' : '') + scrollInfo}
+          {isPinned ? (selectedArticle.is_favorite ? ' | ' : '') + '📌ピン' : ''}
+          {scrollInfo && (selectedArticle.is_favorite || isPinned ? ' | ' : '') + scrollInfo}
           {hasMoreContent && ' スペースで続きを表示'}
         </Text>
       </Box>
@@ -190,6 +195,7 @@ export const ArticleList = memo(function ArticleList({
         <Box>
           <Text color="gray">
             {unreadPosition > 0 ? `${unreadPosition}/${unreadCount}件` : `未読${unreadCount}件`}
+            {pinnedCount > 0 && ` | ピン${pinnedCount}件`}
           </Text>
         </Box>
       </Box>
