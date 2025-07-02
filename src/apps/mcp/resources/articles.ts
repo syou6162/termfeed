@@ -93,12 +93,20 @@ export function registerArticleResources(
     (uri: unknown) => {
       // URIからIDを取得
       let articleId: number;
+      let uriString: string;
+
       if (typeof uri === 'string') {
-        const match = uri.match(/articles:\/\/article\/(\d+)/);
-        articleId = match ? parseInt(match[1], 10) : 0;
+        uriString = uri;
+      } else if (uri && typeof uri === 'object' && 'href' in uri) {
+        uriString = (uri as URL).href;
+      } else if (uri && typeof uri === 'object' && 'toString' in uri) {
+        uriString = (uri as { toString(): string }).toString();
       } else {
-        articleId = 0;
+        uriString = '';
       }
+
+      const match = uriString.match(/articles:\/\/article\/(\d+)/);
+      articleId = match ? parseInt(match[1], 10) : 0;
 
       if (!articleId) {
         return {
