@@ -43,4 +43,9 @@ describe('help command E2E', () => {
     const result = execSync(`node ${CLI_PATH} mcp-server --help`, { encoding: 'utf-8' });
     expect(result).toMatchSnapshot();
   });
+
+  it('should match tutorial command help snapshot', () => {
+    const result = execSync(`node ${CLI_PATH} tutorial --help`, { encoding: 'utf-8' });
+    expect(result).toMatchSnapshot();
+  });
 });
