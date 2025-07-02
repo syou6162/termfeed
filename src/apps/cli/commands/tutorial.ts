@@ -6,7 +6,6 @@ import { FeedService } from '../../../services/feed-service.js';
 import { render } from 'ink';
 import React from 'react';
 import { App } from '../../tui/App.js';
-import chalk from 'chalk';
 
 // サンプルフィードのリスト
 const SAMPLE_FEEDS = [
@@ -22,12 +21,6 @@ export function createTutorialCommand(): Command {
   command
     .description('Start RSS reader in tutorial mode (using in-memory database)')
     .action(async () => {
-      console.log(chalk.blue('🎓 チュートリアルモードを開始します...'));
-      console.log(
-        chalk.gray('インメモリデータベースを使用するため、終了後にデータは削除されます。')
-      );
-      console.log();
-
       // インメモリDBを使用してDatabaseManagerを初期化
       const databaseManager = new DatabaseManager(':memory:');
       databaseManager.migrate();
@@ -38,40 +31,20 @@ export function createTutorialCommand(): Command {
       const feedService = new FeedService(feedModel, articleModel);
 
       // サンプルフィードの登録とクロール
-      console.log(chalk.blue('📥 サンプルフィードを登録しています...'));
-
       for (const feedUrl of SAMPLE_FEEDS) {
-        process.stdout.write(chalk.gray(`${feedUrl} を処理中...`));
-
         try {
           // フィードを登録してクロール
-          const result = await feedService.addFeed(feedUrl);
-          console.log(
-            chalk.green(` ✓ ${result.feed.title} - ${result.articlesCount} 件の記事を取得しました`)
-          );
-        } catch (error) {
-          console.log(
-            chalk.red(
-              ` ✗ 処理に失敗しました: ${error instanceof Error ? error.message : String(error)}`
-            )
-          );
+          await feedService.addFeed(feedUrl);
+        } catch {
+          // サイレントに失敗を処理
         }
       }
-
-      console.log();
-      console.log(chalk.green('✅ サンプルフィードの準備が完了しました！'));
-      console.log(chalk.gray('TUIモードを起動しています...'));
-      console.log();
 
       // TUIモードを起動
       try {
         // @ts-expect-error - カスタムpropsを渡すため
         render(React.createElement(App, { databaseManager }));
-      } catch (error) {
-        console.error(
-          'チュートリアルTUIの起動に失敗しました:',
-          error instanceof Error ? error.message : error
-        );
+      } catch {
         process.exit(1);
       }
     });
