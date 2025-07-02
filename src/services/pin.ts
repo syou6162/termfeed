@@ -46,6 +46,43 @@ export class PinService {
   }
 
   /**
+   * 最古のピンから指定した数だけ記事を取得する
+   * @param limit 取得する記事数の上限
+   * @returns ピン留めされた記事の配列（古い順）
+   */
+  public getOldestPinnedArticles(limit: number): Article[] {
+    const pins = this.pinModel.findAll();
+    // findAllはDESCなので逆順にして古い順にする
+    const oldestPins = pins.reverse().slice(0, limit);
+
+    if (oldestPins.length === 0) {
+      return [];
+    }
+
+    // 記事を取得（ピンの順序を保持）
+    const articles: Article[] = [];
+    for (const pin of oldestPins) {
+      const article = this.articleModel.findById(pin.article_id);
+      if (article) {
+        articles.push(article);
+      }
+    }
+
+    return articles;
+  }
+
+  /**
+   * 指定した記事IDのピンを削除する
+   * @param articleIds 削除する記事IDの配列
+   */
+  public deletePins(articleIds: number[]): void {
+    if (articleIds.length === 0) {
+      return;
+    }
+    this.pinModel.deleteMany(articleIds);
+  }
+
+  /**
    * すべてのピンをクリアする（内部用）
    * @internal
    */

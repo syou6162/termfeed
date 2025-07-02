@@ -72,12 +72,10 @@ export function App() {
   const currentArticle = articles[selectedArticleIndex];
 
   // ピン管理
-  const { pinnedCount, isPinned, togglePin, getPinnedArticles, refreshPinnedState } = usePinManager(
-    {
-      pinService,
-      currentArticleId: currentArticle?.id,
-    }
-  );
+  const { pinnedCount, isPinned, togglePin, refreshPinnedState } = usePinManager({
+    pinService,
+    currentArticleId: currentArticle?.id,
+  });
 
   // エラーを統合管理
   const { addError, clearErrorsBySource } = errorManager;
@@ -163,29 +161,42 @@ export function App() {
     }
   }, [articles, selectedArticleIndex, addError]);
 
-  // oキー: ピンした記事をすべて開く
+  // oキー: ピンした記事を10個ずつ開く
   const handleOpenAllPinned = useCallback(async () => {
-    const pinnedArticles = getPinnedArticles();
-    if (pinnedArticles.length === 0) {
+    const PINS_PER_BATCH = 10;
+    const totalPinCount = pinService.getPinCount();
+
+    if (totalPinCount === 0) {
       showTemporaryMessage('📌 ピンした記事がありません');
       return;
     }
 
-    const urls = pinnedArticles.map((article) => article.url);
+    // 古い順に最大10個取得
+    const articlesToOpen = pinService.getOldestPinnedArticles(PINS_PER_BATCH);
+    const urls = articlesToOpen.map((article) => article.url);
+    const articleIds = articlesToOpen.map((article) => article.id);
+
     try {
       await openUrlInBrowser(urls);
-      // すべて成功した場合はピンをクリア
-      pinService.clearAllPins();
+      // すべて成功した場合は開いたピンを削除
+      pinService.deletePins(articleIds);
       // ピン状態を更新
       refreshPinnedState();
     } catch (error) {
       // エラーがOpenUrlResultを含むかチェック
       const openUrlError = error as Error & { result?: OpenUrlResult };
 
-      // 一部でも成功していればピンをクリア
+      // 成功したURLに対応する記事IDを特定
       if (openUrlError.result?.succeeded?.length && openUrlError.result.succeeded.length > 0) {
-        pinService.clearAllPins();
-        refreshPinnedState();
+        const succeededArticleIds = articlesToOpen
+          .filter((article) => openUrlError.result!.succeeded.includes(article.url))
+          .map((article) => article.id);
+
+        if (succeededArticleIds.length > 0) {
+          pinService.deletePins(succeededArticleIds);
+          // ピン状態を更新
+          refreshPinnedState();
+        }
       }
 
       // エラーメッセージをより詳細に
@@ -202,7 +213,7 @@ export function App() {
         recoverable: true,
       });
     }
-  }, [getPinnedArticles, pinService, showTemporaryMessage, refreshPinnedState, addError]);
+  }, [pinService, showTemporaryMessage, refreshPinnedState, addError]);
 
   // pキー: ピンのトグル
   const handleTogglePin = useCallback(() => {

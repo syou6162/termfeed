@@ -48,6 +48,25 @@ export class PinModel {
     return result.changes > 0;
   }
 
+  /**
+   * 複数の記事のピンを一括削除する
+   * @param articleIds 削除する記事IDの配列
+   * @returns 削除された行数
+   */
+  public deleteMany(articleIds: number[]): number {
+    if (articleIds.length === 0) {
+      return 0;
+    }
+
+    const placeholders = articleIds.map(() => '?').join(',');
+    const stmt = this.db.getDb().prepare(`
+      DELETE FROM pins WHERE article_id IN (${placeholders})
+    `);
+
+    const result = stmt.run(...articleIds);
+    return result.changes;
+  }
+
   public findByArticleId(articleId: number): Pin | null {
     const stmt = this.db.getDb().prepare(`
       SELECT * FROM pins WHERE article_id = ?
