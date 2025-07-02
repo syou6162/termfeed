@@ -10,12 +10,19 @@ export function createTuiCommand(): Command {
       // TUIアプリケーション内でマイグレーションが実行される
 
       // TUIアプリケーションを起動
-      render(<App />);
+      const { clear, unmount } = render(<App />);
+
+      // プロセス終了時のクリーンアップ（Raw modeエラー防止）
+      const cleanup = () => {
+        clear();
+        unmount();
+      };
+
+      process.on('SIGINT', cleanup);
+      process.on('SIGTERM', cleanup);
     } catch (error) {
       console.error('TUIの起動に失敗しました:', error instanceof Error ? error.message : error);
       process.exit(1);
-    } finally {
-      // データベース接続のクリーンアップは不要（App内で管理）
     }
   });
 

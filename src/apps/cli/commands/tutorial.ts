@@ -39,8 +39,23 @@ export function createTutorialCommand(): Command {
       // TUIモードを起動
       try {
         // @ts-expect-error - カスタムpropsを渡すため
-        render(React.createElement(App, { databaseManager }));
-      } catch {
+        const { clear, unmount } = render(React.createElement(App, { databaseManager }));
+
+        // プロセス終了時のクリーンアップ
+        const cleanup = () => {
+          clear();
+          unmount();
+          databaseManager.close();
+        };
+
+        process.on('SIGINT', cleanup);
+        process.on('SIGTERM', cleanup);
+      } catch (error) {
+        console.error(
+          'チュートリアルの起動に失敗しました:',
+          error instanceof Error ? error.message : error
+        );
+        databaseManager.close();
         process.exit(1);
       }
     });
