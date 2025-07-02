@@ -36,7 +36,9 @@ vi.mock('../../../models/feed.js', () => ({
 }));
 
 vi.mock('../../../models/article.js', () => ({
-  ArticleModel: vi.fn().mockImplementation(() => ({})),
+  ArticleModel: vi.fn().mockImplementation(() => ({
+    getPinnedArticles: vi.fn(() => []),
+  })),
 }));
 
 // FeedServiceのモック

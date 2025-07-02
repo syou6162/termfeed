@@ -32,6 +32,8 @@ type KeyboardNavigationProps = {
   onCancel?: () => void;
   onToggleFailedFeeds?: () => void;
   onSetFeedRating?: (rating: number) => void;
+  onTogglePin?: () => void;
+  onOpenAllPinned?: () => void;
 };
 
 export function useKeyboardNavigation({
@@ -55,6 +57,8 @@ export function useKeyboardNavigation({
   onCancel,
   onToggleFailedFeeds,
   onSetFeedRating,
+  onTogglePin,
+  onOpenAllPinned,
 }: KeyboardNavigationProps) {
   const handleInput = useCallback(
     (input: string, key: KeyEvent) => {
@@ -104,6 +108,18 @@ export function useKeyboardNavigation({
       // お気に入りトグル
       if (input === 'f') {
         onToggleFavorite?.();
+        return;
+      }
+
+      // ピントグル
+      if (input === 'p') {
+        onTogglePin?.();
+        return;
+      }
+
+      // ピンした記事をまとめて開く
+      if (input === 'o') {
+        onOpenAllPinned?.();
         return;
       }
 
@@ -175,6 +191,8 @@ export function useKeyboardNavigation({
       onCancel,
       onToggleFailedFeeds,
       onSetFeedRating,
+      onTogglePin,
+      onOpenAllPinned,
     ]
   );
 

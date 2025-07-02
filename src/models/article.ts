@@ -159,6 +159,70 @@ export class ArticleModel {
     return rows.map((row) => this.convertRowToArticle(row));
   }
 
+  public findAllWithPinStatus(filter: ArticleFilter = {}): (Article & { is_pinned: boolean })[] {
+    let query = `
+      SELECT 
+        a.*,
+        CASE WHEN p.article_id IS NOT NULL THEN 1 ELSE 0 END as is_pinned
+      FROM articles a
+      LEFT JOIN pins p ON a.id = p.article_id
+      WHERE 1=1
+    `;
+    const params: unknown[] = [];
+
+    if (filter.feed_id !== undefined) {
+      query += ' AND a.feed_id = ?';
+      params.push(filter.feed_id);
+    }
+
+    if (filter.is_read !== undefined) {
+      query += ' AND a.is_read = ?';
+      params.push(filter.is_read ? 1 : 0);
+    }
+
+    if (filter.is_favorite !== undefined) {
+      query += ' AND a.is_favorite = ?';
+      params.push(filter.is_favorite ? 1 : 0);
+    }
+
+    query += ' ORDER BY a.published_at DESC';
+
+    if (filter.limit !== undefined) {
+      query += ' LIMIT ?';
+      params.push(filter.limit);
+
+      if (filter.offset !== undefined) {
+        query += ' OFFSET ?';
+        params.push(filter.offset);
+      }
+    }
+
+    const stmt = this.db.getDb().prepare(query);
+    const rows = stmt.all(...params);
+
+    return rows.map((row) => {
+      const article = this.convertRowToArticle(row);
+      const data = row as { is_pinned: number };
+      const isPinned = Boolean(data.is_pinned);
+      return { ...article, is_pinned: isPinned };
+    });
+  }
+
+  public getPinnedArticles(): Article[] {
+    const query = `
+      SELECT 
+        a.*
+      FROM articles a
+      INNER JOIN pins p ON a.id = p.article_id
+      ORDER BY p.created_at DESC
+    `;
+
+    const stmt = this.db.getDb().prepare(query);
+    const rows = stmt.all();
+
+    return rows.map((row) => this.convertRowToArticle(row));
+  }
+
   public update(id: number, updates: UpdateArticleInput): Article | null {
     const updateFields: string[] = [];
     const updateValues: unknown[] = [];

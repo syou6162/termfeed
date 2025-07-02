@@ -468,4 +468,94 @@ describe('ArticleModel', () => {
       expect(feed1UnreadCount).toBe(2);
     });
   });
+
+  describe('findAllWithPinStatus', () => {
+    it('ピン状態を含めて記事を取得できる', async () => {
+      // 記事を3つ作成
+      const article1 = articleModel.create({
+        feed_id: testFeedId,
+        title: 'Article 1',
+        url: 'https://example.com/article/1',
+        published_at: new Date('2024-01-01'),
+      });
+      const article2 = articleModel.create({
+        feed_id: testFeedId,
+        title: 'Article 2',
+        url: 'https://example.com/article/2',
+        published_at: new Date('2024-01-02'),
+      });
+      const article3 = articleModel.create({
+        feed_id: testFeedId,
+        title: 'Article 3',
+        url: 'https://example.com/article/3',
+        published_at: new Date('2024-01-03'),
+      });
+
+      // article2だけピンを立てる
+      const pinModel = new (await import('./pin.js')).PinModel(db);
+      pinModel.create(article2.id);
+
+      const articlesWithPinStatus = articleModel.findAllWithPinStatus({ feed_id: testFeedId });
+
+      expect(articlesWithPinStatus).toHaveLength(3);
+      // 最新順にソートされている
+      expect(articlesWithPinStatus[0].id).toBe(article3.id);
+      expect(articlesWithPinStatus[0].is_pinned).toBe(false);
+      expect(articlesWithPinStatus[1].id).toBe(article2.id);
+      expect(articlesWithPinStatus[1].is_pinned).toBe(true);
+      expect(articlesWithPinStatus[2].id).toBe(article1.id);
+      expect(articlesWithPinStatus[2].is_pinned).toBe(false);
+    });
+  });
+
+  describe('getPinnedArticles', () => {
+    it('ピン留めされた記事のみを取得できる', async () => {
+      // 記事を3つ作成
+      const article1 = articleModel.create({
+        feed_id: testFeedId,
+        title: 'Article 1',
+        url: 'https://example.com/article/1',
+        published_at: new Date('2024-01-01'),
+      });
+      // article2は作成するがピンは立てない
+      articleModel.create({
+        feed_id: testFeedId,
+        title: 'Article 2',
+        url: 'https://example.com/article/2',
+        published_at: new Date('2024-01-02'),
+      });
+      const article3 = articleModel.create({
+        feed_id: testFeedId,
+        title: 'Article 3',
+        url: 'https://example.com/article/3',
+        published_at: new Date('2024-01-03'),
+      });
+
+      // article1とarticle3にピンを立てる
+      const pinModel = new (await import('./pin.js')).PinModel(db);
+      pinModel.create(article1.id);
+      await new Promise((resolve) => setTimeout(resolve, 1100)); // タイムスタンプをずらす
+      pinModel.create(article3.id);
+
+      const pinnedArticles = articleModel.getPinnedArticles();
+
+      expect(pinnedArticles).toHaveLength(2);
+      // ピンの作成日時の降順でソートされている（新しい方が先）
+      expect(pinnedArticles[0].id).toBe(article3.id);
+      expect(pinnedArticles[1].id).toBe(article1.id);
+    });
+
+    it('ピンがない場合は空配列を返す', () => {
+      articleModel.create({
+        feed_id: testFeedId,
+        title: 'Article 1',
+        url: 'https://example.com/article/1',
+        published_at: new Date('2024-01-01'),
+      });
+
+      const pinnedArticles = articleModel.getPinnedArticles();
+
+      expect(pinnedArticles).toEqual([]);
+    });
+  });
 });

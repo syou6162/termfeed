@@ -1,5 +1,5 @@
 import { Box, Text, useApp, useStdout } from 'ink';
-import { useCallback, useEffect, useState, useRef } from 'react';
+import { useCallback, useEffect, useState, useRef, useMemo } from 'react';
 import { ArticleList } from './components/ArticleList.js';
 import { FeedList } from './components/FeedList.js';
 import { TwoPaneLayout } from './components/TwoPaneLayout.js';
@@ -10,16 +10,20 @@ import { useFeedManager } from './hooks/useFeedManager.js';
 import { useArticleManager } from './hooks/useArticleManager.js';
 import { useErrorManager } from './hooks/useErrorManager.js';
 import { useViewedArticles } from './hooks/useViewedArticles.js';
-import { openUrlInBrowser } from './utils/browser.js';
+import { usePinManager } from './hooks/usePinManager.js';
+import { openUrlInBrowser, type OpenUrlResult } from './utils/browser.js';
 import { ERROR_SOURCES } from './types/error.js';
+import { PinService } from '../../services/pin.js';
 
 export function App() {
   const { exit } = useApp();
   const { stdout } = useStdout();
   const [showHelp, setShowHelp] = useState(false);
+  const [temporaryMessage, setTemporaryMessage] = useState<string | null>(null);
 
   // データベースとサービスを初期化
-  const { feedService } = useTermfeedData();
+  const { feedService, databaseManager } = useTermfeedData();
+  const pinService = useMemo(() => new PinService(databaseManager), [databaseManager]);
 
   // フィード管理
   const {
@@ -64,8 +68,25 @@ export function App() {
   // 閲覧済み記事の管理
   const { recordArticleView, markViewedArticlesAsRead } = useViewedArticles(feedService);
 
+  // 現在選択中の記事
+  const currentArticle = articles[selectedArticleIndex];
+
+  // ピン管理
+  const { pinnedCount, isPinned, togglePin, refreshPinnedState } = usePinManager({
+    pinService,
+    currentArticleId: currentArticle?.id,
+  });
+
   // エラーを統合管理
   const { addError, clearErrorsBySource } = errorManager;
+
+  // 一時的なメッセージを表示する関数
+  const showTemporaryMessage = useCallback((message: string, duration = 3000) => {
+    setTemporaryMessage(message);
+    setTimeout(() => {
+      setTemporaryMessage(null);
+    }, duration);
+  }, []);
 
   // フィードエラーの管理
   useEffect(() => {
@@ -123,7 +144,8 @@ export function App() {
     [articles, selectedArticleIndex, recordArticleView, setSelectedArticleIndex]
   );
 
-  const handleArticleSelect = useCallback(async () => {
+  // vキー: 現在の記事を開く
+  const handleOpenInBrowser = useCallback(async () => {
     const selectedArticle = articles[selectedArticleIndex];
     if (selectedArticle?.url) {
       try {
@@ -138,6 +160,67 @@ export function App() {
       }
     }
   }, [articles, selectedArticleIndex, addError]);
+
+  // oキー: ピンした記事を10個ずつ開く
+  const handleOpenAllPinned = useCallback(async () => {
+    const PINS_PER_BATCH = 10;
+    const totalPinCount = pinService.getPinCount();
+
+    if (totalPinCount === 0) {
+      showTemporaryMessage('📌 ピンした記事がありません');
+      return;
+    }
+
+    // 古い順に最大10個取得
+    const articlesToOpen = pinService.getOldestPinnedArticles(PINS_PER_BATCH);
+    const urls = articlesToOpen.map((article) => article.url);
+    const articleIds = articlesToOpen.map((article) => article.id);
+
+    try {
+      await openUrlInBrowser(urls);
+      // すべて成功した場合は開いたピンを削除
+      pinService.deletePins(articleIds);
+      // ピン状態を更新
+      refreshPinnedState();
+    } catch (error) {
+      // エラーがOpenUrlResultを含むかチェック
+      const openUrlError = error as Error & { result?: OpenUrlResult };
+
+      // 成功したURLに対応する記事IDを特定
+      if (openUrlError.result?.succeeded?.length && openUrlError.result.succeeded.length > 0) {
+        const succeededArticleIds = articlesToOpen
+          .filter((article) => openUrlError.result!.succeeded.includes(article.url))
+          .map((article) => article.id);
+
+        if (succeededArticleIds.length > 0) {
+          pinService.deletePins(succeededArticleIds);
+          // ピン状態を更新
+          refreshPinnedState();
+        }
+      }
+
+      // エラーメッセージをより詳細に
+      let errorMessage = error instanceof Error ? error.message : 'ブラウザの起動に失敗しました';
+      if (openUrlError.result?.failed?.length && openUrlError.result.failed.length > 0) {
+        const failedUrls = openUrlError.result.failed.map((f) => f.url).join(', ');
+        errorMessage = `一部のURLを開けませんでした (${openUrlError.result.failed.length}件失敗): ${failedUrls}`;
+      }
+
+      addError({
+        source: ERROR_SOURCES.NETWORK,
+        message: errorMessage,
+        timestamp: new Date(),
+        recoverable: true,
+      });
+    }
+  }, [pinService, showTemporaryMessage, refreshPinnedState, addError]);
+
+  // pキー: ピンのトグル
+  const handleTogglePin = useCallback(() => {
+    if (currentArticle) {
+      togglePin();
+    }
+  }, [currentArticle, togglePin]);
 
   // 閲覧済み記事の参照を保持（プロセス終了時の既読化用）
   const markViewedArticlesAsReadRef = useRef(markViewedArticlesAsRead);
@@ -215,7 +298,7 @@ export function App() {
     onArticleSelectionChange: handleArticleSelectionChange,
     onFeedSelectionChange: handleFeedSelectionChange,
     onOpenInBrowser: () => {
-      void handleArticleSelect();
+      void handleOpenInBrowser();
     },
     onRefreshAll: () => {
       void updateAllFeeds();
@@ -232,6 +315,10 @@ export function App() {
     onCancel: cancelUpdate,
     onToggleFailedFeeds: toggleFailedFeeds,
     onSetFeedRating: handleSetFeedRating,
+    onTogglePin: handleTogglePin,
+    onOpenAllPinned: () => {
+      void handleOpenAllPinned();
+    },
   });
 
   if (isLoading) {
@@ -319,18 +406,30 @@ export function App() {
   }
 
   return (
-    <TwoPaneLayout
-      leftWidth={30}
-      rightWidth={70}
-      leftPane={<FeedList feeds={feeds} selectedIndex={selectedFeedIndex} />}
-      rightPane={
-        <ArticleList
-          articles={articles}
-          selectedArticle={selectedArticle}
-          scrollOffset={scrollOffset}
-          onScrollOffsetChange={setScrollOffset}
-        />
-      }
-    />
+    <>
+      <TwoPaneLayout
+        leftWidth={30}
+        rightWidth={70}
+        leftPane={
+          <FeedList feeds={feeds} selectedIndex={selectedFeedIndex} pinnedCount={pinnedCount} />
+        }
+        rightPane={
+          <ArticleList
+            articles={articles}
+            selectedArticle={selectedArticle}
+            scrollOffset={scrollOffset}
+            onScrollOffsetChange={setScrollOffset}
+            isPinned={isPinned}
+          />
+        }
+      />
+      {temporaryMessage && (
+        <Box position="absolute" marginLeft={2} marginTop={2}>
+          <Box borderStyle="round" padding={1}>
+            <Text color="yellow">{temporaryMessage}</Text>
+          </Box>
+        </Box>
+      )}
+    </>
   );
 }

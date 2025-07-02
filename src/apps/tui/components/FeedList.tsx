@@ -20,10 +20,15 @@ type FeedSection = {
 type FeedListProps = {
   feeds: FeedWithUnreadCount[];
   selectedIndex: number;
+  pinnedCount?: number;
   onFeedSelect?: (feed: FeedWithUnreadCount) => void;
 };
 
-export const FeedList = memo(function FeedList({ feeds, selectedIndex }: FeedListProps) {
+export const FeedList = memo(function FeedList({
+  feeds,
+  selectedIndex,
+  pinnedCount = 0,
+}: FeedListProps) {
   const feedSections: FeedSection[] = useMemo(() => {
     const feedItems: FeedListItem[] = feeds.map((feed) => ({
       id: feed.id || 0,
@@ -95,7 +100,7 @@ export const FeedList = memo(function FeedList({ feeds, selectedIndex }: FeedLis
   return (
     <Box flexDirection="column" paddingX={0} paddingY={1} width="100%" flexGrow={1}>
       <Text bold color="blue">
-        フィード一覧 ({totalUnreadCount}件)
+        フィード一覧 (未読{totalUnreadCount}件{pinnedCount > 0 ? ` | ピン${pinnedCount}件` : ''})
       </Text>
       <Box marginTop={1} width="100%">
         <Box flexDirection="column" width="100%">

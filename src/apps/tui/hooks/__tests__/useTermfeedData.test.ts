@@ -9,7 +9,9 @@ const mockDatabaseManager = {
 };
 
 const mockFeedModel = {};
-const mockArticleModel = {};
+const mockArticleModel = {
+  getPinnedArticles: vi.fn(() => []),
+};
 const mockFeedService = {
   getFeedList: vi.fn(),
   getUnreadCountsForAllFeeds: vi.fn(),
