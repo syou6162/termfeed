@@ -114,12 +114,6 @@ termfeed tutorial
 - **インメモリDB**: データは終了時に自動削除されるため、お試しに最適
 - **即座に体験**: フィード登録の手間なく、すぐにtermfeedの機能を試せます
 
-含まれるサンプルフィード：
-- yasuhisa's blog
-- 10X Product Blog
-- MonotaRO Tech Blog
-- Hatena Developer Blog
-
 #### キーボード操作
 
 | キー | 機能 |
