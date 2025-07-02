@@ -54,3 +54,9 @@ export type UpdateArticleInput = {
   is_read?: boolean;
   is_favorite?: boolean;
 };
+
+export type Pin = {
+  id: number;
+  article_id: number;
+  created_at: Date;
+};

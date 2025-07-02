@@ -19,6 +19,12 @@ termfeedは、ターミナルで動作するRSSリーダーです。Vim風のキ
 - **ArticleModel**: 記事のCRUD操作、既読管理、お気に入り機能
   - `getUnreadCountsByFeedIds()`: N+1クエリ回避のバッチ処理メソッド
   - `count()`: 記事の総数を取得
+  - `findAllWithPinStatus()`: LEFT JOINでピン状態を含む記事取得
+  - `getPinnedArticles()`: INNER JOINでピン留めされた記事のみ取得
+- **PinModel**: ピン機能のCRUD操作
+  - `create()`: 記事にピンを立てる（UNIQUE制約で重複防止）
+  - `delete()`: ピンを外す
+  - `isPinned()`: ピン状態の確認
 
 ### ビジネスロジック層 (src/services/)
 - **RSSCrawler**: RSS/Atomフィードの取得・パース（rss-parser使用）
@@ -28,6 +34,11 @@ termfeedは、ターミナルで動作するRSSリーダーです。Vim風のキ
   - `setFeedRating()`: フィードレーティング設定
   - `getUnreadFeeds()`: レーティング優先・未読件数副次のソート
 - **ArticleService**: 記事管理のビジネスロジック（ArticleModelのラッパー）
+- **PinService**: ピン機能のビジネスロジック
+  - `togglePin()`: ピン状態の切り替え（戻り値でピン/アンピンを判定）
+  - `getPinnedArticles()`: ピン留めされた記事を取得（作成日時の降順）
+  - `getPinCount()`: ピン数を取得
+  - `clearAllPins()`: すべてのピンをクリア（内部用）
 - **カスタムエラークラス**: 型安全なエラーハンドリング
   - RSSFetchError, RSSParseError, FeedUpdateError, DuplicateFeedError, FeedNotFoundError
 
@@ -38,13 +49,18 @@ termfeedは、ターミナルで動作するRSSリーダーです。Vim風のキ
   - `components/`: ArticleList, FeedList, TwoPaneLayout, HelpOverlay
   - `hooks/useKeyboardNavigation.ts`: キーバインド処理
   - `hooks/useFeedManager.ts`: フィード選択状態の自動同期
+  - `hooks/usePinManager.ts`: ピン状態管理（pinnedArticleIds Set管理）
+  - `hooks/useTermfeedData.ts`: DatabaseManagerとサービスの初期化
+    - `databaseManager`プロパティを返す（`db`ではない）
+  - `utils/browser.ts`: 複数URL対応のブラウザ起動ユーティリティ
 - **src/apps/mcp/**: Model Context Protocolサーバー実装
   - AI連携用のリソースプロバイダー
 
 ### 型定義 (src/types/)
 すべての型定義を集約管理：
-- **domain.ts**: DBエンティティ（Feed, Article）
+- **domain.ts**: DBエンティティ（Feed, Article, Pin）
   - `Feed.rating`: 0-5の整数値（必須）
+  - `Pin`: article_id, created_atを持つピン情報
 - **dto.ts**: データ転送オブジェクト（RSSItem, CrawlResult）
 - **options.ts**: 関数引数・設定（ArticleQueryOptions, ServiceError）
 - **services.ts**: サービス層のインターフェース
@@ -95,6 +111,8 @@ npm run dev mcp-server  # MCPサーバー起動
 - `s/a`: フィード移動（s=次、a=前）
 - `v`: ブラウザで開く（spawn使用でセキュア実装）
 - `f`: お気に入りトグル
+- `p`: ピントグル（後で読む記事をマーク）
+- `o`: ピンした記事をまとめてブラウザで開く
 - `r`: 全フィード更新
 - `0-5`: フィードレーティング設定
 - `?`: ヘルプ表示
@@ -111,6 +129,14 @@ npm run dev mcp-server  # MCPサーバー起動
 - アプリ終了時（handleQuit、SIGINT/SIGTERM）で既読化
 - 既読化した記事は即座にリストから除外
 
+### ピン機能
+- `p`キーで記事にピンを立てる（後で読む記事をマーク）
+- `o`キーでピンした記事をまとめてブラウザで開く
+- 開いた記事のピンは自動的に解除される
+- 一部のURLが開けなくても成功したURLのピンは解除
+- フィード一覧にピン総数を表示（フィード横断情報）
+- 一時的なメッセージ表示（3秒で自動消去）
+
 ### パフォーマンス最適化
 - `getUnreadCountsForAllFeeds()`でN+1クエリ回避
 - レーティング優先・未読件数副次のソート表示
@@ -122,11 +148,15 @@ SQLiteを使用（src/models/schema.sql）：
 ### テーブル構造
 - **feeds**: id, url (UNIQUE), title, description, rating (INTEGER DEFAULT 0), last_updated_at, created_at
 - **articles**: id, feed_id (FK), title, url (UNIQUE), content, summary, author, published_at, is_read, is_favorite, thumbnail_url, created_at, updated_at
+- **pins**: id, article_id (FK UNIQUE), created_at
+  - 外部キー制約でarticle削除時に自動削除（ON DELETE CASCADE）
 
 ### インデックス
 - `idx_feeds_rating`: レーティングでの高速ソート
 - `idx_articles_feed_id`: フィード別記事の高速取得
 - `idx_articles_is_read`: 未読記事の高速フィルタリング
+- `idx_pins_article_id`: ピン状態の高速確認
+- `idx_pins_created_at`: ピン作成日時でのソート用
 
 ### 設計原則
 - データベースは制約のみ、ロジックはアプリケーション側
@@ -139,6 +169,9 @@ SQLiteを使用（src/models/schema.sql）：
 - `message`を第一引数に統一
 - `this.name = this.constructor.name`でクラス名自動設定
 - `cause`プロパティでスタックトレース保持
+- **複数URL処理**: `OpenUrlResult`型で成功/失敗を個別管理
+  - 一部失敗しても成功したURLの処理は継続
+  - エラーオブジェクトに詳細情報（result）を付加
 
 ## テスト戦略
 
@@ -146,6 +179,14 @@ SQLiteを使用（src/models/schema.sql）：
 - **TUIテスト**: ink-testing-library使用
 - **データベーステスト**: 各テストで独立したDB作成・削除
 - **モック**: axios、child_processなど外部依存をモック
+  - **ArticleModelのモック**: TUIテストではgetPinnedArticlesメソッドを含める必要あり
+  ```typescript
+  vi.mock('../../models/article.js', () => ({
+    ArticleModel: vi.fn(() => ({
+      getPinnedArticles: vi.fn(() => []),
+    })),
+  }));
+  ```
 
 ## セキュリティ実装
 
@@ -162,8 +203,8 @@ SQLiteを使用（src/models/schema.sql）：
 ## 注意事項
 
 ### 現在の課題
-- CLIコマンドのテストカバレッジが0%（要改善）
-- App.tsxが大きすぎる（337行）
+- 一部のCLIコマンドのテストカバレッジが低い（mcp-server.ts: 30.55%、tui.tsx: 56.25%）
+- App.tsxが大きすぎる（424行）
 
 ### データベースファイルパス
 - デフォルト: XDG Base Directory準拠 (`~/.local/share/termfeed/termfeed.db`)

@@ -1,7 +1,7 @@
 // すべての型定義を再エクスポート
 
 // ドメインモデル
-export type { Feed, Article, CreateFeedInput, UpdateArticleInput } from './domain.js';
+export type { Feed, Article, CreateFeedInput, UpdateArticleInput, Pin } from './domain.js';
 
 // データ転送オブジェクト
 export type {

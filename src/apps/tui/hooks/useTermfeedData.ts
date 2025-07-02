@@ -6,6 +6,7 @@ import { createDatabaseManager } from '../../cli/utils/database.js';
 
 export type TermfeedData = {
   feedService: FeedService;
+  databaseManager: ReturnType<typeof createDatabaseManager>;
 };
 
 /**
@@ -13,7 +14,7 @@ export type TermfeedData = {
  * App.tsxのuseMemoによる初期化ロジックをカプセル化
  */
 export function useTermfeedData(): TermfeedData {
-  const { feedService } = useMemo(() => {
+  const { feedService, databaseManager } = useMemo(() => {
     const databaseManager = createDatabaseManager();
     // マイグレーションを実行
     databaseManager.migrate();
@@ -22,8 +23,8 @@ export function useTermfeedData(): TermfeedData {
     const articleModel = new ArticleModel(databaseManager);
     const feedService = new FeedService(feedModel, articleModel);
 
-    return { feedService };
+    return { feedService, databaseManager };
   }, []);
 
-  return { feedService };
+  return { feedService, databaseManager };
 }

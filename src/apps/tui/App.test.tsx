@@ -53,7 +53,9 @@ vi.mock('../../models/feed.js', () => ({
 }));
 
 vi.mock('../../models/article.js', () => ({
-  ArticleModel: vi.fn(),
+  ArticleModel: vi.fn(() => ({
+    getPinnedArticles: vi.fn(() => []),
+  })),
 }));
 
 vi.mock('ink', async () => {

@@ -33,3 +33,15 @@ CREATE INDEX IF NOT EXISTS idx_articles_is_read ON articles(is_read);
 CREATE INDEX IF NOT EXISTS idx_articles_is_favorite ON articles(is_favorite);
 CREATE INDEX IF NOT EXISTS idx_feeds_rating ON feeds(rating DESC);
 
+-- Pinsテーブル
+CREATE TABLE IF NOT EXISTS pins (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  article_id INTEGER NOT NULL UNIQUE,
+  created_at INTEGER NOT NULL,
+  FOREIGN KEY (article_id) REFERENCES articles(id) ON DELETE CASCADE
+);
+
+-- Pinsテーブルのインデックス
+CREATE INDEX IF NOT EXISTS idx_pins_article_id ON pins(article_id);
+CREATE INDEX IF NOT EXISTS idx_pins_created_at ON pins(created_at DESC);
+
