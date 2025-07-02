@@ -39,8 +39,7 @@ export function createMainProgram(): Command {
   return program;
 }
 
-// Main CLI entry point - デフォルトエクスポートで実行
-// CLIツールとしてインポートされた場合のみ実行される
+// CLI実行用のデフォルトエクスポート
 export default function runCLI() {
   const program = createMainProgram();
   program.parse();
