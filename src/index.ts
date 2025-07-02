@@ -14,8 +14,12 @@ import {
 } from './apps/cli/commands/index.js';
 
 // package.jsonからバージョンを動的に読み込む
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const packageJsonPath = join(__dirname, '../package.json');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+// src/index.ts または dist/index.js のどちらから実行されても対応
+const packageJsonPath = __filename.includes('/dist/')
+  ? join(__dirname, '../../package.json')
+  : join(__dirname, '../package.json');
 const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8')) as { version: string };
 export const VERSION = packageJson.version;
 
