@@ -56,12 +56,9 @@ export class DatabaseManager {
       const { name } = innerRequire('../../package.json') as { name: string };
       schemaPath = require.resolve(`${name}/src/models/schema.sql`);
     } catch {
-      // 開発環境では相対パスで解決
-      schemaPath = path.join(__dirname, 'schema.sql');
-      if (!fs.existsSync(schemaPath)) {
-        // ソースディレクトリを試す
-        schemaPath = path.join(__dirname, '..', '..', 'src', 'models', 'schema.sql');
-      }
+      // 開発環境・ローカルビルドでは常にsrcディレクトリを参照
+      // package.jsonのfilesフィールドで`src/models/schema.sql`を含めているため
+      schemaPath = path.join(__dirname, '..', '..', 'src', 'models', 'schema.sql');
     }
 
     const schema = fs.readFileSync(schemaPath, 'utf8');
