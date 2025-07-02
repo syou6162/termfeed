@@ -9,7 +9,7 @@ import { createDatabaseManager } from '../utils/database.js';
 export const exportCommand = new Command('export')
   .description('Export feed subscriptions to OPML or text file')
   .argument('[file]', 'output file path (default: subscriptions.opml)')
-  .option('-f, --format <format>', 'export format (opml or text)', 'auto')
+  .option('-f, --format <format>', 'Export format (opml or text)', 'auto')
   .action(async (file?: string, options?: { format?: string }) => {
     const dbManager = createDatabaseManager();
 
