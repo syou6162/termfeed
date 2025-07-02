@@ -20,7 +20,8 @@ interface AppProps {
   databaseManager?: DatabaseManager;
 }
 
-export function App({ databaseManager }: AppProps = {}) {
+export function App(props: AppProps = {}) {
+  const { databaseManager } = props;
   const { exit } = useApp();
   const { stdout } = useStdout();
   const [showHelp, setShowHelp] = useState(false);
