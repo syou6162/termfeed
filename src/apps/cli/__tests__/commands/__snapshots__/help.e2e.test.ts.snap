@@ -45,6 +45,8 @@ Commands:
   import [options] <file>  Import feed subscriptions from OPML or text file
   mcp-server               Start MCP server to expose termfeed data to LLM
                            agents
+  tutorial                 Start RSS reader in tutorial mode (using in-memory
+                           database)
   help [command]           Display help for command
 "
 `;
@@ -90,6 +92,16 @@ exports[`help command E2E > should match tui command help snapshot 1`] = `
 "Usage: termfeed tui [options]
 
 Start RSS reader in TUI mode
+
+Options:
+  -h, --help  display help for command
+"
+`;
+
+exports[`help command E2E > should match tutorial command help snapshot 1`] = `
+"Usage: termfeed tutorial [options]
+
+Start RSS reader in tutorial mode (using in-memory database)
 
 Options:
   -h, --help  display help for command

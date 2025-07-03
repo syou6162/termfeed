@@ -46,20 +46,19 @@ export function useFeedManager(feedService: FeedService): FeedManagerState & Fee
       setError('');
 
       // 未読記事があるフィードをソート済みで取得
-      const feeds = feedService.getUnreadFeeds();
-
-      setFeeds(feeds);
+      const feedsData = feedService.getUnreadFeeds();
+      setFeeds(feedsData);
 
       // ソート後に選択中のフィードのインデックスを更新
       setSelection((currentSelection) => {
         if (currentSelection.id) {
-          const newIndex = feeds.findIndex((feed) => feed.id === currentSelection.id);
+          const newIndex = feedsData.findIndex((feed) => feed.id === currentSelection.id);
           if (newIndex !== -1) {
             return { index: newIndex, id: currentSelection.id };
           }
-        } else if (feeds.length > 0 && feeds[0].id) {
+        } else if (feedsData.length > 0 && feedsData[0].id) {
           // 初回読み込み時は最初のフィードを選択
-          return { index: 0, id: feeds[0].id };
+          return { index: 0, id: feedsData[0].id };
         }
         return currentSelection;
       });
@@ -140,7 +139,7 @@ export function useFeedManager(feedService: FeedService): FeedManagerState & Fee
     [feeds]
   );
 
-  return {
+  const result = {
     // State
     feeds,
     selectedFeedIndex: selection.index,
@@ -159,4 +158,6 @@ export function useFeedManager(feedService: FeedService): FeedManagerState & Fee
     cancelUpdate,
     toggleFailedFeeds,
   };
+
+  return result;
 }

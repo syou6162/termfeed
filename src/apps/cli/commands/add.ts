@@ -1,8 +1,6 @@
 import { Command } from 'commander';
-import { FeedModel } from '../../../models/feed.js';
-import { ArticleModel } from '../../../models/article.js';
-import { FeedService } from '../../../services/feed-service.js';
 import { createDatabaseManager } from '../utils/database.js';
+import { createFeedServices } from '../../../services/factory.js';
 
 export function createAddCommand(): Command {
   const command = new Command('add');
@@ -16,9 +14,7 @@ export function createAddCommand(): Command {
 
       try {
         dbManager.migrate();
-        const feedModel = new FeedModel(dbManager);
-        const articleModel = new ArticleModel(dbManager);
-        const feedService = new FeedService(feedModel, articleModel);
+        const feedService = createFeedServices(dbManager);
 
         console.log(`Adding feed: ${url}`);
 
