@@ -67,3 +67,12 @@ export type UpdateAllFeedsResult = {
     failureCount: number;
   };
 };
+
+export type ArticleResource = {
+  id: number;
+  title: string;
+  url: string;
+  content: string | null;
+  publishedAt: string;
+  author: string | null;
+};
