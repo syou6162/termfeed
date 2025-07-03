@@ -68,11 +68,11 @@ export type UpdateAllFeedsResult = {
   };
 };
 
-export interface ArticleResource {
+export type ArticleResource = {
   id: number;
   title: string;
   url: string;
   content: string | null;
   publishedAt: string;
   author: string | null;
-}
+};
