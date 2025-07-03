@@ -2,7 +2,7 @@ import { McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mc
 import type { Variables } from '@modelcontextprotocol/sdk/shared/uriTemplate.js';
 import { ArticleModel } from '../../../models/article.js';
 import { FeedModel } from '../../../models/feed.js';
-import { ArticleResource } from '../types.js';
+import { ArticleResource, ArticleListResponse, ResourceSchema } from '../types.js';
 
 export function registerArticleResources(
   server: McpServer,
@@ -13,6 +13,14 @@ export function registerArticleResources(
   const getAllFeedsMap = () => {
     const feeds = feedModel.findAll();
     return new Map(feeds.map((f) => [f.id, f]));
+  };
+
+  const dynamicResourceSchema: ResourceSchema = {
+    template: 'articles://article/{id}',
+    description: 'Get full details of a specific article by ID',
+    parameters: {
+      id: { type: 'number', description: 'Article ID' },
+    },
   };
 
   // Register unread articles resource
@@ -37,12 +45,19 @@ export function registerArticleResources(
         author: article.author || null,
       }));
 
+      const response: ArticleListResponse = {
+        articles: resources,
+        _schema: {
+          availableResources: [dynamicResourceSchema],
+        },
+      };
+
       return {
         contents: [
           {
             uri: 'articles://unread',
             mimeType: 'application/json',
-            text: JSON.stringify(resources, null, 2),
+            text: JSON.stringify(response, null, 2),
           },
         ],
       };
@@ -71,12 +86,19 @@ export function registerArticleResources(
         author: article.author || null,
       }));
 
+      const response: ArticleListResponse = {
+        articles: resources,
+        _schema: {
+          availableResources: [dynamicResourceSchema],
+        },
+      };
+
       return {
         contents: [
           {
             uri: 'articles://favorites',
             mimeType: 'application/json',
-            text: JSON.stringify(resources, null, 2),
+            text: JSON.stringify(response, null, 2),
           },
         ],
       };

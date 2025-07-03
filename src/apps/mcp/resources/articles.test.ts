@@ -114,15 +114,24 @@ describe('registerArticleResources', () => {
       expect(mockArticleModel.findAll).toHaveBeenCalledWith({ is_read: false, limit: 10 });
       expect(mockFeedModel.findAll).toHaveBeenCalled();
 
-      const contents = JSON.parse(result?.contents[0].text ?? '[]') as ArticleResourceJSON[];
-      expect(contents).toHaveLength(1);
-      expect(contents[0]).toMatchObject({
+      const response = JSON.parse(result?.contents[0].text ?? '{}') as {
+        articles: ArticleResourceJSON[];
+        _schema: { availableResources: Array<{ template: string; description: string }> };
+      };
+      expect(response.articles).toHaveLength(1);
+      expect(response.articles[0]).toMatchObject({
         id: 1,
         title: 'Article 1',
         url: 'https://example.com/1',
         content: 'Content 1...',
         feedTitle: 'Example Feed',
         author: 'Author 1',
+      });
+      expect(response._schema).toBeDefined();
+      expect(response._schema.availableResources).toHaveLength(1);
+      expect(response._schema.availableResources[0]).toMatchObject({
+        template: 'articles://article/{id}',
+        description: 'Get full details of a specific article by ID',
       });
     });
 
@@ -149,8 +158,11 @@ describe('registerArticleResources', () => {
       const unreadResource = registeredResources.get('unread');
       const result = unreadResource?.handler(new URL('articles://unread'));
 
-      const contents = JSON.parse(result?.contents[0].text ?? '[]') as ArticleResourceJSON[];
-      expect(contents[0].feedTitle).toBe('Unknown Feed');
+      const response = JSON.parse(result?.contents[0].text ?? '{}') as {
+        articles: ArticleResourceJSON[];
+        _schema: { availableResources: Array<{ template: string; description: string }> };
+      };
+      expect(response.articles[0].feedTitle).toBe('Unknown Feed');
     });
   });
 
@@ -206,13 +218,22 @@ describe('registerArticleResources', () => {
 
       expect(mockArticleModel.findAll).toHaveBeenCalledWith({ is_favorite: true, limit: 10 });
 
-      const contents = JSON.parse(result?.contents[0].text ?? '[]') as ArticleResourceJSON[];
-      expect(contents[0]).toMatchObject({
+      const response = JSON.parse(result?.contents[0].text ?? '{}') as {
+        articles: ArticleResourceJSON[];
+        _schema: { availableResources: Array<{ template: string; description: string }> };
+      };
+      expect(response.articles[0]).toMatchObject({
         id: 1,
         title: 'Favorite Article',
         url: 'https://example.com/fav',
         content: 'Favorite content...',
         feedTitle: 'Example Feed',
+      });
+      expect(response._schema).toBeDefined();
+      expect(response._schema.availableResources).toHaveLength(1);
+      expect(response._schema.availableResources[0]).toMatchObject({
+        template: 'articles://article/{id}',
+        description: 'Get full details of a specific article by ID',
       });
     });
   });
