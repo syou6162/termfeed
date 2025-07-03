@@ -1,7 +1,6 @@
 export { createAddCommand } from './add.js';
 export { createRmCommand } from './rm.js';
 export { createListCommand } from './list.js';
-export { createUpdateCommand } from './update.js';
 export { createTuiCommand } from './tui.js';
 export { exportCommand } from './export.js';
 export { importCommand } from './import.js';

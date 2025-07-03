@@ -4,7 +4,6 @@ import {
   createAddCommand,
   createRmCommand,
   createListCommand,
-  createUpdateCommand,
   createTuiCommand,
   exportCommand,
   importCommand,
@@ -36,7 +35,6 @@ export function createMainProgram(): Command {
   program.addCommand(createAddCommand());
   program.addCommand(createRmCommand());
   program.addCommand(createListCommand());
-  program.addCommand(createUpdateCommand());
   program.addCommand(createTuiCommand());
   program.addCommand(exportCommand);
   program.addCommand(importCommand);
