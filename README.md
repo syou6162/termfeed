@@ -251,7 +251,7 @@ Claude Code内で以下のようにtermfeedのデータにアクセスできま�
 ```
 
 **動的リソースの発見:**
-静的リソース（`articles://unread`, `articles://favorites`）のレスポンスには、利用可能な動的リソースのスキーマ情報が `_schema.availableResources` に含まれています。これにより、MCPクライアントは `articles://article/{id}` 形式の動的リソースの存在を発見できます。
+MCPクライアントは標準の `resources/templates/list` エンドポイントを使用して、利用可能な動的リソーステンプレート（`articles://article/{id}`）を発見できます。MCP SDKが自動的にResourceTemplateを公開するため、追加の設定は不要です。
 
 **ツール（操作実行）:**
 - `update_all_feeds`: 全フィードを更新して新しい記事を取得
