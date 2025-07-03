@@ -1,15 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { URL } from 'node:url';
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { ArticleModel } from '../../../models/article.js';
 import { FeedModel } from '../../../models/feed.js';
 import { registerArticleResources } from './articles.js';
 import type { Article, Feed } from '@/types';
 
 interface RegisteredResource {
-  uri: string;
+  uri: string | ResourceTemplate;
   metadata: { title: string; description: string };
-  handler: (uri: URL) => { contents: Array<{ uri: string; mimeType: string; text: string }> };
+  handler: (
+    uri: URL,
+    variables?: Record<string, string | string[]>
+  ) => { contents: Array<{ uri: string; mimeType: string; text: string }> };
 }
 
 interface ArticleResourceJSON {
@@ -32,9 +35,20 @@ describe('registerArticleResources', () => {
     registeredResources = new Map();
 
     mockServer = {
-      registerResource: vi.fn((name: string, uri: string, metadata: unknown, handler: unknown) => {
-        registeredResources.set(name, { uri, metadata, handler } as RegisteredResource);
-      }),
+      registerResource: vi.fn(
+        (
+          name: string,
+          uriOrTemplate: string | ResourceTemplate,
+          metadata: unknown,
+          handler: unknown
+        ) => {
+          registeredResources.set(name, {
+            uri: uriOrTemplate,
+            metadata,
+            handler,
+          } as RegisteredResource);
+        }
+      ),
     } as unknown as McpServer;
 
     mockArticleModel = {
@@ -235,7 +249,7 @@ describe('registerArticleResources', () => {
 
       expect(mockServer.registerResource).toHaveBeenCalledWith(
         'article',
-        'articles://article/{id}',
+        expect.any(ResourceTemplate),
         {
           title: 'Article Details',
           description: 'Get full details of a specific article',
@@ -274,7 +288,7 @@ describe('registerArticleResources', () => {
       registerArticleResources(mockServer, mockArticleModel, mockFeedModel);
 
       const articleResource = registeredResources.get('article');
-      const result = articleResource?.handler(new URL('articles://article/153'));
+      const result = articleResource?.handler(new URL('articles://article/153'), { id: '153' });
 
       expect(mockArticleModel.findById).toHaveBeenCalledWith(153);
       expect(mockFeedModel.findById).toHaveBeenCalledWith(1);
@@ -294,7 +308,9 @@ describe('registerArticleResources', () => {
       registerArticleResources(mockServer, mockArticleModel, mockFeedModel);
 
       const articleResource = registeredResources.get('article');
-      const result = articleResource?.handler(new URL('articles://article/invalid'));
+      const result = articleResource?.handler(new URL('articles://article/invalid'), {
+        id: 'invalid',
+      });
 
       const content = JSON.parse(result?.contents[0].text ?? '{}') as { error: string };
       expect(content).toEqual({ error: 'Invalid article ID' });
@@ -306,7 +322,7 @@ describe('registerArticleResources', () => {
       registerArticleResources(mockServer, mockArticleModel, mockFeedModel);
 
       const articleResource = registeredResources.get('article');
-      const result = articleResource?.handler(new URL('articles://article/999'));
+      const result = articleResource?.handler(new URL('articles://article/999'), { id: '999' });
 
       expect(mockArticleModel.findById).toHaveBeenCalledWith(999);
 
