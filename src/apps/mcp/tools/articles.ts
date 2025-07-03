@@ -1,7 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { ArticleModel } from '../../../models/article.js';
-import { ArticleResource } from '../types.js';
+import { ArticleResource } from '../../../types/index.js';
 
 export function registerArticleTools(server: McpServer, articleModel: ArticleModel): void {
   server.tool(

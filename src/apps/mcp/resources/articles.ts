@@ -1,7 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { ArticleModel } from '../../../models/article.js';
 import { FeedModel } from '../../../models/feed.js';
-import { ArticleResource } from '../types.js';
+import { ArticleResource } from '../../../types/index.js';
 
 export function registerArticleResources(
   server: McpServer,
