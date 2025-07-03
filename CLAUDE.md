@@ -27,6 +27,9 @@ termfeedは、ターミナルで動作するRSSリーダーです。Vim風のキ
   - `isPinned()`: ピン状態の確認
 
 ### ビジネスロジック層 (src/services/)
+- **factory.ts**: サービス層のファクトリー関数（レイヤリング保持のため重要）
+  - `createFeedServices()`: FeedService単体のファクトリー
+  - `createModelsAndServices()`: 個別モデルも必要な場合のファクトリー
 - **RSSCrawler**: RSS/Atomフィードの取得・パース（rss-parser使用）
 - **FeedService**: フィード管理とビジネスロジック
   - `implements IFeedService`で型安全性を保証
@@ -43,15 +46,21 @@ termfeedは、ターミナルで動作するRSSリーダーです。Vim風のキ
   - RSSFetchError, RSSParseError, FeedUpdateError, DuplicateFeedError, FeedNotFoundError
 
 ### プレゼンテーション層 (src/apps/)
-- **src/apps/cli/commands/**: 各CLIサブコマンドの実装（add、update、rm、tui、export、import、mcp-server）
+- **src/apps/cli/commands/**: 各CLIサブコマンドの実装（add、update、rm、tui、export、import、mcp-server、tutorial）
+  - **注意**: CLIコマンドは`createFeedServices()`または`createModelsAndServices()`を使用すること
+- **src/apps/cli/utils/**: CLIユーティリティ
+  - `tui-launcher.ts`: TUI起動とRaw modeクリーンアップの共通処理
+  - `database.ts`: DatabaseManager作成ユーティリティ
 - **src/apps/tui/**: ターミナルUI実装（Ink/React）
   - `App.tsx`: メインコンポーネント、自動既読機能実装
+    - `AppProps`型でDatabaseManagerを外部から注入可能（チュートリアルモード用）
   - `components/`: ArticleList, FeedList, TwoPaneLayout, HelpOverlay
   - `hooks/useKeyboardNavigation.ts`: キーバインド処理
   - `hooks/useFeedManager.ts`: フィード選択状態の自動同期
   - `hooks/usePinManager.ts`: ピン状態管理（pinnedArticleIds Set管理）
   - `hooks/useTermfeedData.ts`: DatabaseManagerとサービスの初期化
     - `databaseManager`プロパティを返す（`db`ではない）
+    - 外部から注入されたDatabaseManagerがある場合はマイグレーションをスキップ
   - `utils/browser.ts`: 複数URL対応のブラウザ起動ユーティリティ
 - **src/apps/mcp/**: Model Context Protocolサーバー実装
   - AI連携用のリソースプロバイダー
@@ -75,6 +84,7 @@ npm install
 # 開発モード（ファイル監視付き）
 npm run dev
 npm run dev tui  # TUIモード起動
+npm run dev tutorial  # チュートリアルモード起動
 
 # ビルド
 npm run build
@@ -99,6 +109,7 @@ npm run dev add https://example.com/feed.rss
 npm run dev update  # 全フィード更新
 npm run dev rm 1  # フィードID=1を削除
 npm run dev tui  # TUIモード
+npm run dev tutorial  # チュートリアルモード（インメモリDB）
 npm run dev export feeds.opml
 npm run dev import feeds.txt
 npm run dev mcp-server  # MCPサーバー起動
@@ -140,6 +151,11 @@ npm run dev mcp-server  # MCPサーバー起動
 ### パフォーマンス最適化
 - `getUnreadCountsForAllFeeds()`でN+1クエリ回避
 - レーティング優先・未読件数副次のソート表示
+
+### プロセスクリーンアップの役割分担
+- **tui-launcher.ts**: InkのRaw modeクリーンアップ専用（ターミナル状態のリセット）
+- **App.tsx内のSIGINT/SIGTERMハンドラー**: 既読化処理専用
+- 両者は異なる目的のため、両方必要
 
 ## データベース設計
 
@@ -197,8 +213,16 @@ SQLiteを使用（src/models/schema.sql）：
 ## エントリーポイント
 
 - **メインファイル**: `src/index.ts`（シバン付き）
-- **bin設定**: package.jsonで`termfeed`を`dist/index.js`にマッピング
+- **bin設定**: package.jsonで`termfeed`を`dist/cli.js`にマッピング
 - **開発時実行**: `npm run dev`でtsxを使用
+
+## チュートリアルモード
+
+インメモリDBを使用した試用モード：
+- `termfeed tutorial`または`npm run dev tutorial`で起動
+- サンプルフィード4つが自動登録済み
+- データは終了時に破棄される（お試しに最適）
+- 実装は`src/apps/cli/commands/tutorial.tsx`
 
 ## 注意事項
 
@@ -210,3 +234,8 @@ SQLiteを使用（src/models/schema.sql）：
 - デフォルト: XDG Base Directory準拠 (`~/.local/share/termfeed/termfeed.db`)
 - 環境変数 `TERMFEED_DB` で変更可能
 - テスト時は一時ファイルを使用（インメモリDBは未実装）
+
+### レイヤリング原則
+- CLIコマンドからモデル層への直接アクセスは禁止
+- 必ず`createFeedServices()`または`createModelsAndServices()`を使用
+- 依存関係: CLI → Services → Models
