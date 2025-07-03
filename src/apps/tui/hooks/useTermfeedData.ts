@@ -13,6 +13,8 @@ export type TermfeedData = {
 /**
  * DatabaseManagerの初期化、Model/Serviceの初期化、マイグレーションの実行を行うカスタムフック
  * App.tsxのuseMemoによる初期化ロジックをカプセル化
+ *
+ * @param databaseManagerProp - 外部から注入するDatabaseManager（チュートリアルモード用）
  */
 export function useTermfeedData(databaseManagerProp?: DatabaseManager): TermfeedData {
   const { feedService, databaseManager } = useMemo(() => {

@@ -12,6 +12,9 @@ export interface TuiLaunchOptions {
 /**
  * TUIアプリケーションを安全に起動し、適切なクリーンアップを行う
  * Raw modeエラーを防ぐためのプロセス終了ハンドラーを設定
+ *
+ * 注意: このハンドラーはInkのRaw modeクリーンアップ専用です。
+ * App.tsx内のSIGINT/SIGTERMハンドラーは既読化処理のため別途必要です。
  */
 export function launchTuiApp(component: ReactElement, options: TuiLaunchOptions): void {
   const { appName, databaseManager } = options;

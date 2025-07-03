@@ -2,7 +2,6 @@ import { Command } from 'commander';
 import { createDatabaseManager } from '../utils/database.js';
 import { createFeedServices } from '../../../services/factory.js';
 import { launchTuiApp } from '../utils/tui-launcher.js';
-import React from 'react';
 import { App } from '../../tui/App.js';
 
 // サンプルフィードのリスト
@@ -37,8 +36,7 @@ export function createTutorialCommand(): Command {
       }
 
       // TUIモードを起動
-      // @ts-expect-error - カスタムpropsを渡すため
-      launchTuiApp(React.createElement(App, { databaseManager }), {
+      launchTuiApp(<App databaseManager={databaseManager} />, {
         appName: 'チュートリアル',
         databaseManager,
       });
