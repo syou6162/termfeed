@@ -4,6 +4,5 @@ export interface ArticleResource {
   url: string;
   content: string | null;
   publishedAt: string;
-  feedTitle: string;
   author: string | null;
 }

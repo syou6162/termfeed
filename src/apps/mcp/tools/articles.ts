@@ -1,14 +1,9 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { ArticleModel } from '../../../models/article.js';
-import { FeedModel } from '../../../models/feed.js';
 import { ArticleResource } from '../types.js';
 
-export function registerArticleTools(
-  server: McpServer,
-  articleModel: ArticleModel,
-  feedModel: FeedModel
-): void {
+export function registerArticleTools(server: McpServer, articleModel: ArticleModel): void {
   server.tool(
     'get_article',
     'Get full details of a specific article by ID',
@@ -54,14 +49,12 @@ export function registerArticleTools(
           };
         }
 
-        const feed = await Promise.resolve(feedModel.findById(article.feed_id));
         const resource: ArticleResource = {
           id: article.id,
           title: article.title,
           url: article.url,
           content: article.content || null,
           publishedAt: new Date(article.published_at).toISOString(),
-          feedTitle: feed?.title || 'Unknown Feed',
           author: article.author || null,
         };
 

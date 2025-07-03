@@ -3,12 +3,10 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { registerArticleTools } from './articles.js';
 import { ArticleModel } from '../../../models/article.js';
-import { FeedModel } from '../../../models/feed.js';
 
 describe('registerArticleTools', () => {
   let mockServer: McpServer;
   let mockArticleModel: ArticleModel;
-  let mockFeedModel: FeedModel;
   let mockToolHandler: (args: Record<string, unknown>) => Promise<CallToolResult>;
 
   beforeEach(() => {
@@ -22,14 +20,10 @@ describe('registerArticleTools', () => {
     mockArticleModel = {
       findById: vi.fn(),
     } as unknown as ArticleModel;
-
-    mockFeedModel = {
-      findById: vi.fn(),
-    } as unknown as FeedModel;
   });
 
   it('should register get_article tool', () => {
-    registerArticleTools(mockServer, mockArticleModel, mockFeedModel);
+    registerArticleTools(mockServer, mockArticleModel);
 
     expect(mockServer.tool).toHaveBeenCalledTimes(1);
     expect(mockServer.tool).toHaveBeenCalledWith(
@@ -51,29 +45,22 @@ describe('registerArticleTools', () => {
       author: 'Test Author',
     };
 
-    const mockFeed = {
-      id: 1,
-      title: 'Test Feed',
-    };
-
     mockArticleModel.findById = vi.fn().mockReturnValue(mockArticle);
-    mockFeedModel.findById = vi.fn().mockReturnValue(mockFeed);
 
-    registerArticleTools(mockServer, mockArticleModel, mockFeedModel);
+    registerArticleTools(mockServer, mockArticleModel);
 
     const result = await mockToolHandler({ id: 123 });
 
     expect(mockArticleModel.findById).toHaveBeenCalledWith(123);
-    expect(mockFeedModel.findById).toHaveBeenCalledWith(1);
     expect(result.content[0].text).toContain('"success": true');
     expect(result.content[0].text).toContain('"title": "Test Article"');
-    expect(result.content[0].text).toContain('"feedTitle": "Test Feed"');
+    expect(result.content[0].text).toContain('"author": "Test Author"');
   });
 
   it('should return error when article is not found', async () => {
     mockArticleModel.findById = vi.fn().mockReturnValue(null);
 
-    registerArticleTools(mockServer, mockArticleModel, mockFeedModel);
+    registerArticleTools(mockServer, mockArticleModel);
 
     const result = await mockToolHandler({ id: 999 });
 
@@ -83,7 +70,7 @@ describe('registerArticleTools', () => {
   });
 
   it('should return error when invalid ID is provided', async () => {
-    registerArticleTools(mockServer, mockArticleModel, mockFeedModel);
+    registerArticleTools(mockServer, mockArticleModel);
 
     const result = await mockToolHandler({ id: 'invalid' });
 
@@ -91,7 +78,7 @@ describe('registerArticleTools', () => {
     expect(result.content[0].text).toContain('Article with ID invalid not found');
   });
 
-  it('should handle missing feed gracefully', async () => {
+  it('should return article data without feed information', async () => {
     const mockArticle = {
       id: 123,
       title: 'Test Article',
@@ -103,13 +90,14 @@ describe('registerArticleTools', () => {
     };
 
     mockArticleModel.findById = vi.fn().mockReturnValue(mockArticle);
-    mockFeedModel.findById = vi.fn().mockReturnValue(null);
 
-    registerArticleTools(mockServer, mockArticleModel, mockFeedModel);
+    registerArticleTools(mockServer, mockArticleModel);
 
     const result = await mockToolHandler({ id: 123 });
 
-    expect(result.content[0].text).toContain('"feedTitle": "Unknown Feed"');
+    expect(result.content[0].text).toContain('"success": true');
+    expect(result.content[0].text).toContain('"title": "Test Article"');
+    expect(result.content[0].text).not.toContain('feedTitle');
   });
 
   it('should handle errors gracefully', async () => {
@@ -117,7 +105,7 @@ describe('registerArticleTools', () => {
       throw new Error('Database error');
     });
 
-    registerArticleTools(mockServer, mockArticleModel, mockFeedModel);
+    registerArticleTools(mockServer, mockArticleModel);
 
     const result = await mockToolHandler({ id: 123 });
 

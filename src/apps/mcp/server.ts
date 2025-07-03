@@ -30,7 +30,7 @@ export async function createMcpServer(
 
   // Register tools
   registerFeedTools(server, feedModel, articleModel);
-  registerArticleTools(server, articleModel, feedModel);
+  registerArticleTools(server, articleModel);
 
   // Connect using stdio transport
   const transport = new StdioServerTransport();
