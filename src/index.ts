@@ -3,6 +3,8 @@ import { createRequire } from 'module';
 import {
   createAddCommand,
   createRmCommand,
+  createListCommand,
+  createUpdateCommand,
   createTuiCommand,
   exportCommand,
   importCommand,
@@ -33,6 +35,8 @@ export function createMainProgram(): Command {
   // Register subcommands
   program.addCommand(createAddCommand());
   program.addCommand(createRmCommand());
+  program.addCommand(createListCommand());
+  program.addCommand(createUpdateCommand());
   program.addCommand(createTuiCommand());
   program.addCommand(exportCommand);
   program.addCommand(importCommand);
