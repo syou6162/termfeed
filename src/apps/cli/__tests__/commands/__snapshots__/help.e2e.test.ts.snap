@@ -40,6 +40,8 @@ Options:
 Commands:
   add [options] <url>      Add a new RSS feed
   rm <feedId>              Remove RSS feed by ID
+  list                     List all feeds
+  update [options]         Update all RSS feeds
   tui                      Start RSS reader in TUI mode
   export [options] [file]  Export feed subscriptions to OPML or text file
   import [options] <file>  Import feed subscriptions from OPML or text file
