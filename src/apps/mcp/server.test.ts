@@ -17,6 +17,9 @@ vi.mock('@modelcontextprotocol/sdk/server/mcp.js', () => ({
     tool: vi.fn(),
     close: vi.fn(),
   })),
+  ResourceTemplate: vi.fn().mockImplementation((template: string) => ({
+    uriTemplate: template,
+  })),
 }));
 
 describe('createMcpServer', () => {

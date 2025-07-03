@@ -1,4 +1,5 @@
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { Variables } from '@modelcontextprotocol/sdk/shared/uriTemplate.js';
 import { ArticleModel } from '../../../models/article.js';
 import { FeedModel } from '../../../models/feed.js';
 import { ArticleResource } from '../types.js';
@@ -83,20 +84,21 @@ export function registerArticleResources(
   );
 
   // Register article detail resource
+  const articleTemplate = new ResourceTemplate('articles://article/{id}', {
+    list: undefined, // 個別記事なのでリスト機能は不要
+  });
+
   server.registerResource(
     'article',
-    'articles://article/{id}',
+    articleTemplate,
     {
       title: 'Article Details',
       description: 'Get full details of a specific article',
     },
-    (uri: URL) => {
-      // URIからIDを取得
-      let articleId: number;
-      const uriString = uri.href;
-
-      const match = uriString.match(/articles:\/\/article\/(\d+)/);
-      articleId = match ? parseInt(match[1], 10) : 0;
+    (_uri: URL, variables: Variables) => {
+      // variablesからIDを取得
+      const id = variables.id;
+      const articleId = typeof id === 'string' ? parseInt(id, 10) : 0;
 
       if (!articleId) {
         return {
