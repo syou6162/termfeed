@@ -1,0 +1,12 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`list command E2E > should display message when no feeds exist > list-no-feeds-output 1`] = `
+"No feeds found.
+"
+`;
+
+exports[`list command E2E > should list feeds with ID and title > list-with-feeds-output 1`] = `
+"1: Test Feed 1
+2: Test Feed 2
+"
+`;
