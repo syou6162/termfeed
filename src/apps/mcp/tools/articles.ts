@@ -8,7 +8,7 @@ export function registerArticleTools(server: McpServer, articleModel: ArticleMod
     'get_article',
     'Get full details of a specific article by ID',
     { id: z.number().describe('Article ID to retrieve') },
-    async (args) => {
+    (args) => {
       try {
         const articleId = args.id;
 
@@ -30,7 +30,7 @@ export function registerArticleTools(server: McpServer, articleModel: ArticleMod
           };
         }
 
-        const article = await Promise.resolve(articleModel.findById(articleId));
+        const article = articleModel.findById(articleId);
         if (!article) {
           return {
             content: [
