@@ -1,4 +1,5 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { z } from 'zod';
 import { ArticleModel } from '../../../models/article.js';
 import { FeedModel } from '../../../models/feed.js';
 import { ArticleResource } from '../types.js';
@@ -11,21 +12,12 @@ export function registerArticleTools(
   server.tool(
     'get_article',
     'Get full details of a specific article by ID',
-    {
-      type: 'object',
-      properties: {
-        id: {
-          type: 'number',
-          description: 'Article ID to retrieve',
-        },
-      },
-      required: ['id'],
-    },
+    { id: z.number().describe('Article ID to retrieve') },
     async (args) => {
       try {
-        const articleId = args.id as number;
+        const articleId = args.id;
 
-        if (!articleId || typeof articleId !== 'number') {
+        if (!articleId) {
           return {
             content: [
               {

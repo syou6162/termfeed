@@ -31,19 +31,11 @@ describe('registerArticleTools', () => {
   it('should register get_article tool', () => {
     registerArticleTools(mockServer, mockArticleModel, mockFeedModel);
 
+    expect(mockServer.tool).toHaveBeenCalledTimes(1);
     expect(mockServer.tool).toHaveBeenCalledWith(
       'get_article',
       'Get full details of a specific article by ID',
-      {
-        type: 'object',
-        properties: {
-          id: {
-            type: 'number',
-            description: 'Article ID to retrieve',
-          },
-        },
-        required: ['id'],
-      },
+      expect.any(Object),
       expect.any(Function)
     );
   });
@@ -96,7 +88,7 @@ describe('registerArticleTools', () => {
     const result = await mockToolHandler({ id: 'invalid' });
 
     expect(result.content[0].text).toContain('"success": false');
-    expect(result.content[0].text).toContain('Invalid article ID');
+    expect(result.content[0].text).toContain('Article with ID invalid not found');
   });
 
   it('should handle missing feed gracefully', async () => {
