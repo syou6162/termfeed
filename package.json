@@ -1,6 +1,6 @@
 {
   "name": "termfeed",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "A terminal-based RSS reader with Vim-like keybindings",
   "type": "module",
   "main": "dist/index.js",
