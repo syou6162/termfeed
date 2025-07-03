@@ -3,12 +3,10 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import chalk from 'chalk';
 import { DatabaseManager } from '../../../models/database.js';
-import { FeedModel } from '../../../models/feed.js';
-import { ArticleModel } from '../../../models/article.js';
-import { FeedService } from '../../../services/feed-service.js';
 import { OPMLService } from '../../../services/opml.js';
 import { DuplicateFeedError } from '../../../services/errors.js';
 import { createDatabaseManager } from '../utils/database.js';
+import { createFeedServices } from '../../../services/factory.js';
 
 export const importCommand = new Command('import')
   .description('Import feed subscriptions from OPML or text file')
@@ -60,9 +58,7 @@ export const importCommand = new Command('import')
       // データベースとサービスの初期化
       dbManager = createDatabaseManager();
       dbManager.migrate();
-      const feedModel = new FeedModel(dbManager);
-      const articleModel = new ArticleModel(dbManager);
-      const feedService = new FeedService(feedModel, articleModel);
+      const feedService = createFeedServices(dbManager);
 
       // 各URLを追加
       let successCount = 0;

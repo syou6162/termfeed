@@ -14,16 +14,22 @@ import { usePinManager } from './hooks/usePinManager.js';
 import { openUrlInBrowser, type OpenUrlResult } from './utils/browser.js';
 import { ERROR_SOURCES } from './types/error.js';
 import { PinService } from '../../services/pin.js';
+import type { DatabaseManager } from '../../models/database.js';
 
-export function App() {
+interface AppProps {
+  databaseManager?: DatabaseManager;
+}
+
+export function App(props: AppProps = {}) {
+  const { databaseManager } = props;
   const { exit } = useApp();
   const { stdout } = useStdout();
   const [showHelp, setShowHelp] = useState(false);
   const [temporaryMessage, setTemporaryMessage] = useState<string | null>(null);
 
   // データベースとサービスを初期化
-  const { feedService, databaseManager } = useTermfeedData();
-  const pinService = useMemo(() => new PinService(databaseManager), [databaseManager]);
+  const { feedService, databaseManager: dbManager } = useTermfeedData(databaseManager);
+  const pinService = useMemo(() => new PinService(dbManager), [dbManager]);
 
   // フィード管理
   const {

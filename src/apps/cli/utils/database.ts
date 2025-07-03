@@ -15,6 +15,6 @@ export function getDatabasePath(): string {
   return process.env.TERMFEED_DB || DEFAULT_DB_PATH;
 }
 
-export function createDatabaseManager(): DatabaseManager {
-  return new DatabaseManager(getDatabasePath());
+export function createDatabaseManager(dbPath?: string): DatabaseManager {
+  return new DatabaseManager(dbPath || getDatabasePath());
 }
