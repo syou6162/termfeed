@@ -1,8 +1,7 @@
-import { McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
-import type { Variables } from '@modelcontextprotocol/sdk/shared/uriTemplate.js';
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { ArticleModel } from '../../../models/article.js';
 import { FeedModel } from '../../../models/feed.js';
-import { ArticleResource } from '../types.js';
+import { ArticleResource } from '../../../types/index.js';
 
 export function registerArticleResources(
   server: McpServer,
@@ -77,71 +76,6 @@ export function registerArticleResources(
             uri: 'articles://favorites',
             mimeType: 'application/json',
             text: JSON.stringify(resources, null, 2),
-          },
-        ],
-      };
-    }
-  );
-
-  // Register article detail resource
-  const articleTemplate = new ResourceTemplate('articles://article/{id}', {
-    list: undefined, // 個別記事なのでリスト機能は不要
-  });
-
-  server.registerResource(
-    'article',
-    articleTemplate,
-    {
-      title: 'Article Details',
-      description: 'Get full details of a specific article',
-    },
-    (_uri: URL, variables: Variables) => {
-      // variablesからIDを取得
-      const id = variables.id;
-      const articleId = typeof id === 'string' ? parseInt(id, 10) : 0;
-
-      if (!articleId) {
-        return {
-          contents: [
-            {
-              uri: 'articles://article/error',
-              mimeType: 'application/json',
-              text: JSON.stringify({ error: 'Invalid article ID' }),
-            },
-          ],
-        };
-      }
-
-      const article = articleModel.findById(articleId);
-      if (!article) {
-        return {
-          contents: [
-            {
-              uri: `articles://article/${articleId}`,
-              mimeType: 'application/json',
-              text: JSON.stringify({ error: 'Article not found' }),
-            },
-          ],
-        };
-      }
-
-      const feed = feedModel.findById(article.feed_id);
-      const resource: ArticleResource = {
-        id: article.id,
-        title: article.title,
-        url: article.url,
-        content: article.content || null, // 全文を返す
-        publishedAt: new Date(article.published_at).toISOString(),
-        feedTitle: feed?.title || 'Unknown Feed',
-        author: article.author || null,
-      };
-
-      return {
-        contents: [
-          {
-            uri: `articles://article/${articleId}`,
-            mimeType: 'application/json',
-            text: JSON.stringify(resource, null, 2),
           },
         ],
       };

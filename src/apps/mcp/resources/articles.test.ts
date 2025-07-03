@@ -1,13 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { URL } from 'node:url';
-import { McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { ArticleModel } from '../../../models/article.js';
 import { FeedModel } from '../../../models/feed.js';
 import { registerArticleResources } from './articles.js';
 import type { Article, Feed } from '@/types';
 
 interface RegisteredResource {
-  uri: string | ResourceTemplate;
+  uri: string;
   metadata: { title: string; description: string };
   handler: (
     uri: URL,
@@ -35,20 +35,13 @@ describe('registerArticleResources', () => {
     registeredResources = new Map();
 
     mockServer = {
-      registerResource: vi.fn(
-        (
-          name: string,
-          uriOrTemplate: string | ResourceTemplate,
-          metadata: unknown,
-          handler: unknown
-        ) => {
-          registeredResources.set(name, {
-            uri: uriOrTemplate,
-            metadata,
-            handler,
-          } as RegisteredResource);
-        }
-      ),
+      registerResource: vi.fn((name: string, uri: string, metadata: unknown, handler: unknown) => {
+        registeredResources.set(name, {
+          uri,
+          metadata,
+          handler,
+        } as RegisteredResource);
+      }),
     } as unknown as McpServer;
 
     mockArticleModel = {
@@ -228,106 +221,6 @@ describe('registerArticleResources', () => {
       unreadResource?.handler(new URL('articles://unread'));
 
       expect(mockArticleModel.findAll).toHaveBeenCalledWith({ is_read: false, limit: 10 });
-    });
-  });
-
-  describe('individual article resource', () => {
-    beforeEach(() => {
-      mockArticleModel = {
-        findAll: vi.fn(),
-        findById: vi.fn(),
-      } as unknown as ArticleModel;
-
-      mockFeedModel = {
-        findAll: vi.fn(),
-        findById: vi.fn(),
-      } as unknown as FeedModel;
-    });
-
-    it('should register individual article resource', () => {
-      registerArticleResources(mockServer, mockArticleModel, mockFeedModel);
-
-      expect(mockServer.registerResource).toHaveBeenCalledWith(
-        'article',
-        expect.any(ResourceTemplate),
-        {
-          title: 'Article Details',
-          description: 'Get full details of a specific article',
-        },
-        expect.any(Function)
-      );
-    });
-
-    it('should return article details for valid ID', () => {
-      const mockArticle: Article = {
-        id: 153,
-        feed_id: 1,
-        title: 'Test Article',
-        url: 'https://example.com/article',
-        content: 'Full article content',
-        author: 'Test Author',
-        published_at: new Date('2024-01-01'),
-        is_read: false,
-        is_favorite: false,
-        created_at: new Date(),
-        updated_at: new Date(),
-      };
-
-      const mockFeed: Feed = {
-        id: 1,
-        url: 'https://example.com/feed',
-        title: 'Test Feed',
-        rating: 0,
-        last_updated_at: new Date(),
-        created_at: new Date(),
-      };
-
-      vi.mocked(mockArticleModel.findById).mockReturnValue(mockArticle);
-      vi.mocked(mockFeedModel.findById).mockReturnValue(mockFeed);
-
-      registerArticleResources(mockServer, mockArticleModel, mockFeedModel);
-
-      const articleResource = registeredResources.get('article');
-      const result = articleResource?.handler(new URL('articles://article/153'), { id: '153' });
-
-      expect(mockArticleModel.findById).toHaveBeenCalledWith(153);
-      expect(mockFeedModel.findById).toHaveBeenCalledWith(1);
-
-      const content = JSON.parse(result?.contents[0].text ?? '{}') as ArticleResourceJSON;
-      expect(content).toMatchObject({
-        id: 153,
-        title: 'Test Article',
-        url: 'https://example.com/article',
-        content: 'Full article content',
-        feedTitle: 'Test Feed',
-        author: 'Test Author',
-      });
-    });
-
-    it('should return error for invalid article ID', () => {
-      registerArticleResources(mockServer, mockArticleModel, mockFeedModel);
-
-      const articleResource = registeredResources.get('article');
-      const result = articleResource?.handler(new URL('articles://article/invalid'), {
-        id: 'invalid',
-      });
-
-      const content = JSON.parse(result?.contents[0].text ?? '{}') as { error: string };
-      expect(content).toEqual({ error: 'Invalid article ID' });
-    });
-
-    it('should return error for non-existent article', () => {
-      vi.mocked(mockArticleModel.findById).mockReturnValue(null);
-
-      registerArticleResources(mockServer, mockArticleModel, mockFeedModel);
-
-      const articleResource = registeredResources.get('article');
-      const result = articleResource?.handler(new URL('articles://article/999'), { id: '999' });
-
-      expect(mockArticleModel.findById).toHaveBeenCalledWith(999);
-
-      const content = JSON.parse(result?.contents[0].text ?? '{}') as { error: string };
-      expect(content).toEqual({ error: 'Article not found' });
     });
   });
 });

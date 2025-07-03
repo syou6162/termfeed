@@ -11,6 +11,7 @@ export type {
   FeedUpdateResult,
   AddFeedResult,
   UpdateAllFeedsResult,
+  ArticleResource,
 } from './dto.js';
 
 // オプション型

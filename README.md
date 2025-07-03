@@ -247,11 +247,18 @@ Claude Code内で以下のようにtermfeedのデータにアクセスできま�
 ```
 @termfeed:articles://unread          # 未読記事10件（デフォルト）
 @termfeed:articles://favorites       # お気に入り記事10件
-@termfeed:articles://article/123     # 記事ID 123の詳細（全文）
 ```
 
 **ツール（操作実行）:**
 - `update_all_feeds`: 全フィードを更新して新しい記事を取得
+- `get_article`: 記事IDを指定して個別記事の詳細（全文）を取得
+
+**ツール使用例:**
+```
+get_article(id: 123)  # 記事ID 123の詳細を取得
+```
+
+**注意:** 個別記事の取得は、Claude Codeでの発見性を向上させるため、リソースではなくツールとして実装されています。
 
 #### 使用例
 
