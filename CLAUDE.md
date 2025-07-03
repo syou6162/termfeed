@@ -46,7 +46,7 @@ termfeedは、ターミナルで動作するRSSリーダーです。Vim風のキ
   - RSSFetchError, RSSParseError, FeedUpdateError, DuplicateFeedError, FeedNotFoundError
 
 ### プレゼンテーション層 (src/apps/)
-- **src/apps/cli/commands/**: 各CLIサブコマンドの実装（add、update、rm、tui、export、import、mcp-server、tutorial）
+- **src/apps/cli/commands/**: 各CLIサブコマンドの実装（add、list、rm、tui、export、import、mcp-server、tutorial）
   - **注意**: CLIコマンドは`createFeedServices()`または`createModelsAndServices()`を使用すること
 - **src/apps/cli/utils/**: CLIユーティリティ
   - `tui-launcher.ts`: TUI起動とRaw modeクリーンアップの共通処理
@@ -106,7 +106,7 @@ npm run migrate  # schema.sqlを実行してテーブル作成
 
 # CLIコマンド例（開発時）
 npm run dev add https://example.com/feed.rss
-npm run dev update  # 全フィード更新
+npm run dev list  # フィード一覧表示
 npm run dev rm 1  # フィードID=1を削除
 npm run dev tui  # TUIモード
 npm run dev tutorial  # チュートリアルモード（インメモリDB）
@@ -239,3 +239,26 @@ SQLiteを使用（src/models/schema.sql）：
 - CLIコマンドからモデル層への直接アクセスは禁止
 - 必ず`createFeedServices()`または`createModelsAndServices()`を使用
 - 依存関係: CLI → Services → Models
+
+## 新機能追加時の注意点
+
+### CLIコマンド追加時
+1. `src/apps/cli/commands/`に実装ファイルを作成
+2. `createXXXCommand`関数として実装（Commander.jsのCommandオブジェクトを返す）
+3. `src/apps/cli/commands/index.ts`でエクスポート
+4. `src/index.ts`の`createMainProgram`関数でコマンド登録
+5. E2Eテストを`src/apps/cli/__tests__/commands/`に作成
+6. ヘルプのスナップショットテストを更新（`npm run test:run src/apps/cli/__tests__/commands/help.e2e.test.ts -- -u`）
+
+### 新しいデータモデル追加時
+1. `src/models/schema.sql`にテーブル定義追加
+2. `src/types/domain.ts`に型定義追加
+3. `src/models/`に対応するModelクラス作成
+4. 必要に応じて`src/services/`にServiceクラス作成
+5. `src/services/factory.ts`でファクトリー関数を更新
+
+### テスト作成時の注意
+- E2Eテストは`createTestContext()`を使用して独立したDB環境を作成
+- ビルド済みファイルを使うテストは`npm run build`後に実行
+- TUIコンポーネントのテストは`ink-testing-library`を使用
+- モックする際は適切なメソッドを含める（特に`getPinnedArticles`など）
