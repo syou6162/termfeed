@@ -107,53 +107,47 @@ export function FavoriteList({
 
   return (
     <Box flexDirection="column" height="100%">
+      {/* ヘッダー部分 */}
       <Box borderStyle="round" borderColor="yellow" padding={1} marginBottom={1}>
         <Text bold color="yellow">
-          お気に入り記事一覧 ({favoriteArticles.length}件)
+          お気に入り記事一覧 ({favoriteArticles.length}件) - {selectedIndex + 1}/
+          {favoriteArticles.length}
         </Text>
       </Box>
 
-      {/* ワンペインレイアウト - 記事一覧のみ */}
-      <Box flexDirection="column" flexGrow={1} borderStyle="single">
-        {favoriteArticles.map((article, index) => (
-          <Box key={article.id} paddingLeft={1} paddingRight={1} paddingY={0}>
-            <Box flexDirection="row" alignItems="center">
-              <Text
-                color={index === selectedIndex ? 'green' : 'gray'}
-                bold={index === selectedIndex}
-              >
-                {index === selectedIndex ? '► ' : '  '}
-                {isPinned(article.id) && '📌 '}
-                {article.title}
+      {/* 選択された記事の詳細を100%幅で表示 */}
+      {selectedArticle && (
+        <Box flexDirection="column" flexGrow={1} borderStyle="single" padding={1}>
+          <Box marginBottom={1}>
+            <Text bold color="green">
+              {selectedArticle.title}
+            </Text>
+          </Box>
+
+          <Box marginBottom={1}>
+            <Text color="gray">
+              公開日: {new Date(selectedArticle.published_at).toLocaleDateString('ja-JP')}
+            </Text>
+            {selectedArticle.author && <Text color="cyan"> | 著者: {selectedArticle.author}</Text>}
+            {isPinned(selectedArticle.id) && (
+              <Text color="yellow" bold>
+                {' '}
+                | 📌 ピン
               </Text>
-            </Box>
-            {index === selectedIndex && (
-              <Box paddingLeft={2} marginTop={1} marginBottom={1}>
-                <Text color="cyan" dimColor>
-                  {article.url}
-                </Text>
-                {article.author && <Text dimColor>著者: {article.author}</Text>}
-                {article.published_at && (
-                  <Text dimColor>
-                    公開日: {new Date(article.published_at).toLocaleDateString('ja-JP')}
-                  </Text>
-                )}
-                {article.content && (
-                  <Box marginTop={1}>
-                    <Text wrap="wrap">
-                      {convertHtmlToText(article.content)
-                        .split('\n')
-                        .slice(0, 3) // 最初の3行のみ表示
-                        .join('\n')}
-                      {convertHtmlToText(article.content).split('\n').length > 3 && '...'}
-                    </Text>
-                  </Box>
-                )}
-              </Box>
             )}
           </Box>
-        ))}
-      </Box>
+
+          <Box marginBottom={1}>
+            <Text color="yellow">URL: {selectedArticle.url}</Text>
+          </Box>
+
+          {selectedArticle.content && (
+            <Box flexGrow={1}>
+              <Text wrap="wrap">{convertHtmlToText(selectedArticle.content)}</Text>
+            </Box>
+          )}
+        </Box>
+      )}
 
       <Box borderStyle="single" borderColor="gray" padding={1}>
         <Text dimColor>
