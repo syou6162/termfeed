@@ -37,10 +37,13 @@ termfeedは、ターミナルで動作するRSSリーダーです。Vim風のキ
   - `setFeedRating()`: フィードレーティング設定
   - `getUnreadFeeds()`: レーティング優先・未読件数副次のソート
 - **ArticleService**: 記事管理のビジネスロジック（ArticleModelのラッパー）
+  - `toggleFavoriteWithPin()`: お気に入りとピンを連動させる（v0.4.0〜）
 - **PinService**: ピン機能のビジネスロジック
   - `togglePin()`: ピン状態の切り替え（戻り値でピン/アンピンを判定）
   - `getPinnedArticles()`: ピン留めされた記事を取得（作成日時の降順）
+  - `getOldestPinnedArticles(limit: number)`: 古い順にピン記事を取得
   - `getPinCount()`: ピン数を取得
+  - `deletePins(articleIds: number[])`: 複数のピンを一括削除
   - `clearAllPins()`: すべてのピンをクリア（内部用）
 - **カスタムエラークラス**: 型安全なエラーハンドリング
   - RSSFetchError, RSSParseError, FeedUpdateError, DuplicateFeedError, FeedNotFoundError
@@ -121,9 +124,13 @@ npm run dev mcp-server  # MCPサーバー起動
 - `j/k`: 記事移動（未読のみ）
 - `s/a`: フィード移動（s=次、a=前）
 - `v`: ブラウザで開く（spawn使用でセキュア実装）
-- `f`: お気に入りトグル
+- `f`: お気に入りトグル（自動でピンも設定、v0.4.0〜）
 - `p`: ピントグル（後で読む記事をマーク）
-- `o`: ピンした記事をまとめてブラウザで開く
+- `o`: ピンした記事をまとめてブラウザで開く（最大10件ずつ、古い順）
+- `g`: 記事内の先頭へスクロール
+- `G`: 記事内の末尾へスクロール
+- `Space`: 記事内でページダウン
+- `e`: エラー詳細表示トグル
 - `r`: 全フィード更新
 - `0-5`: フィードレーティング設定
 - `?`: ヘルプ表示
@@ -143,10 +150,15 @@ npm run dev mcp-server  # MCPサーバー起動
 ### ピン機能
 - `p`キーで記事にピンを立てる（後で読む記事をマーク）
 - `o`キーでピンした記事をまとめてブラウザで開く
-- 開いた記事のピンは自動的に解除される
-- 一部のURLが開けなくても成功したURLのピンは解除
+  - 最大10件ずつ古い順に開く（FIFO）
+  - 複数回`o`キーを押すことで次の10件を開ける
+  - 開いた記事のピンは自動的に解除される
+  - 一部のURLが開けなくても成功したURLのピンは解除
 - フィード一覧にピン総数を表示（フィード横断情報）
 - 一時的なメッセージ表示（3秒で自動消去）
+- **お気に入りとピンの連動**（v0.4.0〜）
+  - `f`キーでお気に入り追加時に自動でピンも設定
+  - お気に入りを外すとピンも解除される
 
 ### パフォーマンス最適化
 - `getUnreadCountsForAllFeeds()`でN+1クエリ回避
@@ -220,10 +232,15 @@ SQLiteを使用（src/models/schema.sql）：
 
 ## チュートリアルモード
 
-インメモリDBを使用した試用モード：
+インメモリDBを使用した試用モード（初回推奨）：
 - `termfeed tutorial`または`npm run dev tutorial`で起動
-- サンプルフィード4つが自動登録済み
+- サンプルフィード4つが自動登録済み：
+  - Hacker News (Best Stories)
+  - Dev.to
+  - The Verge
+  - TechCrunch
 - データは終了時に破棄される（お試しに最適）
+- フィード登録の手間なく、すぐにtermfeedの機能を体験可能
 - 実装は`src/apps/cli/commands/tutorial.tsx`
 
 ## 注意事項
