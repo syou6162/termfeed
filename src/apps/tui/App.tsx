@@ -29,7 +29,7 @@ export function App(props: AppProps = {}) {
   const [temporaryMessage, setTemporaryMessage] = useState<string | null>(null);
 
   // データベースとサービスを初期化
-  const { feedService, articleService, pinService, favoriteService, articleModel } =
+  const { feedService, articleService, pinService, favoriteService } =
     useTermfeedData(databaseManager);
 
   // フィード管理
@@ -418,7 +418,7 @@ export function App(props: AppProps = {}) {
     return (
       <>
         <FavoriteList
-          articleModel={articleModel}
+          favoriteService={favoriteService}
           isPinned={(articleId) => pinnedArticleIds.has(articleId)}
           onOpenInBrowser={(url) => void openUrlInBrowser(url)}
           onToggleFavorite={(articleId) => {
@@ -429,6 +429,7 @@ export function App(props: AppProps = {}) {
             pinService.togglePin(articleId);
             refreshPinnedState();
           }}
+          onFavoriteChange={() => {}}
         />
         {temporaryMessage && (
           <Box position="absolute" marginLeft={2} marginTop={2}>

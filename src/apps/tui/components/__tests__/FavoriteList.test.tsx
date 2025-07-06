@@ -9,8 +9,8 @@ vi.mock('../../hooks/useKeyboardNavigation.js', () => ({
   useKeyboardNavigation: vi.fn(),
 }));
 
-// ArticleModelのモック
-const mockArticleModel = {
+// FavoriteServiceのモック
+const mockFavoriteService = {
   getFavoriteArticles: vi.fn(),
 } as any;
 
@@ -43,15 +43,15 @@ const mockFavoriteArticles: Article[] = [
 describe('FavoriteList', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockArticleModel.getFavoriteArticles.mockReturnValue(mockFavoriteArticles);
+    mockFavoriteService.getFavoriteArticles.mockReturnValue(mockFavoriteArticles);
   });
 
   it('お気に入り記事がない場合は適切なメッセージを表示する', () => {
-    mockArticleModel.getFavoriteArticles.mockReturnValue([]);
+    mockFavoriteService.getFavoriteArticles.mockReturnValue([]);
 
     const { lastFrame } = render(
       <FavoriteList
-        articleModel={mockArticleModel}
+        favoriteService={mockFavoriteService}
         isPinned={() => false}
         onOpenInBrowser={() => {}}
         onToggleFavorite={() => {}}
@@ -65,7 +65,7 @@ describe('FavoriteList', () => {
   it('お気に入り記事一覧を表示する', async () => {
     const { lastFrame } = render(
       <FavoriteList
-        articleModel={mockArticleModel}
+        favoriteService={mockFavoriteService}
         isPinned={() => false}
         onOpenInBrowser={() => {}}
         onToggleFavorite={() => {}}
@@ -89,7 +89,7 @@ describe('FavoriteList', () => {
   it('選択中の記事を適切に表示する', async () => {
     const { lastFrame } = render(
       <FavoriteList
-        articleModel={mockArticleModel}
+        favoriteService={mockFavoriteService}
         isPinned={() => false}
         onOpenInBrowser={() => {}}
         onToggleFavorite={() => {}}
@@ -111,7 +111,7 @@ describe('FavoriteList', () => {
   it('ピンされた記事にピンアイコンを表示する', async () => {
     const { lastFrame } = render(
       <FavoriteList
-        articleModel={mockArticleModel}
+        favoriteService={mockFavoriteService}
         isPinned={(articleId) => articleId === 1}
         onOpenInBrowser={() => {}}
         onToggleFavorite={() => {}}
@@ -133,7 +133,7 @@ describe('FavoriteList', () => {
   it('キーボードショートカットのヘルプを表示する', async () => {
     const { lastFrame } = render(
       <FavoriteList
-        articleModel={mockArticleModel}
+        favoriteService={mockFavoriteService}
         isPinned={() => false}
         onOpenInBrowser={() => {}}
         onToggleFavorite={() => {}}
@@ -153,11 +153,11 @@ describe('FavoriteList', () => {
   });
 
   it('記事が選択されていない場合は適切なメッセージを表示する', () => {
-    mockArticleModel.getFavoriteArticles.mockReturnValue([]);
+    mockFavoriteService.getFavoriteArticles.mockReturnValue([]);
 
     const { lastFrame } = render(
       <FavoriteList
-        articleModel={mockArticleModel}
+        favoriteService={mockFavoriteService}
         isPinned={() => false}
         onOpenInBrowser={() => {}}
         onToggleFavorite={() => {}}

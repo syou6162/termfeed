@@ -1,12 +1,15 @@
 import type { DatabaseManager } from '../models/database.js';
 import { FavoriteModel } from '../models/favorite.js';
-import type { Favorite } from '../types/index.js';
+import { ArticleModel } from '../models/article.js';
+import type { Favorite, Article } from '../types/index.js';
 
 export class FavoriteService {
   private favoriteModel: FavoriteModel;
+  private articleModel: ArticleModel;
 
   constructor(db: DatabaseManager) {
     this.favoriteModel = new FavoriteModel(db);
+    this.articleModel = new ArticleModel(db);
   }
 
   /**
@@ -63,5 +66,13 @@ export class FavoriteService {
    */
   clearAllFavorites(): number {
     return this.favoriteModel.clearAllFavorites();
+  }
+
+  /**
+   * お気に入り記事を取得
+   * @returns お気に入り記事の配列（作成日時の降順）
+   */
+  getFavoriteArticles(): Article[] {
+    return this.articleModel.getFavoriteArticles();
   }
 }

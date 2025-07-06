@@ -2,24 +2,26 @@ import { Box, Text, useStdout } from 'ink';
 import { useState, useEffect, useCallback } from 'react';
 import { convertHtmlToText } from '../utils/html.js';
 import type { Article } from '@/types';
-import type { ArticleModel } from '../../../models/article.js';
+import type { FavoriteService } from '../../../services/favorite.js';
 import { useKeyboardNavigation } from '../hooks/useKeyboardNavigation.js';
 import { TUI_CONFIG } from '../config/constants.js';
 
 interface FavoriteListProps {
-  articleModel: ArticleModel;
+  favoriteService: FavoriteService;
   isPinned: (articleId: number) => boolean;
   onOpenInBrowser: (url: string) => void;
   onToggleFavorite: (articleId: number) => void;
   onTogglePin: (articleId: number) => void;
+  onFavoriteChange?: () => void;
 }
 
 export function FavoriteList({
-  articleModel,
+  favoriteService,
   isPinned,
   onOpenInBrowser,
   onToggleFavorite,
   onTogglePin,
+  onFavoriteChange,
 }: FavoriteListProps) {
   const { stdout } = useStdout();
   const [favoriteArticles, setFavoriteArticles] = useState<Article[]>([]);
@@ -29,17 +31,22 @@ export function FavoriteList({
   const [totalLines, setTotalLines] = useState(0);
 
   // お気に入り記事を取得
-  useEffect(() => {
-    const loadFavorites = () => {
-      const articles = articleModel.getFavoriteArticles();
-      setFavoriteArticles(articles);
-    };
+  const loadFavorites = useCallback(() => {
+    const articles = favoriteService.getFavoriteArticles();
+    setFavoriteArticles(articles);
+  }, [favoriteService]);
 
+  // 初回ロード
+  useEffect(() => {
     loadFavorites();
-    // お気に入りの変更を検知するために、定期的に更新
-    const interval = globalThis.setInterval(loadFavorites, 1000);
-    return () => globalThis.clearInterval(interval);
-  }, [articleModel]);
+  }, [loadFavorites]);
+
+  // お気に入り変更時のコールバックを監視
+  useEffect(() => {
+    if (onFavoriteChange) {
+      loadFavorites();
+    }
+  }, [onFavoriteChange, loadFavorites]);
 
   const selectedArticle = favoriteArticles[selectedIndex];
 
@@ -121,19 +128,15 @@ export function FavoriteList({
   const handleToggleFavorite = useCallback(() => {
     if (selectedArticle) {
       onToggleFavorite(selectedArticle.id);
-      // お気に入りを解除したら、次の更新でリストから削除される
+      // お気に入りを更新後、リストを再読み込み
+      const newArticles = favoriteService.getFavoriteArticles();
+      setFavoriteArticles(newArticles);
       // 最後の記事を解除した場合のインデックス調整
-      setTimeout(() => {
-        setSelectedIndex((prevIndex) => {
-          const newLength = articleModel.getFavoriteArticles().length;
-          if (prevIndex >= newLength && prevIndex > 0) {
-            return prevIndex - 1;
-          }
-          return prevIndex;
-        });
-      }, 100);
+      if (selectedIndex >= newArticles.length && selectedIndex > 0) {
+        setSelectedIndex(selectedIndex - 1);
+      }
     }
-  }, [selectedArticle, onToggleFavorite, articleModel]);
+  }, [selectedArticle, onToggleFavorite, favoriteService]);
 
   // pキーでピントグル
   const handleTogglePin = useCallback(() => {
