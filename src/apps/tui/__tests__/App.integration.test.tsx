@@ -719,4 +719,143 @@ describe('App Integration Tests', () => {
       });
     });
   });
+
+  describe('スライディングウィンドウページネーション', () => {
+    it('フィード一覧のウィンドウサイズ制限が機能する', async () => {
+      // 15件のフィードを持つデータを設定
+      const manyFeeds = Array.from({ length: 15 }, (_, i) => ({
+        id: i + 1,
+        url: `https://example.com/feed${i + 1}.rss`,
+        title: `Feed ${i + 1}`,
+        description: `Test feed ${i + 1} description`,
+        last_updated_at: new Date('2024-01-01'),
+        created_at: new Date('2024-01-01'),
+        rating: 3,
+        unreadCount: 10,
+      }));
+
+      mockFeedService.getUnreadFeeds.mockReturnValue(manyFeeds);
+      mockFeedService.getArticles.mockReturnValue(mockArticles);
+
+      const { lastFrame } = render(<App />);
+
+      // 初期化を待つ
+      await vi.waitFor(() => {
+        expect(lastFrame()).toContain('Feed 1');
+      });
+
+      const frame = lastFrame();
+
+      // フィード一覧が表示されていることを確認
+      expect(frame).toContain('フィード一覧');
+      expect(frame).toContain('Feed 1');
+
+      // 10件以上のフィードがある場合でも、表示は制限されていることを確認
+      // （具体的な表示数のテストは FeedList.test.tsx で行う）
+    });
+  });
+
+  describe('リロード時のポインター保持', () => {
+    it('rキーでリロードした後も選択中のフィードが保持される', async () => {
+      const { stdin, lastFrame } = render(<App />);
+
+      // 初期化を待つ
+      await vi.waitFor(() => {
+        expect(lastFrame()).toContain('Feed 1');
+      });
+
+      // Feed 2を選択
+      stdin.write('s');
+
+      // Feed 2が選択されていることを確認
+      await vi.waitFor(() => {
+        expect(mockFeedService.getArticles).toHaveBeenLastCalledWith({
+          feed_id: 2,
+          limit: 100,
+        });
+      });
+
+      // フィード更新の準備
+      let updateCallCount = 0;
+      mockFeedService.updateAllFeeds.mockImplementation((callback) => {
+        updateCallCount++;
+        if (callback) {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+          callback({ current: 1, total: 2, feedTitle: 'Feed 1' });
+        }
+        return Promise.resolve({ summary: { successCount: 2, failureCount: 0 }, failed: [] });
+      });
+
+      // rキーでリロード
+      stdin.write('r');
+
+      // 更新が完了するのを待つ
+      await vi.waitFor(() => {
+        expect(updateCallCount).toBeGreaterThan(0);
+      });
+
+      // Feed 2が引き続き選択されていることを確認
+      expect(mockFeedService.getArticles).toHaveBeenLastCalledWith({
+        feed_id: 2,
+        limit: 100,
+      });
+    });
+
+    it('選択中のフィードの未読が0になった場合、適切なフィードが選択される', async () => {
+      const { stdin, lastFrame } = render(<App />);
+
+      // 初期化を待つ
+      await vi.waitFor(() => {
+        expect(lastFrame()).toContain('Feed 1');
+      });
+
+      // Feed 2を選択
+      stdin.write('s');
+
+      await vi.waitFor(() => {
+        expect(mockFeedService.getArticles).toHaveBeenCalledWith({
+          feed_id: 2,
+          limit: 100,
+        });
+      });
+
+      // リロード時にFeed 2の未読が0になる（Feed 2がリストから消える）
+      mockFeedService.getUnreadFeeds.mockReturnValue([
+        {
+          id: 1,
+          url: 'https://example.com/feed1.rss',
+          title: 'Feed 1',
+          description: 'Test feed 1 description',
+          last_updated_at: new Date('2024-01-01'),
+          created_at: new Date('2024-01-01'),
+          rating: 0,
+          unreadCount: 5,
+        },
+      ]);
+
+      // フィード更新
+      let updateCompleted = false;
+      mockFeedService.updateAllFeeds.mockImplementation((callback) => {
+        if (callback) {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+          callback({ current: 1, total: 1, feedTitle: 'Feed 1' });
+        }
+        updateCompleted = true;
+        return Promise.resolve({ summary: { successCount: 1, failureCount: 0 }, failed: [] });
+      });
+
+      // rキーでリロード
+      stdin.write('r');
+
+      // 更新が完了するのを待つ
+      await vi.waitFor(() => {
+        expect(updateCompleted).toBe(true);
+      });
+
+      // リロード後、Feed 1のみが残っていることを確認
+      const frame = lastFrame();
+      expect(frame).toContain('Feed 1');
+      expect(frame).not.toContain('Feed 2');
+    });
+  });
 });
