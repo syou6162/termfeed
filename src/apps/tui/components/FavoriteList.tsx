@@ -22,7 +22,6 @@ export function FavoriteList({
 }: FavoriteListProps) {
   const [favoriteArticles, setFavoriteArticles] = useState<Article[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [scrollOffset, setScrollOffset] = useState(0);
 
   // お気に入り記事を取得
   useEffect(() => {
@@ -44,7 +43,6 @@ export function FavoriteList({
     (index: number) => {
       if (index >= 0 && index < favoriteArticles.length) {
         setSelectedIndex(index);
-        setScrollOffset(0); // 記事を切り替えたらスクロール位置をリセット
       }
     },
     [favoriteArticles.length]
@@ -93,9 +91,9 @@ export function FavoriteList({
     onOpenInBrowser: handleOpenInBrowser,
     onToggleFavorite: handleToggleFavorite,
     onTogglePin: handleTogglePin,
-    onScrollDown: () => setScrollOffset((prev) => prev + 1),
-    onScrollUp: () => setScrollOffset((prev) => Math.max(0, prev - 1)),
-    onScrollOffsetChange: setScrollOffset,
+    onScrollDown: () => {},
+    onScrollUp: () => {},
+    onScrollOffsetChange: () => {},
   });
 
   if (favoriteArticles.length === 0) {
@@ -114,53 +112,49 @@ export function FavoriteList({
           お気に入り記事一覧 ({favoriteArticles.length}件)
         </Text>
       </Box>
-      <Box flexDirection="row" flexGrow={1}>
-        <Box flexDirection="column" width="30%" borderStyle="single" marginRight={1}>
-          {favoriteArticles.map((article, index) => (
-            <Box key={article.id} paddingLeft={1} paddingRight={1}>
+
+      {/* ワンペインレイアウト - 記事一覧のみ */}
+      <Box flexDirection="column" flexGrow={1} borderStyle="single">
+        {favoriteArticles.map((article, index) => (
+          <Box key={article.id} paddingLeft={1} paddingRight={1} paddingY={0}>
+            <Box flexDirection="row" alignItems="center">
               <Text
                 color={index === selectedIndex ? 'green' : 'gray'}
                 bold={index === selectedIndex}
-                wrap="truncate"
               >
+                {index === selectedIndex ? '► ' : '  '}
                 {isPinned(article.id) && '📌 '}
                 {article.title}
               </Text>
             </Box>
-          ))}
-        </Box>
-        <Box flexDirection="column" width="70%" borderStyle="single">
-          {selectedArticle ? (
-            <Box flexDirection="column" padding={1}>
-              <Box marginBottom={1}>
-                <Text bold wrap="wrap">
-                  {selectedArticle.title}
+            {index === selectedIndex && (
+              <Box paddingLeft={2} marginTop={1} marginBottom={1}>
+                <Text color="cyan" dimColor>
+                  {article.url}
                 </Text>
-              </Box>
-              {selectedArticle.author && <Text dimColor>by {selectedArticle.author}</Text>}
-              {selectedArticle.published_at && (
-                <Text dimColor>{new Date(selectedArticle.published_at).toLocaleString()}</Text>
-              )}
-              <Box marginTop={1}>
-                {selectedArticle.content ? (
-                  <Text wrap="wrap">
-                    {convertHtmlToText(selectedArticle.content)
-                      .split('\n')
-                      .slice(scrollOffset, scrollOffset + 20)
-                      .join('\n')}
+                {article.author && <Text dimColor>著者: {article.author}</Text>}
+                {article.published_at && (
+                  <Text dimColor>
+                    公開日: {new Date(article.published_at).toLocaleDateString('ja-JP')}
                   </Text>
-                ) : (
-                  <Text dimColor>コンテンツがありません</Text>
+                )}
+                {article.content && (
+                  <Box marginTop={1}>
+                    <Text wrap="wrap">
+                      {convertHtmlToText(article.content)
+                        .split('\n')
+                        .slice(0, 3) // 最初の3行のみ表示
+                        .join('\n')}
+                      {convertHtmlToText(article.content).split('\n').length > 3 && '...'}
+                    </Text>
+                  </Box>
                 )}
               </Box>
-            </Box>
-          ) : (
-            <Box padding={1}>
-              <Text dimColor>記事を選択してください</Text>
-            </Box>
-          )}
-        </Box>
+            )}
+          </Box>
+        ))}
       </Box>
+
       <Box borderStyle="single" borderColor="gray" padding={1}>
         <Text dimColor>
           j/k: 移動 | v: ブラウザで開く | f: お気に入り解除 | p: ピン | F: 通常モードに戻る

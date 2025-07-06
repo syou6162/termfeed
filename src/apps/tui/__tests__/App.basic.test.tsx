@@ -117,7 +117,6 @@ const mockArticles: Article[] = [
     author: 'Author 1',
     published_at: new Date('2024-01-01'),
     is_read: false,
-    is_favorite: false,
     thumbnail_url: undefined,
     created_at: new Date('2024-01-01'),
     updated_at: new Date('2024-01-01'),

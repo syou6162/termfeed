@@ -84,14 +84,8 @@ export function useArticleManager(
       try {
         feedService.toggleArticleFavorite(selectedArticle.id);
 
-        // パフォーマンス改善: 記事リストの全件再取得を避け、ローカル状態のみ更新
-        setArticles((prevArticles) =>
-          prevArticles.map((article) =>
-            article.id === selectedArticle.id
-              ? { ...article, is_favorite: !article.is_favorite }
-              : article
-          )
-        );
+        // お気に入り状態はfavoritesテーブルで管理されるため、ローカル状態の更新は不要
+        // 実際のお気に入り状態は別途 ArticleService の方で管理される
       } catch (err) {
         console.error('お気に入り状態の更新に失敗しました:', err);
         // エラー時は共通ロジックで記事リストを再取得し、同じ記事を再選択

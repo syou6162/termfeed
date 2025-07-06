@@ -161,14 +161,9 @@ export const ArticleList = memo(function ArticleList({
       <Box paddingX={1}>
         <Text color="gray">公開日: {publishedDate}</Text>
         {selectedArticle.author && <Text color="cyan"> | 著者: {selectedArticle.author}</Text>}
-        {selectedArticle.is_favorite && (
-          <Text color="yellow" bold>
-            {selectedArticle.author ? ' | ' : ' | '}★ お気に入り
-          </Text>
-        )}
         {isPinned && (
           <Text color="yellow" bold>
-            {selectedArticle.author || selectedArticle.is_favorite ? ' | ' : ' | '}📌 ピン
+            {selectedArticle.author ? ' | ' : ' | '}📌 ピン
           </Text>
         )}
       </Box>

@@ -12,7 +12,6 @@ describe('ArticleList', () => {
   const createMockArticle = (
     id: number,
     options: {
-      is_favorite?: boolean;
       title?: string;
       content?: string;
       author?: string;
@@ -28,7 +27,6 @@ describe('ArticleList', () => {
     author: options.author || undefined,
     published_at: options.published_at || new Date('2024-01-01T12:00:00Z'),
     is_read: false,
-    is_favorite: options.is_favorite || false,
     thumbnail_url: undefined,
     created_at: new Date(),
     updated_at: new Date(),
@@ -104,7 +102,6 @@ describe('ArticleList', () => {
   describe('お気に入り・ピン表示ロジック', () => {
     it('お気に入りのみの場合、公開日と同じ行に★お気に入りを表示する', () => {
       const article = createMockArticle(1, {
-        is_favorite: true,
         published_at: new Date('2024-01-15T10:30:00Z'),
       });
 
@@ -131,7 +128,6 @@ describe('ArticleList', () => {
 
     it('ピンのみの場合、公開日と同じ行に📌ピンを表示する', () => {
       const article = createMockArticle(1, {
-        is_favorite: false,
         published_at: new Date('2024-01-15T10:30:00Z'),
       });
 
@@ -158,7 +154,6 @@ describe('ArticleList', () => {
 
     it('お気に入りとピン両方がある場合、公開日と同じ行に両方を表示する', () => {
       const article = createMockArticle(1, {
-        is_favorite: true,
         published_at: new Date('2024-01-15T10:30:00Z'),
       });
 
@@ -183,7 +178,6 @@ describe('ArticleList', () => {
 
     it('お気に入りもピンもない場合、公開日行に追加情報は表示しない', () => {
       const article = createMockArticle(1, {
-        is_favorite: false,
         published_at: new Date('2024-01-15T10:30:00Z'),
       });
 
@@ -211,7 +205,6 @@ describe('ArticleList', () => {
     it('著者がない場合、公開日と同一行にお気に入りが適切な区切り文字で表示される', () => {
       const article = createMockArticle(1, {
         author: undefined,
-        is_favorite: true,
         published_at: new Date('2024-01-15T10:30:00Z'),
       });
 
@@ -237,7 +230,6 @@ describe('ArticleList', () => {
     it('著者がある場合、公開日・著者・お気に入りが同一行に適切な区切り文字で表示される', () => {
       const article = createMockArticle(1, {
         author: 'John Doe',
-        is_favorite: true,
         published_at: new Date('2024-01-15T10:30:00Z'),
       });
 
@@ -263,7 +255,6 @@ describe('ArticleList', () => {
     it('著者とお気に入りがある場合、ピンも同一行に適切な区切り文字で表示される', () => {
       const article = createMockArticle(1, {
         author: 'John Doe',
-        is_favorite: true,
         published_at: new Date('2024-01-15T10:30:00Z'),
       });
 
@@ -297,7 +288,6 @@ describe('ArticleList', () => {
     it('著者のみがある場合、公開日・著者・ピンが同一行に適切な区切り文字で表示される', () => {
       const article = createMockArticle(1, {
         author: 'John Doe',
-        is_favorite: false,
         published_at: new Date('2024-01-15T10:30:00Z'),
       });
 
@@ -362,7 +352,6 @@ describe('ArticleList', () => {
   describe('レイアウト構造の検証', () => {
     it('お気に入り・ピンが独立した行として表示されていない', () => {
       const article = createMockArticle(1, {
-        is_favorite: true,
         published_at: new Date('2024-01-15T10:30:00Z'),
       });
 
@@ -402,7 +391,6 @@ describe('ArticleList', () => {
     it('著者情報とお気に入り・ピンが適切な順序で同一行に表示される', () => {
       const article = createMockArticle(1, {
         author: 'John Doe',
-        is_favorite: true,
         published_at: new Date('2024-01-15T10:30:00Z'),
       });
 
@@ -425,7 +413,6 @@ describe('ArticleList', () => {
 
     it('修正前の独立行レイアウトとは異なる構造になっている', () => {
       const article = createMockArticle(1, {
-        is_favorite: true,
         published_at: new Date('2024-01-15T10:30:00Z'),
       });
 
@@ -494,7 +481,6 @@ describe('ArticleList', () => {
       const article = createMockArticle(1, {
         title: 'Sample Article Title',
         author: 'John Doe',
-        is_favorite: true,
         published_at: mockDate,
         content: '<p>Sample article content with HTML tags</p>',
       });
@@ -516,7 +502,6 @@ describe('ArticleList', () => {
       const article = createMockArticle(1, {
         title: 'Sample Article Title',
         author: 'Jane Smith',
-        is_favorite: false,
         published_at: mockDate,
         content: '<p>Sample article content with HTML tags</p>',
       });
@@ -538,7 +523,6 @@ describe('ArticleList', () => {
       const article = createMockArticle(1, {
         title: 'Sample Article Title',
         author: 'Bob Wilson',
-        is_favorite: true,
         published_at: mockDate,
         content: '<p>Sample article content with HTML tags</p>',
       });
@@ -560,7 +544,6 @@ describe('ArticleList', () => {
       const article = createMockArticle(1, {
         title: 'Sample Article Title',
         author: undefined,
-        is_favorite: true,
         published_at: mockDate,
         content: '<p>Sample article content with HTML tags</p>',
       });
@@ -582,7 +565,6 @@ describe('ArticleList', () => {
       const article = createMockArticle(1, {
         title: 'Sample Article Title',
         author: 'Alice Johnson',
-        is_favorite: false,
         published_at: mockDate,
         content: '<p>Sample article content with HTML tags</p>',
       });

@@ -52,7 +52,6 @@ export class ArticleModel {
       author: data.author,
       published_at: unixSecondsToDate(data.published_at),
       is_read: Boolean(data.is_read),
-      is_favorite: false, // お気に入りは別テーブルで管理
       thumbnail_url: data.thumbnail_url,
       created_at: unixSecondsToDate(data.created_at),
       updated_at: unixSecondsToDate(data.updated_at),
@@ -86,7 +85,6 @@ export class ArticleModel {
         id: result.lastInsertRowid as number,
         ...article,
         is_read: false,
-        is_favorite: false, // お気に入りは別テーブルで管理
         created_at: unixSecondsToDate(now),
         updated_at: unixSecondsToDate(now),
       };

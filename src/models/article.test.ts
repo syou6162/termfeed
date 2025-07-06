@@ -71,7 +71,6 @@ describe('ArticleModel', () => {
       expect(article.published_at).toEqual(articleInput.published_at);
       expect(article.thumbnail_url).toBe(articleInput.thumbnail_url);
       expect(article.is_read).toBe(false);
-      expect(article.is_favorite).toBe(false);
       expect(article.created_at).toBeInstanceOf(Date);
       expect(article.updated_at).toBeInstanceOf(Date);
     });
@@ -113,7 +112,6 @@ describe('ArticleModel', () => {
       expect(found!.title).toBe(created.title);
       expect(found!.published_at).toEqual(created.published_at);
       expect(found!.is_read).toBe(false);
-      expect(found!.is_favorite).toBe(false);
     });
 
     it('存在しないIDの場合はnullを返す', () => {

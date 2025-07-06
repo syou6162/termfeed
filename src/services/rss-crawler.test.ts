@@ -413,7 +413,6 @@ describe('RSSCrawler', () => {
       const result = await crawler.crawl('https://example.com/rss.xml');
 
       expect(result.articles[0].is_read).toBe(false);
-      expect(result.articles[0].is_favorite).toBe(false);
     });
 
     it('キャンセルエラーでRSSFetchErrorを投げる', async () => {
