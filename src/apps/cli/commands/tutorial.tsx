@@ -23,7 +23,7 @@ export function createTutorialCommand(): Command {
       databaseManager.migrate();
 
       // サービス層の初期化
-      const feedService = createFeedServices(databaseManager);
+      const { feedService } = createFeedServices(databaseManager);
 
       // サンプルフィードの登録とクロール
       for (const feedUrl of SAMPLE_FEEDS) {
