@@ -51,22 +51,22 @@ describe('list command E2E', () => {
     expect(output.stdout).toMatchSnapshot('list-with-feeds-output');
   });
 
-  it('should list feeds sorted by ID', async () => {
-    // Arrange - フィードを逆順で作成
+  it('should list feeds sorted by rating and ID', async () => {
+    // Arrange - 異なるレーティングのフィードを作成
     const feed1 = context.feedModel.create({
       url: 'https://example.com/feed1.rss',
       title: 'Feed A',
-      rating: 0,
+      rating: 5,
     });
     const feed2 = context.feedModel.create({
       url: 'https://example.com/feed2.rss',
       title: 'Feed B',
-      rating: 0,
+      rating: 3,
     });
     const feed3 = context.feedModel.create({
       url: 'https://example.com/feed3.rss',
       title: 'Feed C',
-      rating: 0,
+      rating: 5,
     });
 
     // Act
@@ -76,10 +76,11 @@ describe('list command E2E', () => {
 
     // Assert
     expect(output.exitCode).toBeUndefined();
-    const lines = output.stdout.trim().split('\n');
-    expect(lines[0]).toContain(`${feed1.id}: Feed A`);
-    expect(lines[1]).toContain(`${feed2.id}: Feed B`);
-    expect(lines[2]).toContain(`${feed3.id}: Feed C`);
+    const feedSections = output.stdout.trim().split('\n\n');
+    // レーティング5のフィードが最初に表示され、その中でID順
+    expect(feedSections[0]).toContain(`${feed1.id}: Feed A`);
+    expect(feedSections[1]).toContain(`${feed3.id}: Feed C`);
+    expect(feedSections[2]).toContain(`${feed2.id}: Feed B`);
   });
 
   it('should handle feeds with special characters in title', async () => {
