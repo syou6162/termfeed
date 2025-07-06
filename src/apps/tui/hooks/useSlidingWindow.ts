@@ -9,14 +9,13 @@ export function calculateSlidingWindow<T extends { id: number }>(
 ) {
   const { windowSize = 10 } = config;
 
-  const selectedItem = items[selectedIndex];
-  const selectedItemIndex = selectedItem
-    ? items.findIndex((item) => item.id === selectedItem.id)
-    : -1;
+  // 入力値のバリデーション
+  const validSelectedIndex = Math.max(0, Math.min(selectedIndex, items.length - 1));
+  const actualIndex = items.length > 0 ? validSelectedIndex : -1;
 
   let startIndex = 0;
-  if (items.length > windowSize && selectedItemIndex >= 0) {
-    startIndex = selectedItemIndex;
+  if (items.length > windowSize && actualIndex >= 0) {
+    startIndex = actualIndex;
     startIndex = Math.min(startIndex, items.length - windowSize);
   }
 

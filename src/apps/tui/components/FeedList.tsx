@@ -152,7 +152,7 @@ export const FeedList = memo(function FeedList({
                       : -1;
 
                     // calculateSlidingWindowを使用してウィンドウを計算
-                    const { visibleItems } = calculateSlidingWindow(
+                    const { visibleItems, startIndex } = calculateSlidingWindow(
                       section.items,
                       selectedItemInSection,
                       {
@@ -160,10 +160,16 @@ export const FeedList = memo(function FeedList({
                       }
                     );
 
-                    return visibleItems.map((item) => {
-                      const globalIndex = allItems.findIndex(
-                        (globalItem) => globalItem.id === item.id
-                      );
+                    // グローバルインデックスの開始位置を計算
+                    let globalStartIndex = 0;
+                    for (const s of feedSections) {
+                      if (s.rating === section.rating) break;
+                      globalStartIndex += s.items.length;
+                    }
+
+                    return visibleItems.map((item, index) => {
+                      // O(1)でグローバルインデックスを計算
+                      const globalIndex = globalStartIndex + startIndex + index;
                       return (
                         <Box key={`${section.rating}-${item.id}`} paddingX={1}>
                           {renderFeedItem(item, globalIndex === selectedIndex)}
