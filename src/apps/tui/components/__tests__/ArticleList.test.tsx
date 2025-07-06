@@ -474,4 +474,135 @@ describe('ArticleList', () => {
       expect(onScrollOffsetChange).toHaveBeenCalledWith(0);
     });
   });
+
+  describe('スナップショットテスト（レイアウト破壊的変更の検出）', () => {
+    it('お気に入りのみの記事レイアウト', () => {
+      const article = createMockArticle(1, {
+        title: 'Sample Article Title',
+        author: 'John Doe',
+        is_favorite: true,
+        published_at: new Date('2024-01-15T10:30:00Z'),
+        content: '<p>Sample article content with HTML tags</p>',
+      });
+
+      const { lastFrame } = render(
+        <ArticleList
+          {...defaultProps}
+          articles={[article]}
+          selectedArticle={article}
+          isPinned={false}
+        />
+      );
+
+      // お気に入りが公開日の横に表示されるレイアウトをスナップショット
+      expect(lastFrame()).toMatchSnapshot('article-layout-favorite-only');
+    });
+
+    it('ピンのみの記事レイアウト', () => {
+      const article = createMockArticle(1, {
+        title: 'Sample Article Title',
+        author: 'Jane Smith',
+        is_favorite: false,
+        published_at: new Date('2024-01-15T10:30:00Z'),
+        content: '<p>Sample article content with HTML tags</p>',
+      });
+
+      const { lastFrame } = render(
+        <ArticleList
+          {...defaultProps}
+          articles={[article]}
+          selectedArticle={article}
+          isPinned={true}
+        />
+      );
+
+      // ピンが公開日の横に表示されるレイアウトをスナップショット
+      expect(lastFrame()).toMatchSnapshot('article-layout-pin-only');
+    });
+
+    it('お気に入り＋ピン両方の記事レイアウト', () => {
+      const article = createMockArticle(1, {
+        title: 'Sample Article Title',
+        author: 'Bob Wilson',
+        is_favorite: true,
+        published_at: new Date('2024-01-15T10:30:00Z'),
+        content: '<p>Sample article content with HTML tags</p>',
+      });
+
+      const { lastFrame } = render(
+        <ArticleList
+          {...defaultProps}
+          articles={[article]}
+          selectedArticle={article}
+          isPinned={true}
+        />
+      );
+
+      // お気に入り＋ピン両方が公開日の横に表示されるレイアウトをスナップショット
+      expect(lastFrame()).toMatchSnapshot('article-layout-favorite-and-pin');
+    });
+
+    it('著者なし＋お気に入りの記事レイアウト', () => {
+      const article = createMockArticle(1, {
+        title: 'Sample Article Title',
+        author: undefined,
+        is_favorite: true,
+        published_at: new Date('2024-01-15T10:30:00Z'),
+        content: '<p>Sample article content with HTML tags</p>',
+      });
+
+      const { lastFrame } = render(
+        <ArticleList
+          {...defaultProps}
+          articles={[article]}
+          selectedArticle={article}
+          isPinned={false}
+        />
+      );
+
+      // 著者なしでお気に入りが公開日の横に表示されるレイアウトをスナップショット
+      expect(lastFrame()).toMatchSnapshot('article-layout-no-author-favorite');
+    });
+
+    it('通常の記事レイアウト（お気に入り・ピンなし）', () => {
+      const article = createMockArticle(1, {
+        title: 'Sample Article Title',
+        author: 'Alice Johnson',
+        is_favorite: false,
+        published_at: new Date('2024-01-15T10:30:00Z'),
+        content: '<p>Sample article content with HTML tags</p>',
+      });
+
+      const { lastFrame } = render(
+        <ArticleList
+          {...defaultProps}
+          articles={[article]}
+          selectedArticle={article}
+          isPinned={false}
+        />
+      );
+
+      // 通常の記事表示レイアウトをスナップショット
+      expect(lastFrame()).toMatchSnapshot('article-layout-normal');
+    });
+
+    it('未読記事なしの状態', () => {
+      const { lastFrame } = render(
+        <ArticleList {...defaultProps} articles={[]} selectedArticle={undefined} />
+      );
+
+      // 未読記事なしのメッセージ表示をスナップショット
+      expect(lastFrame()).toMatchSnapshot('article-layout-no-articles');
+    });
+
+    it('記事未選択の状態', () => {
+      const articles = [createMockArticle(1), createMockArticle(2)];
+      const { lastFrame } = render(
+        <ArticleList {...defaultProps} articles={articles} selectedArticle={undefined} />
+      );
+
+      // 記事未選択時の表示をスナップショット
+      expect(lastFrame()).toMatchSnapshot('article-layout-no-selection');
+    });
+  });
 });
