@@ -203,11 +203,114 @@ SQLiteを使用（src/models/schema.sql）：
 
 ## テスト戦略
 
-- **フレームワーク**: Vitest
-- **TUIテスト**: ink-testing-library使用
-- **データベーステスト**: 各テストで独立したDB作成・削除
-- **モック**: axios、child_processなど外部依存をモック
-  - **ArticleModelのモック**: TUIテストではgetPinnedArticlesメソッドを含める必要あり
+### テストフレームワーク
+- **Vitest**: ユニットテスト・統合テスト
+- **ink-testing-library**: TUIコンポーネントテスト
+- **Commander.js**: CLIコマンドのE2Eテスト
+
+### 各レイヤーのテスト方針
+
+#### データ層 (src/models/)
+**書くべきテスト**:
+- CRUDメソッドの基本動作（create, findById, update, delete）
+- データベース制約の検証（UNIQUE制約、外部キー制約）
+- タイムスタンプ変換の正確性
+- SQLエラーハンドリング（存在しないID、重複データ）
+
+**書くべきでないテスト**:
+- ビジネスロジックのテスト（サービス層で実施）
+- 外部サービスとの連携テスト
+- UI関連のテスト
+
+**実装パターン**:
+```typescript
+beforeEach(() => {
+  db = new DatabaseManager(testDbPath);
+  db.migrate();
+  feedModel = new FeedModel(db);
+});
+```
+
+#### ビジネスロジック層 (src/services/)
+**書くべきテスト**:
+- ビジネスロジックの全体フロー（フィード追加・更新処理）
+- 複数モデルの協調動作（カスケード削除など）
+- カスタムエラーのハンドリング
+- 外部サービスのモック（RSSCrawler）
+- 進捗コールバックとキャンセル機能
+
+**書くべきでないテスト**:
+- データベースへの直接アクセス
+- 実際のHTTPリクエスト（必ずモック）
+- UI表示の詳細
+
+**モックの例**:
+```typescript
+mockCrawler = { crawl: vi.fn() } as unknown as RSSCrawler;
+vi.mocked(mockCrawler.crawl).mockResolvedValueOnce(mockData);
+```
+
+#### プレゼンテーション層 - CLI (src/apps/cli/)
+**書くべきテスト**:
+- E2Eテスト（コマンド実行から出力まで）
+- エラーメッセージの適切性
+- 終了コード（成功: undefined、エラー: 1）
+- 出力フォーマットのスナップショット
+
+**書くべきでないテスト**:
+- モデル層の詳細な動作
+- ビジネスロジックの内部実装
+
+**テストヘルパー**:
+```typescript
+const context = createTestContext();
+const output = await runCommand(['add', url], { dbPath: context.dbPath });
+expect(output.stdout).toMatchSnapshot();
+```
+
+#### プレゼンテーション層 - TUI (src/apps/tui/)
+**書くべきテスト**:
+- キーボード操作の統合テスト
+- 状態管理（選択、既読、ピン）
+- エラー表示とローディング状態
+- コンポーネント間の連携
+
+**書くべきでないテスト**:
+- console.logの詳細な出力（実装詳細に依存）
+- ビジネスロジックの詳細
+- 実際のデータベース操作
+
+**実装パターン**:
+```typescript
+const { stdin, lastFrame } = render(<App />);
+stdin.write('j'); // 次の記事へ
+await vi.waitFor(() => {
+  expect(lastFrame()).toContain('Article 1');
+});
+```
+
+### テストで避けるべきパターン
+
+1. **実装詳細への依存**
+   ```typescript
+   // ❌ 悪い例
+   expect(component.state.selectedIndex).toBe(1);
+   // ✅ 良い例
+   expect(lastFrame()).toContain('選択された記事');
+   ```
+
+2. **脆弱なテスト**
+   - 出力フォーマットの細かい変更で壊れる
+   - タイミングに依存する
+   - 内部状態に依存する
+
+3. **メンテナンス困難なテスト**
+   - 巨大な単一テスト
+   - 重複したセットアップ
+   - モックの過剰使用
+
+### モックの注意点
+- **ArticleModelのモック**: TUIテストではgetPinnedArticlesメソッドを含める
   ```typescript
   vi.mock('../../models/article.js', () => ({
     ArticleModel: vi.fn(() => ({
@@ -215,8 +318,6 @@ SQLiteを使用（src/models/schema.sql）：
     })),
   }));
   ```
-- コンポーネントのテストでconsole.log出力に依存するテストは避ける
-  - 出力フォーマットの変更に脆弱でメンテナンス性が低い
 
 ## セキュリティ実装
 
