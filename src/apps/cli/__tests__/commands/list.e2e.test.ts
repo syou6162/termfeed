@@ -76,11 +76,13 @@ describe('list command E2E', () => {
 
     // Assert
     expect(output.exitCode).toBeUndefined();
-    const feedSections = output.stdout.trim().split('\n\n');
-    // レーティング5のフィードが最初に表示され、その中でID順
-    expect(feedSections[0]).toContain(`${feed1.id}: Feed A`);
-    expect(feedSections[1]).toContain(`${feed3.id}: Feed C`);
-    expect(feedSections[2]).toContain(`${feed2.id}: Feed B`);
+    // レーティング5のフィードが最初に表示される
+    expect(output.stdout).toContain('## Rating 5');
+    expect(output.stdout).toContain(`${feed1.id}: Feed A`);
+    expect(output.stdout).toContain(`${feed3.id}: Feed C`);
+    // レーティング3のフィードが後に表示される
+    expect(output.stdout).toContain('## Rating 3');
+    expect(output.stdout).toContain(`${feed2.id}: Feed B`);
   });
 
   it('should handle feeds with special characters in title', async () => {

@@ -6,14 +6,14 @@ exports[`list command E2E > should display message when no feeds exist > list-no
 `;
 
 exports[`list command E2E > should list feeds with ID and title > list-with-feeds-output 1`] = `
-"1: Test Feed 1
+"## Rating 0 (2 feeds)
+
+1: Test Feed 1
   URL: https://example.com/feed1.rss
-  Rating: 0
   Description: Description 1
 
 2: Test Feed 2
   URL: https://example.com/feed2.rss
-  Rating: 0
   Description: Description 2
 
 "
