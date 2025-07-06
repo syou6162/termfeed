@@ -54,9 +54,6 @@ export class MockArticleService implements ArticleService {
     if (options?.isRead !== undefined) {
       filtered = filtered.filter((article) => article.is_read === options.isRead);
     }
-    if (options?.isFavorite !== undefined) {
-      // is_favoriteフィルタリングは別テーブルで管理されるため削除
-    }
 
     // ソート: 新しい記事が上に
     filtered.sort((a, b) => b.published_at.getTime() - a.published_at.getTime());
@@ -89,7 +86,6 @@ export class MockArticleService implements ArticleService {
   toggleFavorite(articleId: number): boolean {
     const article = this.articles.find((a) => a.id === articleId);
     if (!article) return false;
-    // is_favoriteプロパティは別テーブルで管理されるため削除
     article.updated_at = new Date();
     return true;
   }
