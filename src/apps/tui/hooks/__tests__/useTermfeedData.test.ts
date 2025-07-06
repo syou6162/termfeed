@@ -41,6 +41,46 @@ vi.mock('@/apps/cli/utils/database.js', () => ({
   createDatabaseManager: vi.fn(() => mockDatabaseManager),
 }));
 
+const mockFavoriteService = {
+  getFavoriteArticles: vi.fn(() => []),
+  toggleFavorite: vi.fn(),
+  setFavorite: vi.fn(),
+  removeFavorite: vi.fn(),
+  isFavorite: vi.fn(() => false),
+};
+
+const mockArticleService = {
+  getArticles: vi.fn(),
+  getArticleById: vi.fn(),
+  markAsRead: vi.fn(),
+  markAsUnread: vi.fn(),
+  toggleFavorite: vi.fn(),
+  toggleFavoriteWithPin: vi.fn(),
+  getUnreadCount: vi.fn(),
+  getTotalCount: vi.fn(),
+};
+
+const mockPinService = {
+  togglePin: vi.fn(),
+  getPinnedArticles: vi.fn(() => []),
+  getPinCount: vi.fn(() => 0),
+  setPin: vi.fn(),
+  unsetPin: vi.fn(),
+  clearAllPins: vi.fn(),
+};
+
+vi.mock('@/services/factory.js', () => ({
+  createModelsAndServices: vi.fn(() => ({
+    feedService: mockFeedService,
+    articleService: mockArticleService,
+    pinService: mockPinService,
+    favoriteService: mockFavoriteService,
+    articleModel: mockArticleModel,
+    feedModel: mockFeedModel,
+    favoriteModel: {},
+  })),
+}));
+
 // グローバルに結果を保持する型定義
 interface TestGlobal {
   __testFeedService?: ReturnType<typeof useTermfeedData>['feedService'];
@@ -73,14 +113,10 @@ describe('useTermfeedData', () => {
   });
 
   it('各Modelが正しく初期化される', async () => {
-    const { FeedModel } = await import('@/models/feed.js');
-    const { ArticleModel } = await import('@/models/article.js');
-    const { FeedService } = await import('@/services/feed-service.js');
+    const { createModelsAndServices } = await import('@/services/factory.js');
 
     render(React.createElement(TestComponent));
 
-    expect(FeedModel).toHaveBeenCalledWith(mockDatabaseManager);
-    expect(ArticleModel).toHaveBeenCalledWith(mockDatabaseManager);
-    expect(FeedService).toHaveBeenCalledWith(mockFeedModel, mockArticleModel);
+    expect(createModelsAndServices).toHaveBeenCalledWith(mockDatabaseManager);
   });
 });
