@@ -46,6 +46,7 @@ describe('registerArticleResources', () => {
 
     mockArticleModel = {
       findAll: vi.fn(),
+      getFavoriteArticles: vi.fn(),
     } as unknown as ArticleModel;
 
     mockFeedModel = {
@@ -189,7 +190,7 @@ describe('registerArticleResources', () => {
         },
       ];
 
-      vi.mocked(mockArticleModel.findAll).mockReturnValue(mockArticles);
+      vi.mocked(mockArticleModel.getFavoriteArticles).mockReturnValue(mockArticles);
       vi.mocked(mockFeedModel.findAll).mockReturnValue(mockFeeds);
 
       registerArticleResources(mockServer, mockArticleModel, mockFeedModel);
@@ -197,7 +198,7 @@ describe('registerArticleResources', () => {
       const favResource = registeredResources.get('favorites');
       const result = favResource?.handler(new URL('articles://favorites'));
 
-      expect(mockArticleModel.findAll).toHaveBeenCalledWith({ is_favorite: true, limit: 10 });
+      expect(mockArticleModel.getFavoriteArticles).toHaveBeenCalled();
 
       const contents = JSON.parse(result?.contents[0].text ?? '[]') as ArticleResourceJSON[];
       expect(contents[0]).toMatchObject({

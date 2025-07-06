@@ -15,7 +15,7 @@ export function createMcpServerCommand(): Command {
 
       console.error('Starting MCP server...');
 
-      const server = await createMcpServer(articleModel, feedModel);
+      const server = await createMcpServer(dbManager, articleModel, feedModel);
 
       // Graceful shutdown
       const shutdown = async () => {

@@ -38,7 +38,6 @@ export class ArticleModel {
       author?: string;
       published_at: number;
       is_read: number;
-      is_favorite: number;
       thumbnail_url?: string;
       created_at: number;
       updated_at: number;
@@ -53,7 +52,7 @@ export class ArticleModel {
       author: data.author,
       published_at: unixSecondsToDate(data.published_at),
       is_read: Boolean(data.is_read),
-      is_favorite: Boolean(data.is_favorite),
+      is_favorite: false, // お気に入りは別テーブルで管理
       thumbnail_url: data.thumbnail_url,
       created_at: unixSecondsToDate(data.created_at),
       updated_at: unixSecondsToDate(data.updated_at),
@@ -65,9 +64,9 @@ export class ArticleModel {
     const stmt = this.db.getDb().prepare(`
       INSERT INTO articles (
         feed_id, title, url, content, author, 
-        published_at, is_read, is_favorite, thumbnail_url, created_at, updated_at
+        published_at, is_read, thumbnail_url, created_at, updated_at
       )
-      VALUES (?, ?, ?, ?, ?, ?, 0, 0, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?)
     `);
 
     try {
@@ -87,7 +86,7 @@ export class ArticleModel {
         id: result.lastInsertRowid as number,
         ...article,
         is_read: false,
-        is_favorite: false,
+        is_favorite: false, // お気に入りは別テーブルで管理
         created_at: unixSecondsToDate(now),
         updated_at: unixSecondsToDate(now),
       };
@@ -123,25 +122,41 @@ export class ArticleModel {
   }
 
   public findAll(filter: ArticleFilter = {}): Article[] {
-    let query = 'SELECT * FROM articles WHERE 1=1';
+    let query = 'SELECT a.* FROM articles a';
+    const joins: string[] = [];
+    const conditions: string[] = [];
     const params: unknown[] = [];
 
+    if (filter.is_favorite !== undefined) {
+      if (filter.is_favorite) {
+        joins.push('INNER JOIN favorites f ON a.id = f.article_id');
+      } else {
+        joins.push('LEFT JOIN favorites f ON a.id = f.article_id');
+        conditions.push('f.article_id IS NULL');
+      }
+    }
+
+    if (joins.length > 0) {
+      query += ' ' + joins.join(' ');
+    }
+
+    query += ' WHERE 1=1';
+
+    if (conditions.length > 0) {
+      query += ' AND ' + conditions.join(' AND ');
+    }
+
     if (filter.feed_id !== undefined) {
-      query += ' AND feed_id = ?';
+      query += ' AND a.feed_id = ?';
       params.push(filter.feed_id);
     }
 
     if (filter.is_read !== undefined) {
-      query += ' AND is_read = ?';
+      query += ' AND a.is_read = ?';
       params.push(filter.is_read ? 1 : 0);
     }
 
-    if (filter.is_favorite !== undefined) {
-      query += ' AND is_favorite = ?';
-      params.push(filter.is_favorite ? 1 : 0);
-    }
-
-    query += ' ORDER BY published_at DESC';
+    query += ' ORDER BY a.published_at DESC';
 
     if (filter.limit !== undefined) {
       query += ' LIMIT ?';
@@ -166,9 +181,32 @@ export class ArticleModel {
         CASE WHEN p.article_id IS NOT NULL THEN 1 ELSE 0 END as is_pinned
       FROM articles a
       LEFT JOIN pins p ON a.id = p.article_id
-      WHERE 1=1
     `;
+    const joins: string[] = [];
+    const conditions: string[] = ['1=1'];
     const params: unknown[] = [];
+
+    if (filter.is_favorite !== undefined) {
+      if (filter.is_favorite) {
+        joins.push('INNER JOIN favorites f ON a.id = f.article_id');
+      } else {
+        joins.push('LEFT JOIN favorites f ON a.id = f.article_id');
+        conditions.push('f.article_id IS NULL');
+      }
+    }
+
+    if (joins.length > 0) {
+      query = `
+        SELECT 
+          a.*,
+          CASE WHEN p.article_id IS NOT NULL THEN 1 ELSE 0 END as is_pinned
+        FROM articles a
+        LEFT JOIN pins p ON a.id = p.article_id
+        ${joins.join(' ')}
+      `;
+    }
+
+    query += ' WHERE ' + conditions.join(' AND ');
 
     if (filter.feed_id !== undefined) {
       query += ' AND a.feed_id = ?';
@@ -178,11 +216,6 @@ export class ArticleModel {
     if (filter.is_read !== undefined) {
       query += ' AND a.is_read = ?';
       params.push(filter.is_read ? 1 : 0);
-    }
-
-    if (filter.is_favorite !== undefined) {
-      query += ' AND a.is_favorite = ?';
-      params.push(filter.is_favorite ? 1 : 0);
     }
 
     query += ' ORDER BY a.published_at DESC';
@@ -225,9 +258,11 @@ export class ArticleModel {
 
   public getFavoriteArticles(): Article[] {
     const query = `
-      SELECT * FROM articles 
-      WHERE is_favorite = 1 
-      ORDER BY created_at DESC
+      SELECT 
+        a.*
+      FROM articles a
+      INNER JOIN favorites f ON a.id = f.article_id
+      ORDER BY f.created_at DESC
     `;
 
     const stmt = this.db.getDb().prepare(query);
@@ -245,10 +280,7 @@ export class ArticleModel {
       updateValues.push(updates.is_read ? 1 : 0);
     }
 
-    if (updates.is_favorite !== undefined) {
-      updateFields.push('is_favorite = ?');
-      updateValues.push(updates.is_favorite ? 1 : 0);
-    }
+    // is_favoriteは別テーブルで管理するため、ここでは処理しない
 
     if (updateFields.length === 0) {
       return this.findById(id);
@@ -297,16 +329,7 @@ export class ArticleModel {
     return updated !== null;
   }
 
-  public toggleFavorite(id: number): boolean {
-    const article = this.findById(id);
-    if (!article) return false;
-
-    const newFavoriteState = !article.is_favorite;
-    const updated = this.update(id, { is_favorite: newFavoriteState });
-
-    // 更新が成功した場合は新しいお気に入り状態を返す
-    return updated !== null ? newFavoriteState : article.is_favorite;
-  }
+  // toggleFavoriteは削除（FavoriteModelで管理）
 
   public countByFeedId(feedId?: number): number {
     if (feedId === undefined) {

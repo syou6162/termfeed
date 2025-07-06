@@ -270,22 +270,6 @@ describe('ArticleModel', () => {
 
       expect(updated).not.toBeNull();
       expect(updated!.is_read).toBe(true);
-      expect(updated!.is_favorite).toBe(false);
-    });
-
-    it('記事のお気に入り状態を更新できる', () => {
-      const article = articleModel.create({
-        feed_id: testFeedId,
-        title: 'Favorite Test',
-        url: 'https://example.com/fav-test',
-        published_at: new Date(),
-      });
-
-      const updated = articleModel.update(article.id, { is_favorite: true });
-
-      expect(updated).not.toBeNull();
-      expect(updated!.is_favorite).toBe(true);
-      expect(updated!.is_read).toBe(false);
     });
 
     it('存在しないIDの場合はnullを返す', () => {
@@ -369,36 +353,6 @@ describe('ArticleModel', () => {
 
       const updated = articleModel.findById(article.id);
       expect(updated!.is_read).toBe(false);
-    });
-  });
-
-  describe('toggleFavorite', () => {
-    it('お気に入り状態をトグルできる', () => {
-      const article = articleModel.create({
-        feed_id: testFeedId,
-        title: 'Toggle Test',
-        url: 'https://example.com/toggle-test',
-        published_at: new Date(),
-      });
-
-      // お気に入りにする
-      let success = articleModel.toggleFavorite(article.id);
-      expect(success).toBe(true);
-
-      let updated = articleModel.findById(article.id);
-      expect(updated!.is_favorite).toBe(true);
-
-      // お気に入りを解除する
-      success = articleModel.toggleFavorite(article.id);
-      expect(success).toBe(false);
-
-      updated = articleModel.findById(article.id);
-      expect(updated!.is_favorite).toBe(false);
-    });
-
-    it('存在しない記事の場合はfalseを返す', () => {
-      const success = articleModel.toggleFavorite(999);
-      expect(success).toBe(false);
     });
   });
 

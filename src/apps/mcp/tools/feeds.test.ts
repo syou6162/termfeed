@@ -1,10 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { registerFeedTools } from './feeds.js';
-import { FeedModel } from '../../../models/feed.js';
-import { ArticleModel } from '../../../models/article.js';
+import { DatabaseManager } from '../../../models/database.js';
 import { FeedService } from '../../../services/feed-service.js';
-import { RSSCrawler } from '../../../services/rss-crawler.js';
 import type { UpdateAllFeedsResult, UpdateCancelledResult } from '@/types';
 
 vi.mock('../../../services/feed-service.js');
@@ -12,8 +10,6 @@ vi.mock('../../../services/rss-crawler.js');
 
 describe('registerFeedTools', () => {
   let mockServer: McpServer;
-  let mockFeedModel: FeedModel;
-  let mockArticleModel: ArticleModel;
   let mockUpdateAllFeeds: ReturnType<typeof vi.fn>;
   let toolHandler: () => Promise<unknown>;
 
@@ -35,13 +31,11 @@ describe('registerFeedTools', () => {
         }
       }),
     } as unknown as McpServer;
-
-    mockFeedModel = {} as FeedModel;
-    mockArticleModel = {} as ArticleModel;
   });
 
   it('should register update_all_feeds tool', () => {
-    registerFeedTools(mockServer, mockFeedModel, mockArticleModel);
+    const mockDatabaseManager = {} as DatabaseManager;
+    registerFeedTools(mockServer, mockDatabaseManager);
 
     expect(mockServer.tool).toHaveBeenCalledWith(
       'update_all_feeds',
@@ -73,7 +67,8 @@ describe('registerFeedTools', () => {
     };
 
     mockUpdateAllFeeds.mockResolvedValue(mockResult);
-    registerFeedTools(mockServer, mockFeedModel, mockArticleModel);
+    const mockDatabaseManager = {} as DatabaseManager;
+    registerFeedTools(mockServer, mockDatabaseManager);
 
     const result = await toolHandler();
 
@@ -125,7 +120,8 @@ describe('registerFeedTools', () => {
     };
 
     mockUpdateAllFeeds.mockResolvedValue(mockResult);
-    registerFeedTools(mockServer, mockFeedModel, mockArticleModel);
+    const mockDatabaseManager = {} as DatabaseManager;
+    registerFeedTools(mockServer, mockDatabaseManager);
 
     const result = await toolHandler();
 
@@ -168,7 +164,8 @@ describe('registerFeedTools', () => {
     };
 
     mockUpdateAllFeeds.mockResolvedValue(mockCancelledResult);
-    registerFeedTools(mockServer, mockFeedModel, mockArticleModel);
+    const mockDatabaseManager = {} as DatabaseManager;
+    registerFeedTools(mockServer, mockDatabaseManager);
 
     const result = await toolHandler();
 
@@ -195,7 +192,8 @@ describe('registerFeedTools', () => {
     error.cause = { code: 'ECONNREFUSED' };
 
     mockUpdateAllFeeds.mockRejectedValue(error);
-    registerFeedTools(mockServer, mockFeedModel, mockArticleModel);
+    const mockDatabaseManager = {} as DatabaseManager;
+    registerFeedTools(mockServer, mockDatabaseManager);
 
     const result = await toolHandler();
 
@@ -223,7 +221,8 @@ describe('registerFeedTools', () => {
 
   it('should handle non-Error exceptions', async () => {
     mockUpdateAllFeeds.mockRejectedValue('String error');
-    registerFeedTools(mockServer, mockFeedModel, mockArticleModel);
+    const mockDatabaseManager = {} as DatabaseManager;
+    registerFeedTools(mockServer, mockDatabaseManager);
 
     const result = await toolHandler();
 
@@ -247,15 +246,5 @@ describe('registerFeedTools', () => {
         },
       ],
     });
-  });
-
-  it('should create FeedService with provided models', () => {
-    registerFeedTools(mockServer, mockFeedModel, mockArticleModel);
-
-    expect(FeedService).toHaveBeenCalledWith(
-      mockFeedModel,
-      mockArticleModel,
-      expect.any(RSSCrawler)
-    );
   });
 });

@@ -1,14 +1,21 @@
 import { ArticleModel } from '../models/article.js';
 import { PinService } from './pin.js';
+import { FavoriteService } from './favorite.js';
 import type { Article, ArticleService as IArticleService } from '@/types';
 
 export class ArticleService implements IArticleService {
   private articleModel: ArticleModel;
   private pinService: PinService;
+  private favoriteService: FavoriteService;
 
-  constructor(articleModel: ArticleModel, pinService: PinService) {
+  constructor(
+    articleModel: ArticleModel,
+    pinService: PinService,
+    favoriteService: FavoriteService
+  ) {
     this.articleModel = articleModel;
     this.pinService = pinService;
+    this.favoriteService = favoriteService;
   }
 
   getArticles(options?: {
@@ -40,7 +47,7 @@ export class ArticleService implements IArticleService {
   }
 
   toggleFavorite(articleId: number): boolean {
-    return this.articleModel.toggleFavorite(articleId);
+    return this.favoriteService.toggleFavorite(articleId);
   }
 
   /**
@@ -49,7 +56,7 @@ export class ArticleService implements IArticleService {
    * @returns お気に入りに設定した場合はtrue、外した場合はfalse
    */
   toggleFavoriteWithPin(articleId: number): boolean {
-    const isFavorite = this.articleModel.toggleFavorite(articleId);
+    const isFavorite = this.favoriteService.toggleFavorite(articleId);
 
     if (isFavorite) {
       // お気に入りに設定した場合：ピンを立てる

@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { DatabaseManager } from '../models/database.js';
 import { ArticleService } from './article-service.js';
 import { PinService } from './pin.js';
+import { FavoriteService } from './favorite.js';
 import { ArticleModel } from '../models/article.js';
 import { FeedModel } from '../models/feed.js';
 import * as fs from 'fs';
@@ -14,6 +15,7 @@ describe('ArticleService', () => {
   let db: DatabaseManager;
   let articleService: ArticleService;
   let pinService: PinService;
+  let favoriteService: FavoriteService;
   let articleModel: ArticleModel;
   let feedModel: FeedModel;
   let testFeedId: number;
@@ -27,7 +29,8 @@ describe('ArticleService', () => {
     db.migrate();
     articleModel = new ArticleModel(db);
     pinService = new PinService(db);
-    articleService = new ArticleService(articleModel, pinService);
+    favoriteService = new FavoriteService(db);
+    articleService = new ArticleService(articleModel, pinService, favoriteService);
     feedModel = new FeedModel(db);
 
     // テスト用のフィードを作成
