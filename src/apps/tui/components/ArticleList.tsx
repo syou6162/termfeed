@@ -158,24 +158,19 @@ export const ArticleList = memo(function ArticleList({
           {selectedArticle.title}
         </Text>
       </Box>
-      {/* お気に入り・ピンステータス */}
-      {(selectedArticle.is_favorite || isPinned) && (
-        <Box paddingX={1} flexDirection="row" gap={1}>
-          {selectedArticle.is_favorite && (
-            <Text color="yellow" bold>
-              ★ お気に入り
-            </Text>
-          )}
-          {isPinned && (
-            <Text color="yellow" bold>
-              📌 ピン
-            </Text>
-          )}
-        </Box>
-      )}
       <Box paddingX={1}>
         <Text color="gray">公開日: {publishedDate}</Text>
         {selectedArticle.author && <Text color="cyan"> | 著者: {selectedArticle.author}</Text>}
+        {selectedArticle.is_favorite && (
+          <Text color="yellow" bold>
+            {selectedArticle.author ? ' | ' : ' | '}★ お気に入り
+          </Text>
+        )}
+        {isPinned && (
+          <Text color="yellow" bold>
+            {selectedArticle.author || selectedArticle.is_favorite ? ' | ' : ' | '}📌 ピン
+          </Text>
+        )}
       </Box>
       <Box paddingX={1} marginBottom={1}>
         <Text color="yellow">URL: {selectedArticle.url}</Text>
