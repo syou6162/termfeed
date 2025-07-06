@@ -1,5 +1,5 @@
 import { render } from 'ink-testing-library';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest';
 import { ArticleList } from '../ArticleList.js';
 import type { Article } from '../../../../types/index.js';
 
@@ -476,12 +476,26 @@ describe('ArticleList', () => {
   });
 
   describe('スナップショットテスト（レイアウト破壊的変更の検出）', () => {
+    // CI環境でのタイムゾーン問題を回避するため、日付フォーマットを固定
+    const mockDate = new Date('2024-01-15T10:30:00Z');
+
+    beforeAll(() => {
+      // Date.prototype.toLocaleDateStringをモック
+      vi.spyOn(Date.prototype, 'toLocaleDateString').mockImplementation(
+        () => '2024年1月15日 10:30'
+      );
+    });
+
+    afterAll(() => {
+      vi.restoreAllMocks();
+    });
+
     it('お気に入りのみの記事レイアウト', () => {
       const article = createMockArticle(1, {
         title: 'Sample Article Title',
         author: 'John Doe',
         is_favorite: true,
-        published_at: new Date('2024-01-15T10:30:00Z'),
+        published_at: mockDate,
         content: '<p>Sample article content with HTML tags</p>',
       });
 
@@ -503,7 +517,7 @@ describe('ArticleList', () => {
         title: 'Sample Article Title',
         author: 'Jane Smith',
         is_favorite: false,
-        published_at: new Date('2024-01-15T10:30:00Z'),
+        published_at: mockDate,
         content: '<p>Sample article content with HTML tags</p>',
       });
 
@@ -525,7 +539,7 @@ describe('ArticleList', () => {
         title: 'Sample Article Title',
         author: 'Bob Wilson',
         is_favorite: true,
-        published_at: new Date('2024-01-15T10:30:00Z'),
+        published_at: mockDate,
         content: '<p>Sample article content with HTML tags</p>',
       });
 
@@ -547,7 +561,7 @@ describe('ArticleList', () => {
         title: 'Sample Article Title',
         author: undefined,
         is_favorite: true,
-        published_at: new Date('2024-01-15T10:30:00Z'),
+        published_at: mockDate,
         content: '<p>Sample article content with HTML tags</p>',
       });
 
@@ -569,7 +583,7 @@ describe('ArticleList', () => {
         title: 'Sample Article Title',
         author: 'Alice Johnson',
         is_favorite: false,
-        published_at: new Date('2024-01-15T10:30:00Z'),
+        published_at: mockDate,
         content: '<p>Sample article content with HTML tags</p>',
       });
 
