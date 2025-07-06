@@ -276,7 +276,6 @@ export class FeedService implements IFeedService {
     options: {
       feed_id?: number;
       is_read?: boolean;
-      is_favorite?: boolean;
       limit?: number;
       offset?: number;
     } = {}

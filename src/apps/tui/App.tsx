@@ -88,11 +88,28 @@ export function App(props: AppProps = {}) {
   const { addError, clearErrorsBySource } = errorManager;
 
   // 一時的なメッセージを表示する関数
+  const messageTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const showTemporaryMessage = useCallback((message: string, duration = 3000) => {
+    // 既存のタイマーをクリア
+    if (messageTimerRef.current) {
+      clearTimeout(messageTimerRef.current);
+    }
+
     setTemporaryMessage(message);
-    setTimeout(() => {
+    messageTimerRef.current = setTimeout(() => {
       setTemporaryMessage(null);
+      messageTimerRef.current = null;
     }, duration);
+  }, []);
+
+  // クリーンアップ：アンマウント時にタイマーをクリア
+  useEffect(() => {
+    return () => {
+      if (messageTimerRef.current) {
+        clearTimeout(messageTimerRef.current);
+      }
+    };
   }, []);
 
   // フィードエラーの管理

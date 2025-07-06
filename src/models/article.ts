@@ -16,7 +16,6 @@ export type CreateArticleInput = {
 export type ArticleFilter = {
   feed_id?: number;
   is_read?: boolean;
-  is_favorite?: boolean;
   limit?: number;
   offset?: number;
 };
@@ -120,41 +119,20 @@ export class ArticleModel {
   }
 
   public findAll(filter: ArticleFilter = {}): Article[] {
-    let query = 'SELECT a.* FROM articles a';
-    const joins: string[] = [];
-    const conditions: string[] = [];
+    let query = 'SELECT * FROM articles WHERE 1=1';
     const params: unknown[] = [];
 
-    if (filter.is_favorite !== undefined) {
-      if (filter.is_favorite) {
-        joins.push('INNER JOIN favorites f ON a.id = f.article_id');
-      } else {
-        joins.push('LEFT JOIN favorites f ON a.id = f.article_id');
-        conditions.push('f.article_id IS NULL');
-      }
-    }
-
-    if (joins.length > 0) {
-      query += ' ' + joins.join(' ');
-    }
-
-    query += ' WHERE 1=1';
-
-    if (conditions.length > 0) {
-      query += ' AND ' + conditions.join(' AND ');
-    }
-
     if (filter.feed_id !== undefined) {
-      query += ' AND a.feed_id = ?';
+      query += ' AND feed_id = ?';
       params.push(filter.feed_id);
     }
 
     if (filter.is_read !== undefined) {
-      query += ' AND a.is_read = ?';
+      query += ' AND is_read = ?';
       params.push(filter.is_read ? 1 : 0);
     }
 
-    query += ' ORDER BY a.published_at DESC';
+    query += ' ORDER BY published_at DESC';
 
     if (filter.limit !== undefined) {
       query += ' LIMIT ?';
@@ -180,43 +158,21 @@ export class ArticleModel {
       FROM articles a
       LEFT JOIN pins p ON a.id = p.article_id
     `;
-    const joins: string[] = [];
-    const conditions: string[] = ['1=1'];
     const params: unknown[] = [];
 
-    if (filter.is_favorite !== undefined) {
-      if (filter.is_favorite) {
-        joins.push('INNER JOIN favorites f ON a.id = f.article_id');
-      } else {
-        joins.push('LEFT JOIN favorites f ON a.id = f.article_id');
-        conditions.push('f.article_id IS NULL');
-      }
-    }
-
-    if (joins.length > 0) {
-      query = `
-        SELECT 
-          a.*,
-          CASE WHEN p.article_id IS NOT NULL THEN 1 ELSE 0 END as is_pinned
-        FROM articles a
-        LEFT JOIN pins p ON a.id = p.article_id
-        ${joins.join(' ')}
-      `;
-    }
-
-    query += ' WHERE ' + conditions.join(' AND ');
+    query += ' WHERE 1=1';
 
     if (filter.feed_id !== undefined) {
-      query += ' AND a.feed_id = ?';
+      query += ' AND feed_id = ?';
       params.push(filter.feed_id);
     }
 
     if (filter.is_read !== undefined) {
-      query += ' AND a.is_read = ?';
+      query += ' AND is_read = ?';
       params.push(filter.is_read ? 1 : 0);
     }
 
-    query += ' ORDER BY a.published_at DESC';
+    query += ' ORDER BY published_at DESC';
 
     if (filter.limit !== undefined) {
       query += ' LIMIT ?';
