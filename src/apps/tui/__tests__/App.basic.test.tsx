@@ -13,6 +13,26 @@ const mockFeedService = {
   updateAllFeeds: vi.fn(),
 };
 
+const mockArticleService = {
+  getArticles: vi.fn(),
+  getArticleById: vi.fn(),
+  markAsRead: vi.fn(),
+  markAsUnread: vi.fn(),
+  toggleFavorite: vi.fn(),
+  toggleFavoriteWithPin: vi.fn(),
+  getUnreadCount: vi.fn(),
+  getTotalCount: vi.fn(),
+};
+
+const mockPinService = {
+  togglePin: vi.fn(),
+  getPinnedArticles: vi.fn(() => []),
+  getPinCount: vi.fn(() => 0),
+  setPin: vi.fn(),
+  unsetPin: vi.fn(),
+  clearAllPins: vi.fn(),
+};
+
 // child_processのモック
 vi.mock('child_process', () => ({
   spawn: vi.fn(() => ({
@@ -44,6 +64,25 @@ vi.mock('../../../models/article.js', () => ({
 // FeedServiceのモック
 vi.mock('../../../services/feed-service.js', () => ({
   FeedService: vi.fn().mockImplementation(() => mockFeedService),
+}));
+
+// ArticleServiceのモック
+vi.mock('../../../services/article-service.js', () => ({
+  ArticleService: vi.fn().mockImplementation(() => mockArticleService),
+}));
+
+// PinServiceのモック
+vi.mock('../../../services/pin.js', () => ({
+  PinService: vi.fn().mockImplementation(() => mockPinService),
+}));
+
+// Factoryのモック
+vi.mock('../../../services/factory.js', () => ({
+  createFeedServices: vi.fn(() => ({
+    feedService: mockFeedService,
+    articleService: mockArticleService,
+    pinService: mockPinService,
+  })),
 }));
 
 // データベースユーティリティのモック
@@ -103,6 +142,18 @@ describe('App Basic Tests', () => {
       failed: [],
     });
 
+    // ArticleServiceのモック実装
+    mockArticleService.getArticles.mockReturnValue(mockArticles);
+    mockArticleService.getArticleById.mockImplementation(
+      (id: number) => mockArticles.find((article) => article.id === id) || null
+    );
+    mockArticleService.markAsRead.mockImplementation(() => true);
+    mockArticleService.markAsUnread.mockImplementation(() => true);
+    mockArticleService.toggleFavorite.mockImplementation(() => true);
+    mockArticleService.toggleFavoriteWithPin.mockImplementation(() => true);
+    mockArticleService.getUnreadCount.mockReturnValue(mockArticles.length);
+    mockArticleService.getTotalCount.mockReturnValue(mockArticles.length);
+
     // process.onのモック
     vi.spyOn(process, 'on').mockImplementation(() => process);
     vi.spyOn(process, 'off').mockImplementation(() => process);
@@ -147,7 +198,7 @@ describe('App Basic Tests', () => {
 
     // getArticlesは遅れて呼ばれる可能性があるので別途待つ
     await vi.waitFor(() => {
-      expect(mockFeedService.getArticles).toHaveBeenCalled();
+      expect(mockArticleService.getArticles).toHaveBeenCalled();
     });
   });
 });
