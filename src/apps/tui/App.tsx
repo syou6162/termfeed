@@ -1,5 +1,5 @@
 import { Box, Text, useApp, useStdout } from 'ink';
-import { useCallback, useEffect, useState, useRef, useMemo } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
 import { ArticleList } from './components/ArticleList.js';
 import { FeedList } from './components/FeedList.js';
 import { TwoPaneLayout } from './components/TwoPaneLayout.js';
@@ -13,7 +13,6 @@ import { useViewedArticles } from './hooks/useViewedArticles.js';
 import { usePinManager } from './hooks/usePinManager.js';
 import { openUrlInBrowser, type OpenUrlResult } from './utils/browser.js';
 import { ERROR_SOURCES } from './types/error.js';
-import { PinService } from '../../services/pin.js';
 import type { DatabaseManager } from '../../models/database.js';
 
 interface AppProps {
@@ -28,8 +27,7 @@ export function App(props: AppProps = {}) {
   const [temporaryMessage, setTemporaryMessage] = useState<string | null>(null);
 
   // データベースとサービスを初期化
-  const { feedService, databaseManager: dbManager } = useTermfeedData(databaseManager);
-  const pinService = useMemo(() => new PinService(dbManager), [dbManager]);
+  const { feedService, articleService, pinService } = useTermfeedData(databaseManager);
 
   // フィード管理
   const {
@@ -58,13 +56,13 @@ export function App(props: AppProps = {}) {
     loadArticles,
     setSelectedArticleIndex,
     setScrollOffset,
-    toggleFavorite,
+    toggleFavoriteWithPin,
     scrollDown,
     scrollUp,
     pageDown,
     pageUp,
     scrollToEnd,
-  } = useArticleManager(feedService, selectedFeedId);
+  } = useArticleManager(feedService, articleService, selectedFeedId);
 
   const isLoading = feedsLoading || articlesLoading;
 
@@ -309,7 +307,7 @@ export function App(props: AppProps = {}) {
     onRefreshAll: () => {
       void updateAllFeeds();
     },
-    onToggleFavorite: toggleFavorite,
+    onToggleFavorite: toggleFavoriteWithPin,
     onToggleHelp: () => setShowHelp((prev) => !prev),
     onQuit: handleQuit,
     onScrollDown: scrollDown,

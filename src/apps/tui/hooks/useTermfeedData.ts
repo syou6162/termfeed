@@ -1,12 +1,15 @@
 import { useMemo } from 'react';
-import { FeedModel } from '../../../models/feed.js';
-import { ArticleModel } from '../../../models/article.js';
-import { FeedService } from '../../../services/feed-service.js';
+import { createFeedServices } from '../../../services/factory.js';
 import { createDatabaseManager } from '../../cli/utils/database.js';
 import type { DatabaseManager } from '../../../models/database.js';
+import type { FeedService } from '../../../services/feed-service.js';
+import type { ArticleService } from '../../../services/article-service.js';
+import type { PinService } from '../../../services/pin.js';
 
 export type TermfeedData = {
   feedService: FeedService;
+  articleService: ArticleService;
+  pinService: PinService;
   databaseManager: ReturnType<typeof createDatabaseManager>;
 };
 
@@ -17,7 +20,7 @@ export type TermfeedData = {
  * @param databaseManagerProp - 外部から注入するDatabaseManager（チュートリアルモード用）
  */
 export function useTermfeedData(databaseManagerProp?: DatabaseManager): TermfeedData {
-  const { feedService, databaseManager } = useMemo(() => {
+  const { feedService, articleService, pinService, databaseManager } = useMemo(() => {
     // 外部から渡されたDatabaseManagerがあればそれを使用、なければ新規作成
     const dbManager = databaseManagerProp || createDatabaseManager();
 
@@ -26,12 +29,10 @@ export function useTermfeedData(databaseManagerProp?: DatabaseManager): Termfeed
       dbManager.migrate();
     }
 
-    const feedModel = new FeedModel(dbManager);
-    const articleModel = new ArticleModel(dbManager);
-    const feedService = new FeedService(feedModel, articleModel);
+    const { feedService, articleService, pinService } = createFeedServices(dbManager);
 
-    return { feedService, databaseManager: dbManager };
+    return { feedService, articleService, pinService, databaseManager: dbManager };
   }, [databaseManagerProp]);
 
-  return { feedService, databaseManager };
+  return { feedService, articleService, pinService, databaseManager };
 }
