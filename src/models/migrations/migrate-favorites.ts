@@ -25,6 +25,9 @@ function migrateToFavoritesTable() {
   const database = db.getDb();
 
   try {
+    // 外部キー制約を一時的に無効化
+    database.prepare('PRAGMA foreign_keys = OFF').run();
+
     // トランザクション開始
     database.prepare('BEGIN TRANSACTION').run();
 
@@ -78,7 +81,8 @@ function migrateToFavoritesTable() {
 
     for (const article of favoriteArticles) {
       // お気に入りにした時間として記事の作成時間を使用
-      insertFavorite.run(article.id, article.created_at);
+      const result = insertFavorite.run(article.id, article.created_at);
+      console.log(`  - Inserted article ${article.id}: ${result.changes} changes`);
     }
 
     // 3. 新しいarticlesテーブルを作成（is_favoriteカラムなし）
@@ -138,6 +142,10 @@ function migrateToFavoritesTable() {
 
     // コミット
     database.prepare('COMMIT').run();
+
+    // 外部キー制約を再度有効化
+    database.prepare('PRAGMA foreign_keys = ON').run();
+
     console.log('Migration completed successfully!');
 
     // 統計情報を表示
@@ -150,7 +158,7 @@ function migrateToFavoritesTable() {
 
     console.log(`\nMigration summary:`);
     console.log(`- Total articles: ${totalArticles.count}`);
-    console.log(`- Total favorites: ${totalFavorites.count}`);
+    console.log(`- Total favorites migrated: ${totalFavorites.count}`);
   } catch (error) {
     // エラーが発生したらロールバック
     console.error('Migration failed:', error);
