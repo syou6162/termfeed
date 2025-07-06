@@ -44,7 +44,7 @@ describe('DatabaseManager', () => {
     expect(tables.map((t) => (t as { name: string }).name)).toContain('articles');
   });
 
-  it('should have correct default values for boolean fields', () => {
+  it('should have correct default values for boolean field', () => {
     dbManager.migrate();
 
     // フィードを挿入
@@ -54,7 +54,7 @@ describe('DatabaseManager', () => {
       .prepare('INSERT INTO feeds (url, title, last_updated_at, created_at) VALUES (?, ?, ?, ?)');
     const feedInfo = insertFeed.run('https://example.com/rss', 'Test Feed', now, now);
 
-    // 記事を挿入（is_read, is_favoriteを指定しない）
+    // 記事を挿入（is_readを指定しない）
     const insertArticle = dbManager
       .getDb()
       .prepare(
@@ -72,11 +72,10 @@ describe('DatabaseManager', () => {
     // デフォルト値を確認
     const article = dbManager
       .getDb()
-      .prepare('SELECT is_read, is_favorite FROM articles WHERE id = 1')
-      .get() as { is_read: number; is_favorite: number };
+      .prepare('SELECT is_read FROM articles WHERE id = 1')
+      .get() as { is_read: number };
 
     expect(article.is_read).toBe(0); // SQLiteでは FALSE は 0 として保存される
-    expect(article.is_favorite).toBe(0);
   });
 });
 

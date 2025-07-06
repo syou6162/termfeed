@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { DatabaseManager } from '../models/database.js';
 import { ArticleService } from './article-service.js';
 import { PinService } from './pin.js';
+import { FavoriteService } from './favorite.js';
 import { ArticleModel } from '../models/article.js';
 import { FeedModel } from '../models/feed.js';
 import * as fs from 'fs';
@@ -14,6 +15,7 @@ describe('ArticleService', () => {
   let db: DatabaseManager;
   let articleService: ArticleService;
   let pinService: PinService;
+  let favoriteService: FavoriteService;
   let articleModel: ArticleModel;
   let feedModel: FeedModel;
   let testFeedId: number;
@@ -27,7 +29,8 @@ describe('ArticleService', () => {
     db.migrate();
     articleModel = new ArticleModel(db);
     pinService = new PinService(db);
-    articleService = new ArticleService(articleModel, pinService);
+    favoriteService = new FavoriteService(db);
+    articleService = new ArticleService(articleModel, pinService, favoriteService);
     feedModel = new FeedModel(db);
 
     // テスト用のフィードを作成
@@ -93,12 +96,16 @@ describe('ArticleService', () => {
       // 1つの記事をお気に入りにする
       articleService.toggleFavorite(testArticleId1);
 
-      const favoriteArticles = articleService.getArticles({ isFavorite: true });
-      const nonFavoriteArticles = articleService.getArticles({ isFavorite: false });
+      const favoriteArticles = articleService.getArticles({ filter: 'favorites' });
+      const allArticles = articleService.getArticles({ filter: 'all' });
+      const allArticlesNoFilter = articleService.getArticles();
 
       expect(favoriteArticles).toHaveLength(1);
-      expect(nonFavoriteArticles).toHaveLength(1);
       expect(favoriteArticles[0].id).toBe(testArticleId1);
+
+      // filter: 'all' または undefined の場合は全記事を返す
+      expect(allArticles).toHaveLength(2);
+      expect(allArticlesNoFilter).toHaveLength(2);
     });
   });
 
@@ -158,15 +165,15 @@ describe('ArticleService', () => {
       let isFavorite = articleService.toggleFavorite(testArticleId1);
       expect(isFavorite).toBe(true);
 
-      let article = articleService.getArticleById(testArticleId1);
-      expect(article!.is_favorite).toBe(true);
+      // お気に入り状態の確認はFavoriteServiceで行う
+      expect(favoriteService.isFavorite(testArticleId1)).toBe(true);
 
       // お気に入りを解除する
       isFavorite = articleService.toggleFavorite(testArticleId1);
       expect(isFavorite).toBe(false);
 
-      article = articleService.getArticleById(testArticleId1);
-      expect(article!.is_favorite).toBe(false);
+      // お気に入り状態の確認はFavoriteServiceで行う
+      expect(favoriteService.isFavorite(testArticleId1)).toBe(false);
     });
 
     it('存在しない記事の場合はfalseを返す', () => {
@@ -178,17 +185,15 @@ describe('ArticleService', () => {
   describe('toggleFavoriteWithPin', () => {
     it('お気に入りに設定すると同時にピンも立てる', () => {
       // 初期状態の確認
-      let article = articleService.getArticleById(testArticleId1);
-      expect(article!.is_favorite).toBe(false);
+      expect(favoriteService.isFavorite(testArticleId1)).toBe(false);
       expect(pinService.getPinCount()).toBe(0);
 
       // お気に入り + ピンを設定
       const isFavorite = articleService.toggleFavoriteWithPin(testArticleId1);
       expect(isFavorite).toBe(true);
 
-      // 記事のお気に入り状態を確認
-      article = articleService.getArticleById(testArticleId1);
-      expect(article!.is_favorite).toBe(true);
+      // お気に入り状態の確認
+      expect(favoriteService.isFavorite(testArticleId1)).toBe(true);
 
       // ピンも立っていることを確認
       expect(pinService.getPinCount()).toBe(1);
@@ -200,16 +205,15 @@ describe('ArticleService', () => {
     it('お気に入りを解除すると同時にピンも外れる', () => {
       // まずお気に入り + ピンを設定
       articleService.toggleFavoriteWithPin(testArticleId1);
-      expect(articleService.getArticleById(testArticleId1)!.is_favorite).toBe(true);
+      expect(favoriteService.isFavorite(testArticleId1)).toBe(true);
       expect(pinService.getPinCount()).toBe(1);
 
       // お気に入り + ピンを解除
       const isFavorite = articleService.toggleFavoriteWithPin(testArticleId1);
       expect(isFavorite).toBe(false);
 
-      // 記事のお気に入り状態を確認
-      const article = articleService.getArticleById(testArticleId1);
-      expect(article!.is_favorite).toBe(false);
+      // お気に入り状態の確認
+      expect(favoriteService.isFavorite(testArticleId1)).toBe(false);
 
       // ピンも外れていることを確認
       expect(pinService.getPinCount()).toBe(0);
@@ -219,22 +223,21 @@ describe('ArticleService', () => {
       // 先にピンだけを立てる（pキー相当）
       pinService.togglePin(testArticleId1);
       expect(pinService.getPinCount()).toBe(1);
-      expect(articleService.getArticleById(testArticleId1)!.is_favorite).toBe(false);
+      expect(favoriteService.isFavorite(testArticleId1)).toBe(false);
 
       // お気に入りにする（fキー相当）
       const isFavorite = articleService.toggleFavoriteWithPin(testArticleId1);
       expect(isFavorite).toBe(true);
 
       // お気に入りになり、ピンも維持される
-      const article = articleService.getArticleById(testArticleId1);
-      expect(article!.is_favorite).toBe(true);
+      expect(favoriteService.isFavorite(testArticleId1)).toBe(true);
       expect(pinService.getPinCount()).toBe(1);
     });
 
     it('お気に入りでピンが立っている記事を解除するとピンも外れる', () => {
       // お気に入り + ピンを設定
       articleService.toggleFavoriteWithPin(testArticleId1);
-      expect(articleService.getArticleById(testArticleId1)!.is_favorite).toBe(true);
+      expect(favoriteService.isFavorite(testArticleId1)).toBe(true);
       expect(pinService.getPinCount()).toBe(1);
 
       // お気に入りを解除
@@ -255,8 +258,8 @@ describe('ArticleService', () => {
       expect(isFavorite2).toBe(true);
 
       // 両方の記事がお気に入りでピンが立っている
-      expect(articleService.getArticleById(testArticleId1)!.is_favorite).toBe(true);
-      expect(articleService.getArticleById(testArticleId2)!.is_favorite).toBe(true);
+      expect(favoriteService.isFavorite(testArticleId1)).toBe(true);
+      expect(favoriteService.isFavorite(testArticleId2)).toBe(true);
       expect(pinService.getPinCount()).toBe(2);
 
       // 記事1のお気に入りを解除
@@ -264,8 +267,8 @@ describe('ArticleService', () => {
       expect(isFavorite1).toBe(false);
 
       // 記事1のお気に入りとピンが外れ、記事2は維持される
-      expect(articleService.getArticleById(testArticleId1)!.is_favorite).toBe(false);
-      expect(articleService.getArticleById(testArticleId2)!.is_favorite).toBe(true);
+      expect(favoriteService.isFavorite(testArticleId1)).toBe(false);
+      expect(favoriteService.isFavorite(testArticleId2)).toBe(true);
       expect(pinService.getPinCount()).toBe(1);
     });
 

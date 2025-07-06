@@ -11,7 +11,6 @@ export class MockArticleService implements ArticleService {
       author: 'John Doe',
       published_at: new Date('2024-01-01'),
       is_read: false,
-      is_favorite: false,
       created_at: new Date(),
       updated_at: new Date(),
     },
@@ -24,7 +23,6 @@ export class MockArticleService implements ArticleService {
       author: 'Jane Smith',
       published_at: new Date('2024-01-02'),
       is_read: true,
-      is_favorite: true,
       created_at: new Date(),
       updated_at: new Date(),
     },
@@ -36,7 +34,6 @@ export class MockArticleService implements ArticleService {
       content: 'This is sample content for article 3.',
       published_at: new Date('2024-01-03'),
       is_read: false,
-      is_favorite: false,
       created_at: new Date(),
       updated_at: new Date(),
     },
@@ -56,9 +53,6 @@ export class MockArticleService implements ArticleService {
     }
     if (options?.isRead !== undefined) {
       filtered = filtered.filter((article) => article.is_read === options.isRead);
-    }
-    if (options?.isFavorite !== undefined) {
-      filtered = filtered.filter((article) => article.is_favorite === options.isFavorite);
     }
 
     // ソート: 新しい記事が上に
@@ -92,7 +86,6 @@ export class MockArticleService implements ArticleService {
   toggleFavorite(articleId: number): boolean {
     const article = this.articles.find((a) => a.id === articleId);
     if (!article) return false;
-    article.is_favorite = !article.is_favorite;
     article.updated_at = new Date();
     return true;
   }

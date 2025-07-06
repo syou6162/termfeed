@@ -42,7 +42,6 @@ export type CrawlResult = {
     published_at: Date;
     thumbnail_url?: string;
     is_read: boolean;
-    is_favorite: boolean;
   }>;
 };
 

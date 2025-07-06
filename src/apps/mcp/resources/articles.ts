@@ -57,7 +57,7 @@ export function registerArticleResources(
       description: 'Get your favorite articles (default: 10 items)',
     },
     () => {
-      const articles = articleModel.findAll({ is_favorite: true, limit: 10 });
+      const articles = articleModel.getFavoriteArticles();
       const feedMap = getAllFeedsMap();
 
       const resources: ArticleResource[] = articles.map((article) => ({

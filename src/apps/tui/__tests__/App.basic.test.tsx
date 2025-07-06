@@ -33,6 +33,14 @@ const mockPinService = {
   clearAllPins: vi.fn(),
 };
 
+const mockFavoriteService = {
+  getFavoriteArticles: vi.fn(() => []),
+  toggleFavorite: vi.fn(),
+  setFavorite: vi.fn(),
+  removeFavorite: vi.fn(),
+  isFavorite: vi.fn(() => false),
+};
+
 // child_processのモック
 vi.mock('child_process', () => ({
   spawn: vi.fn(() => ({
@@ -57,7 +65,31 @@ vi.mock('../../../models/feed.js', () => ({
 
 vi.mock('../../../models/article.js', () => ({
   ArticleModel: vi.fn().mockImplementation(() => ({
+    create: vi.fn(),
+    findById: vi.fn(),
+    findAll: vi.fn(() => []),
+    update: vi.fn(),
+    delete: vi.fn(),
+    markAsRead: vi.fn(),
+    markAsUnread: vi.fn(),
+    getFavoriteArticles: vi.fn(() => []),
+    getUnreadCount: vi.fn(() => 0),
+    count: vi.fn(() => 0),
+    findAllWithPinStatus: vi.fn(() => []),
     getPinnedArticles: vi.fn(() => []),
+    getUnreadCountsByFeedIds: vi.fn(() => ({})),
+  })),
+}));
+
+vi.mock('../../../models/favorite.js', () => ({
+  FavoriteModel: vi.fn().mockImplementation(() => ({
+    create: vi.fn(),
+    findById: vi.fn(),
+    findAll: vi.fn(() => []),
+    update: vi.fn(),
+    delete: vi.fn(),
+    getFavoriteArticles: vi.fn(() => []),
+    isFavorite: vi.fn(() => false),
   })),
 }));
 
@@ -76,12 +108,56 @@ vi.mock('../../../services/pin.js', () => ({
   PinService: vi.fn().mockImplementation(() => mockPinService),
 }));
 
+// FavoriteServiceのモック
+vi.mock('../../../services/favorite.js', () => ({
+  FavoriteService: vi.fn().mockImplementation(() => mockFavoriteService),
+}));
+
 // Factoryのモック
 vi.mock('../../../services/factory.js', () => ({
   createFeedServices: vi.fn(() => ({
     feedService: mockFeedService,
     articleService: mockArticleService,
     pinService: mockPinService,
+    favoriteService: mockFavoriteService,
+  })),
+  createModelsAndServices: vi.fn(() => ({
+    feedService: mockFeedService,
+    articleService: mockArticleService,
+    pinService: mockPinService,
+    favoriteService: mockFavoriteService,
+    articleModel: {
+      create: vi.fn(),
+      findById: vi.fn(),
+      findAll: vi.fn(() => []),
+      update: vi.fn(),
+      delete: vi.fn(),
+      markAsRead: vi.fn(),
+      markAsUnread: vi.fn(),
+      getFavoriteArticles: vi.fn(() => []),
+      getUnreadCount: vi.fn(() => 0),
+      count: vi.fn(() => 0),
+      findAllWithPinStatus: vi.fn(() => []),
+      getPinnedArticles: vi.fn(() => []),
+      getUnreadCountsByFeedIds: vi.fn(() => ({})),
+    },
+    feedModel: {
+      create: vi.fn(),
+      findById: vi.fn(),
+      findAll: vi.fn(() => []),
+      update: vi.fn(),
+      delete: vi.fn(),
+      setRating: vi.fn(),
+    },
+    favoriteModel: {
+      create: vi.fn(),
+      findById: vi.fn(),
+      findAll: vi.fn(() => []),
+      update: vi.fn(),
+      delete: vi.fn(),
+      getFavoriteArticles: vi.fn(() => []),
+      isFavorite: vi.fn(() => false),
+    },
   })),
 }));
 
@@ -117,7 +193,6 @@ const mockArticles: Article[] = [
     author: 'Author 1',
     published_at: new Date('2024-01-01'),
     is_read: false,
-    is_favorite: false,
     thumbnail_url: undefined,
     created_at: new Date('2024-01-01'),
     updated_at: new Date('2024-01-01'),

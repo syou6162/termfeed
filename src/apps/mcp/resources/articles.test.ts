@@ -46,6 +46,7 @@ describe('registerArticleResources', () => {
 
     mockArticleModel = {
       findAll: vi.fn(),
+      getFavoriteArticles: vi.fn(),
     } as unknown as ArticleModel;
 
     mockFeedModel = {
@@ -79,7 +80,6 @@ describe('registerArticleResources', () => {
           author: 'Author 1',
           published_at: new Date('2024-01-01'),
           is_read: false,
-          is_favorite: false,
           created_at: new Date(),
           updated_at: new Date(),
         },
@@ -128,7 +128,6 @@ describe('registerArticleResources', () => {
           url: 'https://example.com/1',
           published_at: new Date('2024-01-01'),
           is_read: false,
-          is_favorite: false,
           created_at: new Date(),
           updated_at: new Date(),
         },
@@ -172,7 +171,6 @@ describe('registerArticleResources', () => {
           content: 'Favorite content',
           published_at: new Date('2024-01-01'),
           is_read: true,
-          is_favorite: true,
           created_at: new Date(),
           updated_at: new Date(),
         },
@@ -189,7 +187,7 @@ describe('registerArticleResources', () => {
         },
       ];
 
-      vi.mocked(mockArticleModel.findAll).mockReturnValue(mockArticles);
+      vi.mocked(mockArticleModel.getFavoriteArticles).mockReturnValue(mockArticles);
       vi.mocked(mockFeedModel.findAll).mockReturnValue(mockFeeds);
 
       registerArticleResources(mockServer, mockArticleModel, mockFeedModel);
@@ -197,7 +195,7 @@ describe('registerArticleResources', () => {
       const favResource = registeredResources.get('favorites');
       const result = favResource?.handler(new URL('articles://favorites'));
 
-      expect(mockArticleModel.findAll).toHaveBeenCalledWith({ is_favorite: true, limit: 10 });
+      expect(mockArticleModel.getFavoriteArticles).toHaveBeenCalled();
 
       const contents = JSON.parse(result?.contents[0].text ?? '[]') as ArticleResourceJSON[];
       expect(contents[0]).toMatchObject({

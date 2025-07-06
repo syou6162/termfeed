@@ -109,10 +109,6 @@ export class MockFeedService implements FeedService {
     return true;
   }
 
-  toggleArticleFavorite(_articleId: number): boolean {
-    return true;
-  }
-
   markAllAsRead(_feedId?: number): void {
     // Mock implementation
   }

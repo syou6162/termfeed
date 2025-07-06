@@ -71,7 +71,6 @@ describe('ArticleModel', () => {
       expect(article.published_at).toEqual(articleInput.published_at);
       expect(article.thumbnail_url).toBe(articleInput.thumbnail_url);
       expect(article.is_read).toBe(false);
-      expect(article.is_favorite).toBe(false);
       expect(article.created_at).toBeInstanceOf(Date);
       expect(article.updated_at).toBeInstanceOf(Date);
     });
@@ -113,7 +112,6 @@ describe('ArticleModel', () => {
       expect(found!.title).toBe(created.title);
       expect(found!.published_at).toEqual(created.published_at);
       expect(found!.is_read).toBe(false);
-      expect(found!.is_favorite).toBe(false);
     });
 
     it('存在しないIDの場合はnullを返す', () => {
@@ -270,22 +268,6 @@ describe('ArticleModel', () => {
 
       expect(updated).not.toBeNull();
       expect(updated!.is_read).toBe(true);
-      expect(updated!.is_favorite).toBe(false);
-    });
-
-    it('記事のお気に入り状態を更新できる', () => {
-      const article = articleModel.create({
-        feed_id: testFeedId,
-        title: 'Favorite Test',
-        url: 'https://example.com/fav-test',
-        published_at: new Date(),
-      });
-
-      const updated = articleModel.update(article.id, { is_favorite: true });
-
-      expect(updated).not.toBeNull();
-      expect(updated!.is_favorite).toBe(true);
-      expect(updated!.is_read).toBe(false);
     });
 
     it('存在しないIDの場合はnullを返す', () => {
@@ -369,36 +351,6 @@ describe('ArticleModel', () => {
 
       const updated = articleModel.findById(article.id);
       expect(updated!.is_read).toBe(false);
-    });
-  });
-
-  describe('toggleFavorite', () => {
-    it('お気に入り状態をトグルできる', () => {
-      const article = articleModel.create({
-        feed_id: testFeedId,
-        title: 'Toggle Test',
-        url: 'https://example.com/toggle-test',
-        published_at: new Date(),
-      });
-
-      // お気に入りにする
-      let success = articleModel.toggleFavorite(article.id);
-      expect(success).toBe(true);
-
-      let updated = articleModel.findById(article.id);
-      expect(updated!.is_favorite).toBe(true);
-
-      // お気に入りを解除する
-      success = articleModel.toggleFavorite(article.id);
-      expect(success).toBe(false);
-
-      updated = articleModel.findById(article.id);
-      expect(updated!.is_favorite).toBe(false);
-    });
-
-    it('存在しない記事の場合はfalseを返す', () => {
-      const success = articleModel.toggleFavorite(999);
-      expect(success).toBe(false);
     });
   });
 
@@ -556,6 +508,113 @@ describe('ArticleModel', () => {
       const pinnedArticles = articleModel.getPinnedArticles();
 
       expect(pinnedArticles).toEqual([]);
+    });
+  });
+
+  describe('markAllAsRead', () => {
+    it('すべての未読記事を既読にできる', () => {
+      // 複数の記事を作成（一部は既読）
+      articleModel.create({
+        feed_id: testFeedId,
+        title: 'Article 1',
+        url: 'https://example.com/article/1',
+        published_at: new Date('2024-01-01'),
+      });
+      const article2 = articleModel.create({
+        feed_id: testFeedId,
+        title: 'Article 2',
+        url: 'https://example.com/article/2',
+        published_at: new Date('2024-01-02'),
+      });
+      articleModel.create({
+        feed_id: testFeedId,
+        title: 'Article 3',
+        url: 'https://example.com/article/3',
+        published_at: new Date('2024-01-03'),
+      });
+
+      // article2を既読にしておく
+      articleModel.markAsRead(article2.id);
+
+      // 一括既読化
+      const updatedCount = articleModel.markAllAsRead();
+
+      // 2件が更新されたはず（article1とarticle3）
+      expect(updatedCount).toBe(2);
+
+      // すべての記事が既読になっているか確認
+      const articles = articleModel.findAll();
+      expect(articles.every((article) => article.is_read)).toBe(true);
+    });
+
+    it('特定のフィードの未読記事のみを既読にできる', () => {
+      // 別のフィードを作成
+      const otherFeed = feedModel.create({
+        url: 'https://example.com/feed2.rss',
+        title: 'Other Feed',
+        description: 'Another test feed',
+        rating: 0,
+      });
+      const otherFeedId = otherFeed.id;
+
+      // 異なるフィードの記事を作成
+      articleModel.create({
+        feed_id: testFeedId,
+        title: 'Feed1 Article 1',
+        url: 'https://example.com/feed1/article/1',
+        published_at: new Date('2024-01-01'),
+      });
+      articleModel.create({
+        feed_id: testFeedId,
+        title: 'Feed1 Article 2',
+        url: 'https://example.com/feed1/article/2',
+        published_at: new Date('2024-01-02'),
+      });
+      articleModel.create({
+        feed_id: otherFeedId,
+        title: 'Feed2 Article 1',
+        url: 'https://example.com/feed2/article/1',
+        published_at: new Date('2024-01-03'),
+      });
+
+      // testFeedIdの記事のみ既読化
+      const updatedCount = articleModel.markAllAsRead(testFeedId);
+
+      // 2件が更新されたはず
+      expect(updatedCount).toBe(2);
+
+      // testFeedIdの記事はすべて既読
+      const feed1Articles = articleModel.findAll({ feed_id: testFeedId });
+      expect(feed1Articles.every((article) => article.is_read)).toBe(true);
+
+      // otherFeedIdの記事は未読のまま
+      const feed2Articles = articleModel.findAll({ feed_id: otherFeedId });
+      expect(feed2Articles.every((article) => !article.is_read)).toBe(true);
+    });
+
+    it('すべて既読の場合は0を返す', () => {
+      const article1 = articleModel.create({
+        feed_id: testFeedId,
+        title: 'Article 1',
+        url: 'https://example.com/article/1',
+        published_at: new Date('2024-01-01'),
+      });
+      const article2 = articleModel.create({
+        feed_id: testFeedId,
+        title: 'Article 2',
+        url: 'https://example.com/article/2',
+        published_at: new Date('2024-01-02'),
+      });
+
+      // すべて既読にしておく
+      articleModel.markAsRead(article1.id);
+      articleModel.markAsRead(article2.id);
+
+      // 一括既読化
+      const updatedCount = articleModel.markAllAsRead();
+
+      // 更新されたものはない
+      expect(updatedCount).toBe(0);
     });
   });
 });
