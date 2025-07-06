@@ -97,11 +97,15 @@ describe('ArticleService', () => {
       articleService.toggleFavorite(testArticleId1);
 
       const favoriteArticles = articleService.getArticles({ isFavorite: true });
-      const nonFavoriteArticles = articleService.getArticles({ isFavorite: false });
+      const allArticles = articleService.getArticles({ isFavorite: false });
+      const allArticlesNoFilter = articleService.getArticles();
 
       expect(favoriteArticles).toHaveLength(1);
-      expect(nonFavoriteArticles).toHaveLength(1);
       expect(favoriteArticles[0].id).toBe(testArticleId1);
+
+      // isFavorite: falseの場合は全記事を返す（フィルタリングしない）
+      expect(allArticles).toHaveLength(2);
+      expect(allArticlesNoFilter).toHaveLength(2);
     });
   });
 
