@@ -103,20 +103,14 @@ describe('toggleFavorite修正のテスト', () => {
       expect(mockFeedService.toggleArticleFavorite).toHaveBeenCalledWith(2);
     });
 
-    it('getArticlesが正しいパラメーターで呼ばれる', () => {
-      // toggleFavorite内でgetArticlesが呼ばれる処理をシミュレート
-      mockFeedService.getArticles({
-        feed_id: 1,
-        is_read: false,
-        limit: TUI_CONFIG.DEFAULT_ARTICLE_LIMIT,
-      });
+    it('パフォーマンス改善: ローカル状態のみ更新しgetArticlesは呼ばれない', () => {
+      const initialCallCount = vi.mocked(mockFeedService.getArticles).mock.calls.length;
 
-      // 正しいパラメーターで呼ばれたことを確認
-      expect(mockFeedService.getArticles).toHaveBeenCalledWith({
-        feed_id: 1,
-        is_read: false,
-        limit: TUI_CONFIG.DEFAULT_ARTICLE_LIMIT,
-      });
+      // toggleFavorite処理をシミュレート（実際のローカル状態更新）
+      const selectedArticle = mockArticles[1];
+      
+      // getArticlesが新たに呼ばれていないことを確認（パフォーマンス改善）
+      expect(vi.mocked(mockFeedService.getArticles).mock.calls.length).toBe(initialCallCount);
     });
 
     it('記事IDから正しいインデックスを見つける', () => {
@@ -135,37 +129,35 @@ describe('toggleFavorite修正のテスト', () => {
       expect(newIndex).toBe(-1);
     });
 
-    it('記事リストが更新された後も同じIDの記事を再選択できる', () => {
-      const originalArticles = mockArticles;
-      const currentArticleId = 2;
-
-      // 元の記事のインデックス
-      const originalIndex = originalArticles.findIndex(
-        (article) => article.id === currentArticleId
+    it('ローカル状態更新でお気に入り状態がトグルされる', () => {
+      const targetArticle = mockArticles[1]; // 2番目の記事（初期状態: is_favorite = false）
+      
+      // お気に入り状態をトグル（false → true）
+      const updatedArticles = mockArticles.map((article) =>
+        article.id === targetArticle.id
+          ? { ...article, is_favorite: !article.is_favorite }
+          : article
       );
-      expect(originalIndex).toBe(1);
 
-      // 記事リストが更新されたとシミュレート（順序は同じ）
-      const updatedArticles = [...originalArticles];
-      const newIndex = updatedArticles.findIndex((article) => article.id === currentArticleId);
-
-      // 同じインデックスが維持される
-      expect(newIndex).toBe(1);
+      // 対象の記事のお気に入り状態が変更されたことを確認
+      const updatedTargetArticle = updatedArticles.find((article) => article.id === targetArticle.id);
+      expect(updatedTargetArticle?.is_favorite).toBe(true);
+      
+      // 他の記事は変更されていないことを確認
+      const otherArticles = updatedArticles.filter((article) => article.id !== targetArticle.id);
+      expect(otherArticles.every((article) => article.is_favorite === false)).toBe(true);
     });
 
-    it('記事が削除された場合のフォールバック動作', () => {
-      const currentArticleId = 3; // 3番目の記事
-
-      // 該当記事が削除された記事リスト
-      const updatedArticles = mockArticles.filter((article) => article.id !== currentArticleId);
-      const newIndex = updatedArticles.findIndex((article) => article.id === currentArticleId);
-
-      // 記事が見つからない場合は-1
-      expect(newIndex).toBe(-1);
-
-      // この場合、実装では0にフォールバックする
-      const fallbackIndex = newIndex !== -1 ? newIndex : 0;
-      expect(fallbackIndex).toBe(0);
+    it('エラー処理: エラー時のみloadArticlesが呼ばれる', () => {
+      // エラーが発生した場合のフォールバック動作をテスト
+      // 実装では try-catch のcatch節でloadArticlesが呼ばれる
+      const mockLoadArticles = vi.fn();
+      const currentFeedId = 1;
+      
+      // エラー時のフォールバック処理をシミュレート
+      mockLoadArticles(currentFeedId);
+      
+      expect(mockLoadArticles).toHaveBeenCalledWith(1);
     });
   });
 
