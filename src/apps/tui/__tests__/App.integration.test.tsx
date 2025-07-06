@@ -3,9 +3,20 @@ import { render } from 'ink-testing-library';
 import type { Feed, Article, FeedUpdateFailure, UpdateProgress } from '@/types';
 
 // 日付フォーマットを固定化（テスト環境の一貫性のため）
+// eslint-disable-next-line @typescript-eslint/unbound-method
 const originalToLocaleDateString = Date.prototype.toLocaleDateString;
-Date.prototype.toLocaleDateString = function (locale, options) {
-  if (locale === 'ja-JP' && options?.hour === '2-digit') {
+Date.prototype.toLocaleDateString = function (
+  this: Date,
+  locale?: string | string[],
+  options?: Intl.DateTimeFormatOptions
+): string {
+  if (
+    locale === 'ja-JP' &&
+    options &&
+    typeof options === 'object' &&
+    'hour' in options &&
+    options.hour === '2-digit'
+  ) {
     // テスト用の固定フォーマット（UTC時刻）
     const year = this.getUTCFullYear();
     const month = this.getUTCMonth() + 1;
