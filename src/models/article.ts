@@ -278,8 +278,6 @@ export class ArticleModel {
       updateValues.push(updates.is_read ? 1 : 0);
     }
 
-    // is_favoriteは別テーブルで管理するため、ここでは処理しない
-
     if (updateFields.length === 0) {
       return this.findById(id);
     }
@@ -326,8 +324,6 @@ export class ArticleModel {
     const updated = this.update(id, { is_read: false });
     return updated !== null;
   }
-
-  // toggleFavoriteは削除（FavoriteModelで管理）
 
   public countByFeedId(feedId?: number): number {
     if (feedId === undefined) {
