@@ -74,7 +74,10 @@ describe('FavoriteList', () => {
     );
 
     // useEffectが実行されるまで待機
-    await new Promise((resolve) => setTimeout(resolve, 10));
+    await vi.waitFor(() => {
+      const output = lastFrame();
+      expect(output).toContain('お気に入り記事一覧');
+    });
 
     const output = lastFrame();
     expect(output).toContain('お気に入り記事一覧 (2件)');
@@ -95,7 +98,10 @@ describe('FavoriteList', () => {
     );
 
     // useEffectが実行されるまで待機
-    await new Promise((resolve) => setTimeout(resolve, 10));
+    await vi.waitFor(() => {
+      const output = lastFrame();
+      expect(output).toContain('お気に入り記事一覧');
+    });
 
     const output = lastFrame();
     expect(output).toContain('お気に入り記事1');
@@ -114,10 +120,14 @@ describe('FavoriteList', () => {
     );
 
     // useEffectが実行されるまで待機
-    await new Promise((resolve) => setTimeout(resolve, 10));
+    await vi.waitFor(() => {
+      const output = lastFrame();
+      expect(output).toContain('お気に入り記事一覧');
+    });
 
     const output = lastFrame();
     expect(output).toContain('📌');
+    expect(output).toContain('ピン');
   });
 
   it('キーボードショートカットのヘルプを表示する', async () => {
@@ -132,11 +142,13 @@ describe('FavoriteList', () => {
     );
 
     // useEffectが実行されるまで待機
-    await new Promise((resolve) => setTimeout(resolve, 10));
+    await vi.waitFor(() => {
+      const output = lastFrame();
+      expect(output).toContain('お気に入り記事一覧');
+    });
 
     const output = lastFrame();
-    // テスト環境では表示範囲が限られるため、基本的な情報のみチェック
-    expect(output).toContain('お気に入り記事一覧');
+    expect(output).toContain('お気に入り記事一覧 (2件)');
     expect(output).toContain('1/2');
   });
 
