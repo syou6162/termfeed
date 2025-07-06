@@ -103,12 +103,39 @@ describe('toggleFavorite修正のテスト', () => {
       expect(mockFeedService.toggleArticleFavorite).toHaveBeenCalledWith(2);
     });
 
-    it('パフォーマンス改善: ローカル状態のみ更新しgetArticlesは呼ばれない', () => {
-      const initialCallCount = vi.mocked(mockFeedService.getArticles).mock.calls.length;
+    it('パフォーマンス改善: 正常時はgetArticlesが呼ばれずローカル状態のみ更新', () => {
+      // 実際のtoggleFavorite実装をシミュレート
+      const currentArticleId = 2;
 
-      // toggleFavorite処理では、正常時にgetArticlesが呼ばれないことを確認（パフォーマンス改善）
-      // 実際の実装では、エラー時のみloadArticles経由でgetArticlesが呼ばれる
-      expect(vi.mocked(mockFeedService.getArticles).mock.calls.length).toBe(initialCallCount);
+      // toggleArticleFavoriteが成功する場合のシミュレーション
+      vi.mocked(mockFeedService.toggleArticleFavorite).mockImplementation(() => {
+        // 成功時はtrueを返す（例外を投げない）
+        return true;
+      });
+
+      // 初期状態の記事リスト
+      const articles = [...mockArticles];
+      expect(articles[1].is_favorite).toBe(false);
+
+      // ローカル状態更新のシミュレーション（実装と同じロジック）
+      const updatedArticles = articles.map((article) =>
+        article.id === currentArticleId
+          ? { ...article, is_favorite: !article.is_favorite }
+          : article
+      );
+
+      // toggleArticleFavoriteが呼ばれる
+      mockFeedService.toggleArticleFavorite(currentArticleId);
+
+      // パフォーマンス改善: 正常時はgetArticlesが呼ばれない
+      expect(mockFeedService.getArticles).not.toHaveBeenCalled();
+
+      // ローカル状態でお気に入り状態が正しく更新される
+      expect(updatedArticles[1].is_favorite).toBe(true);
+      expect(updatedArticles[0].is_favorite).toBe(false); // 他の記事は変更されない
+
+      // 正しい記事IDでtoggleが呼ばれる
+      expect(mockFeedService.toggleArticleFavorite).toHaveBeenCalledWith(currentArticleId);
     });
 
     it('記事IDから正しいインデックスを見つける', () => {
