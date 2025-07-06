@@ -16,7 +16,6 @@ export type ArticleManagerActions = {
   loadArticles: (feedId: number) => void;
   setSelectedArticleIndex: (index: number) => void;
   setScrollOffset: (offset: number) => void;
-  toggleFavorite: () => void;
   toggleFavoriteWithPin: (onPinStateChanged?: () => void) => void;
   scrollDown: () => void;
   scrollUp: () => void;
@@ -32,7 +31,7 @@ export type ArticleManagerActions = {
  * - お気に入りのトグル機能
  */
 export function useArticleManager(
-  feedService: FeedService,
+  _feedService: FeedService,
   articleService: ArticleService,
   currentFeedId: number | null
 ): ArticleManagerState & ArticleManagerActions {
@@ -77,38 +76,6 @@ export function useArticleManager(
     },
     [fetchArticles]
   );
-
-  const toggleFavorite = useCallback(() => {
-    const selectedArticle = articles[selectedArticleIndex];
-    if (selectedArticle?.id && currentFeedId) {
-      try {
-        feedService.toggleArticleFavorite(selectedArticle.id);
-
-        // お気に入り状態はfavoritesテーブルで管理されるため、ローカル状態の更新は不要
-        // 実際のお気に入り状態は別途 ArticleService の方で管理される
-      } catch (err) {
-        console.error('お気に入り状態の更新に失敗しました:', err);
-        // エラー時は共通ロジックで記事リストを再取得し、同じ記事を再選択
-        try {
-          const currentArticleId = selectedArticle.id;
-          const unreadArticles = fetchArticles(currentFeedId);
-          setArticles(unreadArticles);
-
-          // 同じ記事を再選択する（エラー時でもカーソル位置を維持）
-          const newIndex = unreadArticles.findIndex((article) => article.id === currentArticleId);
-          if (newIndex !== -1) {
-            setSelectedArticleIndex(newIndex);
-          } else {
-            // 記事が見つからない場合は最初の記事を選択
-            setSelectedArticleIndex(0);
-          }
-        } catch {
-          // フォールバック: 通常のloadArticlesを使用
-          loadArticles(currentFeedId);
-        }
-      }
-    }
-  }, [articles, selectedArticleIndex, currentFeedId, feedService, fetchArticles, loadArticles]);
 
   const toggleFavoriteWithPin = useCallback(
     (onPinStateChanged?: () => void) => {
@@ -190,7 +157,6 @@ export function useArticleManager(
     loadArticles,
     setSelectedArticleIndex,
     setScrollOffset,
-    toggleFavorite,
     toggleFavoriteWithPin,
     scrollDown,
     scrollUp,

@@ -15,7 +15,6 @@ export type FeedService = {
   ): Promise<UpdateAllFeedsResult | UpdateCancelledResult>;
   markArticleAsRead(articleId: number): boolean;
   markArticleAsUnread(articleId: number): boolean;
-  toggleArticleFavorite(articleId: number): boolean;
   markAllAsRead(feedId?: number): void;
   getUnreadCount(feedId?: number): number;
   getFeedList(): Feed[];

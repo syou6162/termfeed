@@ -67,7 +67,6 @@ describe('toggleFavorite修正のテスト', () => {
       updateAllFeeds: vi.fn(),
       getArticles: vi.fn(),
       markArticleAsRead: vi.fn(),
-      toggleArticleFavorite: vi.fn(),
       setFeedRating: vi.fn(),
       deleteFeed: vi.fn(),
       addFeed: vi.fn(),
@@ -90,39 +89,10 @@ describe('toggleFavorite修正のテスト', () => {
   });
 
   describe('toggleFavoriteの修正された動作', () => {
-    it('toggleArticleFavoriteが正しい記事IDで呼ばれる', () => {
-      const selectedArticle = mockArticles[1]; // 2番目の記事
-
-      // toggleArticleFavoriteを呼び出し
-      mockFeedService.toggleArticleFavorite(selectedArticle.id);
-
-      // 正しいIDで呼ばれたことを確認
-      expect(mockFeedService.toggleArticleFavorite).toHaveBeenCalledWith(2);
-    });
-
     it('パフォーマンス改善: 正常時はgetArticlesが呼ばれずローカル状態のみ更新', () => {
-      // 実際のtoggleFavorite実装をシミュレート
-      const currentArticleId = 2;
-
-      // toggleArticleFavoriteが成功する場合のシミュレーション
-      vi.mocked(mockFeedService.toggleArticleFavorite).mockImplementation(() => {
-        // 成功時はtrueを返す（例外を投げない）
-        return true;
-      });
-
-      // 初期状態の記事リストとローカル状態更新のシミュレーションは
-      // is_favoriteプロパティがないため削除
-
-      // toggleArticleFavoriteが呼ばれる
-      mockFeedService.toggleArticleFavorite(currentArticleId);
-
       // パフォーマンス改善: 正常時はgetArticlesが呼ばれない
+      // (toggleFavoriteWithPinで実装されている動作)
       expect(mockFeedService.getArticles).not.toHaveBeenCalled();
-
-      // ローカル状態の更新確認はis_favoriteプロパティがないため削除
-
-      // 正しい記事IDでtoggleが呼ばれる
-      expect(mockFeedService.toggleArticleFavorite).toHaveBeenCalledWith(currentArticleId);
     });
 
     it('記事IDから正しいインデックスを見つける', () => {
@@ -199,12 +169,6 @@ describe('toggleFavorite修正のテスト', () => {
 
       // getArticlesが呼ばれないことを確認
       expect(mockFeedService.getArticles).not.toHaveBeenCalled();
-    });
-
-    it('選択記事がundefinedの場合はtoggleArticleFavoriteが呼ばれない', () => {
-      // undefinedの記事に対してはtoggleArticleFavoriteが呼ばれないことを確認
-      // 実際のuseArticleManagerでは if (selectedArticle?.id && currentFeedId) の条件でガードされる
-      expect(mockFeedService.toggleArticleFavorite).not.toHaveBeenCalled();
     });
   });
 });

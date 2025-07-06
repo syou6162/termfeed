@@ -1,7 +1,7 @@
 import { FeedModel } from '../models/feed.js';
 import { ArticleModel } from '../models/article.js';
 import { RSSCrawler } from './rss-crawler.js';
-import { FavoriteService } from './favorite.js';
+import type { FavoriteService } from './favorite.js';
 import type {
   Feed,
   Article,
@@ -29,17 +29,15 @@ export class FeedService implements IFeedService {
   private feedModel: FeedModel;
   private articleModel: ArticleModel;
   private crawler: RSSCrawler;
-  private favoriteService: FavoriteService;
 
   constructor(
     feedModel: FeedModel,
     articleModel: ArticleModel,
-    favoriteService: FavoriteService,
+    _favoriteService: FavoriteService, // 互換性のため保持（削除予定）
     crawler?: RSSCrawler
   ) {
     this.feedModel = feedModel;
     this.articleModel = articleModel;
-    this.favoriteService = favoriteService;
     this.crawler = crawler || new RSSCrawler();
   }
 
@@ -226,10 +224,6 @@ export class FeedService implements IFeedService {
 
   markArticleAsUnread(articleId: number): boolean {
     return this.articleModel.markAsUnread(articleId);
-  }
-
-  toggleArticleFavorite(articleId: number): boolean {
-    return this.favoriteService.toggleFavorite(articleId);
   }
 
   markAllAsRead(feedId?: number): void {
