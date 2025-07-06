@@ -51,22 +51,22 @@ describe('list command E2E', () => {
     expect(output.stdout).toMatchSnapshot('list-with-feeds-output');
   });
 
-  it('should list feeds sorted by ID', async () => {
-    // Arrange - フィードを逆順で作成
+  it('should list feeds sorted by rating and ID', async () => {
+    // Arrange - 異なるレーティングのフィードを作成
     const feed1 = context.feedModel.create({
       url: 'https://example.com/feed1.rss',
       title: 'Feed A',
-      rating: 0,
+      rating: 5,
     });
     const feed2 = context.feedModel.create({
       url: 'https://example.com/feed2.rss',
       title: 'Feed B',
-      rating: 0,
+      rating: 3,
     });
     const feed3 = context.feedModel.create({
       url: 'https://example.com/feed3.rss',
       title: 'Feed C',
-      rating: 0,
+      rating: 5,
     });
 
     // Act
@@ -76,10 +76,24 @@ describe('list command E2E', () => {
 
     // Assert
     expect(output.exitCode).toBeUndefined();
-    const lines = output.stdout.trim().split('\n');
-    expect(lines[0]).toContain(`${feed1.id}: Feed A`);
-    expect(lines[1]).toContain(`${feed2.id}: Feed B`);
-    expect(lines[2]).toContain(`${feed3.id}: Feed C`);
+    const stdout = output.stdout;
+
+    // レーティング5のセクションが3より前に表示される
+    const rating5Index = stdout.indexOf('## Rating 5');
+    const rating3Index = stdout.indexOf('## Rating 3');
+    expect(rating5Index).toBeGreaterThan(-1);
+    expect(rating3Index).toBeGreaterThan(-1);
+    expect(rating5Index).toBeLessThan(rating3Index);
+
+    // レーティング5のフィード順序確認（ID順）
+    const feed1Index = stdout.indexOf(`${feed1.id}: Feed A`);
+    const feed3Index = stdout.indexOf(`${feed3.id}: Feed C`);
+    expect(feed1Index).toBeGreaterThan(-1);
+    expect(feed3Index).toBeGreaterThan(-1);
+    expect(feed1Index).toBeLessThan(feed3Index); // feed1(ID小)がfeed3(ID大)より前
+
+    // レーティング3のフィード確認
+    expect(stdout).toContain(`${feed2.id}: Feed B`);
   });
 
   it('should handle feeds with special characters in title', async () => {

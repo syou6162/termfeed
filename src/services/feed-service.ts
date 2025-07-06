@@ -244,6 +244,20 @@ export class FeedService implements IFeedService {
   }
 
   /**
+   * 全フィードをレーティング順で取得
+   * @returns レーティング順でソートされたフィード配列
+   */
+  getFeedListByRating(): Feed[] {
+    const feeds = this.feedModel.findAll();
+    return feeds.sort((a, b) => {
+      if (a.rating !== b.rating) {
+        return b.rating - a.rating; // レーティング降順
+      }
+      return a.id - b.id; // 同じレーティングの場合はID昇順
+    });
+  }
+
+  /**
    * 未読記事があるフィードのみを取得（レーティング・未読件数でソート済み）
    * @returns 未読記事があるフィードと未読件数の配列（レーティング優先、未読件数副次）
    */
