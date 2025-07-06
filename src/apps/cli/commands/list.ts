@@ -16,13 +16,16 @@ export const createListCommand = () => {
     }
 
     // レーティング別にグループ化
-    const feedsByRating = feeds.reduce((acc, feed) => {
-      if (!acc[feed.rating]) {
-        acc[feed.rating] = [];
-      }
-      acc[feed.rating].push(feed);
-      return acc;
-    }, {} as Record<number, typeof feeds>);
+    const feedsByRating = feeds.reduce(
+      (acc, feed) => {
+        if (!acc[feed.rating]) {
+          acc[feed.rating] = [];
+        }
+        acc[feed.rating].push(feed);
+        return acc;
+      },
+      {} as Record<number, typeof feeds>
+    );
 
     // レーティング5から0まで順番に表示
     for (let rating = 5; rating >= 0; rating--) {
