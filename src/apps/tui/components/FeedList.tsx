@@ -1,6 +1,7 @@
 import { Box, Text } from 'ink';
 import { memo, useMemo } from 'react';
 import type { FeedWithUnreadCount } from '../utils/feed-sorter.js';
+import { calculateSlidingWindow } from '../hooks/useSlidingWindow.js';
 
 type FeedListItem = {
   id: number;
@@ -22,12 +23,14 @@ type FeedListProps = {
   selectedIndex: number;
   pinnedCount?: number;
   onFeedSelect?: (feed: FeedWithUnreadCount) => void;
+  windowSize?: number; // 1つのレーティングセクションに表示する最大フィード数
 };
 
 export const FeedList = memo(function FeedList({
   feeds,
   selectedIndex,
   pinnedCount = 0,
+  windowSize = 10,
 }: FeedListProps) {
   const feedSections: FeedSection[] = useMemo(() => {
     const feedItems: FeedListItem[] = feeds.map((feed) => ({
@@ -139,16 +142,41 @@ export const FeedList = memo(function FeedList({
                 </Box>
                 {/* 現在のセクションのみフィード一覧を表示 */}
                 {isCurrentSection &&
-                  section.items.map((item, _index) => {
-                    const globalIndex = allItems.findIndex(
-                      (globalItem) => globalItem.id === item.id
+                  (() => {
+                    // 現在選択されているフィードを取得
+                    const selectedFeedItem = allItems[selectedIndex];
+
+                    // 現在選択されているフィードのセクション内でのインデックスを計算
+                    const selectedItemInSection = selectedFeedItem
+                      ? section.items.findIndex((item) => item.id === selectedFeedItem.id)
+                      : -1;
+
+                    // calculateSlidingWindowを使用してウィンドウを計算
+                    const { visibleItems, startIndex } = calculateSlidingWindow(
+                      section.items,
+                      selectedItemInSection,
+                      {
+                        windowSize,
+                      }
                     );
-                    return (
-                      <Box key={`${section.rating}-${item.id}`} paddingX={1}>
-                        {renderFeedItem(item, globalIndex === selectedIndex)}
-                      </Box>
-                    );
-                  })}
+
+                    // グローバルインデックスの開始位置を計算
+                    let globalStartIndex = 0;
+                    for (const s of feedSections) {
+                      if (s.rating === section.rating) break;
+                      globalStartIndex += s.items.length;
+                    }
+
+                    return visibleItems.map((item, index) => {
+                      // O(1)でグローバルインデックスを計算
+                      const globalIndex = globalStartIndex + startIndex + index;
+                      return (
+                        <Box key={`${section.rating}-${item.id}`} paddingX={1}>
+                          {renderFeedItem(item, globalIndex === selectedIndex)}
+                        </Box>
+                      );
+                    });
+                  })()}
               </Box>
             );
           })}

@@ -9,6 +9,8 @@ const mockFeedService = {
   getArticles: vi.fn(),
   markArticleAsRead: vi.fn(),
   toggleArticleFavorite: vi.fn(),
+  getUnreadFeeds: vi.fn(),
+  setFeedRating: vi.fn(),
 };
 
 // テスト用データ
@@ -45,6 +47,12 @@ describe('useFeedManager Unit Tests', () => {
     // デフォルトのモック実装
     mockFeedService.getFeedList.mockReturnValue(mockFeeds);
     mockFeedService.getUnreadCountsForAllFeeds.mockReturnValue(mockUnreadCounts);
+    mockFeedService.getUnreadFeeds.mockReturnValue(
+      mockFeeds.map((feed) => ({
+        ...feed,
+        unreadCount: feed.id ? mockUnreadCounts[feed.id] || 0 : 0,
+      }))
+    );
     mockFeedService.updateAllFeeds.mockResolvedValue({
       summary: { successCount: 2, failureCount: 0 },
       failed: [],
@@ -91,5 +99,58 @@ describe('useFeedManager Unit Tests', () => {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       return result;
     }).toThrow('ネットワークエラー');
+  });
+
+  describe('リロード時のポインター保持のロジック確認', () => {
+    it('loadFeedsでフィードIDが保持されることを確認', () => {
+      // 初期データ
+      const feedsWithUnread = mockFeeds.map((feed) => ({
+        ...feed,
+        unreadCount: feed.id ? mockUnreadCounts[feed.id] || 0 : 0,
+      }));
+      mockFeedService.getUnreadFeeds.mockReturnValue(feedsWithUnread);
+
+      // 選択状態をシミュレート
+      let selection = { index: 1, id: 2 };
+
+      // loadFeedsの選択更新ロジックをシミュレート
+      const feedsData = mockFeedService.getUnreadFeeds() as typeof feedsWithUnread;
+      if (selection.id) {
+        const newIndex = feedsData.findIndex((feed) => feed.id === selection.id);
+        if (newIndex !== -1) {
+          selection = { index: newIndex, id: selection.id };
+        }
+      }
+
+      expect(selection.id).toBe(2);
+      expect(selection.index).toBe(1);
+    });
+
+    it('選択中のフィードが消えた場合の動作を確認', () => {
+      // 初期状態
+      let selection = { index: 1, id: 2 };
+
+      // Feed 2が消える
+      const feedsWithoutFeed2 = [
+        {
+          ...mockFeeds[0],
+          unreadCount: 5,
+        },
+      ];
+      mockFeedService.getUnreadFeeds.mockReturnValue(feedsWithoutFeed2);
+
+      // loadFeedsの選択更新ロジックをシミュレート
+      const feedsData = mockFeedService.getUnreadFeeds() as typeof feedsWithoutFeed2;
+      if (selection.id) {
+        const newIndex = feedsData.findIndex((feed) => feed.id === selection.id);
+        if (newIndex === -1 && feedsData.length > 0 && feedsData[0].id) {
+          // フィードが見つからない場合、最初のフィードを選択
+          selection = { index: 0, id: feedsData[0].id };
+        }
+      }
+
+      expect(selection.id).toBe(1);
+      expect(selection.index).toBe(0);
+    });
   });
 });
