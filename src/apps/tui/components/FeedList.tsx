@@ -140,41 +140,44 @@ export const FeedList = memo(function FeedList({
                   </Text>
                 </Box>
                 {/* 現在のセクションのみフィード一覧を表示 */}
-                {isCurrentSection && (() => {
-                  // 現在選択されているフィードのセクション内でのインデックスを取得
-                  const selectedItemInSection = section.items.findIndex(
-                    item => allItems.findIndex(globalItem => globalItem.id === item.id) === selectedIndex
-                  );
-                  
-                  // スライディングウィンドウの開始位置を計算
-                  let startIndex = 0;
-                  if (selectedItemInSection !== -1 && section.items.length > windowSize) {
-                    // 選択されたアイテムがウィンドウの最後に来るように調整
-                    // ただし、最初の方を選択している場合は先頭から表示
-                    if (selectedItemInSection < windowSize) {
-                      startIndex = 0;
-                    } else {
-                      // 選択されたアイテムがウィンドウの最後に表示されるように
-                      startIndex = selectedItemInSection - windowSize + 1;
+                {isCurrentSection &&
+                  (() => {
+                    // 現在選択されているフィードのセクション内でのインデックスを取得
+                    const selectedItemInSection = section.items.findIndex(
+                      (item) =>
+                        allItems.findIndex((globalItem) => globalItem.id === item.id) ===
+                        selectedIndex
+                    );
+
+                    // スライディングウィンドウの開始位置を計算
+                    let startIndex = 0;
+                    if (section.items.length > windowSize) {
+                      // 選択されたアイテムがウィンドウ内に収まるように調整
+                      if (selectedItemInSection < windowSize) {
+                        // 最初のウィンドウ内（0〜9番目）
+                        startIndex = 0;
+                      } else {
+                        // 10番目以降を選択した場合、常に選択アイテムがウィンドウの最後に表示されるようにスライド
+                        startIndex = selectedItemInSection - windowSize + 1;
+                        // ウィンドウが末尾を超えないように調整
+                        startIndex = Math.min(startIndex, section.items.length - windowSize);
+                      }
                     }
-                    // ウィンドウが末尾を超えないように調整
-                    startIndex = Math.min(startIndex, Math.max(0, section.items.length - windowSize));
-                  }
-                  
-                  // 表示するアイテムを取得
-                  const visibleItems = section.items.slice(startIndex, startIndex + windowSize);
-                  
-                  return visibleItems.map((item, _index) => {
-                    const globalIndex = allItems.findIndex(
-                      (globalItem) => globalItem.id === item.id
-                    );
-                    return (
-                      <Box key={`${section.rating}-${item.id}`} paddingX={1}>
-                        {renderFeedItem(item, globalIndex === selectedIndex)}
-                      </Box>
-                    );
-                  });
-                })()}
+
+                    // 表示するアイテムを取得
+                    const visibleItems = section.items.slice(startIndex, startIndex + windowSize);
+
+                    return visibleItems.map((item, _index) => {
+                      const globalIndex = allItems.findIndex(
+                        (globalItem) => globalItem.id === item.id
+                      );
+                      return (
+                        <Box key={`${section.rating}-${item.id}`} paddingX={1}>
+                          {renderFeedItem(item, globalIndex === selectedIndex)}
+                        </Box>
+                      );
+                    });
+                  })()}
               </Box>
             );
           })}
