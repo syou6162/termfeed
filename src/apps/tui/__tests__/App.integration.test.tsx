@@ -708,11 +708,10 @@ describe('App Integration Tests', () => {
 
   describe('記事のフィルタリング', () => {
     it('既読記事は表示されない', async () => {
-      // useArticleManagerが未読記事のみをフィルタリングするため、
-      // getArticlesはすべての記事を返し、フック内でフィルタリングされる
+      // データベースから直接未読記事のみを取得するため、
+      // getArticlesは未読記事のみを返す
       mockFeedService.getArticles.mockReturnValue([
-        { ...mockArticles[0], is_read: true },
-        { ...mockArticles[1], is_read: false },
+        { ...mockArticles[1], is_read: false }, // Article 2のみ（未読）
       ]);
 
       const { lastFrame } = render(<App />);
