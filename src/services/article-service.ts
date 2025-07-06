@@ -4,9 +4,9 @@ import type { Article, ArticleService as IArticleService } from '@/types';
 
 export class ArticleService implements IArticleService {
   private articleModel: ArticleModel;
-  private pinService?: PinService;
+  private pinService: PinService;
 
-  constructor(articleModel: ArticleModel, pinService?: PinService) {
+  constructor(articleModel: ArticleModel, pinService: PinService) {
     this.articleModel = articleModel;
     this.pinService = pinService;
   }
@@ -51,14 +51,12 @@ export class ArticleService implements IArticleService {
   toggleFavoriteWithPin(articleId: number): boolean {
     const isFavorite = this.articleModel.toggleFavorite(articleId);
 
-    if (this.pinService) {
-      if (isFavorite) {
-        // お気に入りに設定した場合：ピンを立てる
-        this.pinService.setPin(articleId);
-      } else {
-        // お気に入りを外した場合：ピンも外す
-        this.pinService.unsetPin(articleId);
-      }
+    if (isFavorite) {
+      // お気に入りに設定した場合：ピンを立てる
+      this.pinService.setPin(articleId);
+    } else {
+      // お気に入りを外した場合：ピンも外す
+      this.pinService.unsetPin(articleId);
     }
 
     return isFavorite;
