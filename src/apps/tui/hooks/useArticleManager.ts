@@ -89,8 +89,6 @@ export function useArticleManager(
               : article
           )
         );
-
-        // 選択位置は変更しない（これが本来の修正目的）
       } catch (err) {
         console.error('お気に入り状態の更新に失敗しました:', err);
         // エラー時は共通ロジックで記事リストを再取得し、同じ記事を再選択
@@ -107,7 +105,7 @@ export function useArticleManager(
             // 記事が見つからない場合は最初の記事を選択
             setSelectedArticleIndex(0);
           }
-        } catch (fetchError) {
+        } catch {
           // フォールバック: 通常のloadArticlesを使用
           loadArticles(currentFeedId);
         }
