@@ -88,7 +88,6 @@ export class RSSCrawler {
       author: item.creator,
       published_at: this.parseDate(item.isoDate || item.pubDate),
       is_read: false,
-      is_favorite: false,
       thumbnail_url: this.extractThumbnail(item),
     }));
   }

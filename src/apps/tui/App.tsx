@@ -4,6 +4,7 @@ import { ArticleList } from './components/ArticleList.js';
 import { FeedList } from './components/FeedList.js';
 import { TwoPaneLayout } from './components/TwoPaneLayout.js';
 import { HelpOverlay } from './components/HelpOverlay.js';
+import { FavoriteList } from './components/FavoriteList.js';
 import { useKeyboardNavigation } from './hooks/useKeyboardNavigation.js';
 import { useTermfeedData } from './hooks/useTermfeedData.js';
 import { useFeedManager } from './hooks/useFeedManager.js';
@@ -24,10 +25,12 @@ export function App(props: AppProps = {}) {
   const { exit } = useApp();
   const { stdout } = useStdout();
   const [showHelp, setShowHelp] = useState(false);
+  const [showFavorites, setShowFavorites] = useState(false);
   const [temporaryMessage, setTemporaryMessage] = useState<string | null>(null);
 
   // データベースとサービスを初期化
-  const { feedService, articleService, pinService } = useTermfeedData(databaseManager);
+  const { feedService, articleService, pinService, favoriteService } =
+    useTermfeedData(databaseManager);
 
   // フィード管理
   const {
@@ -62,7 +65,7 @@ export function App(props: AppProps = {}) {
     pageDown,
     pageUp,
     scrollToEnd,
-  } = useArticleManager(feedService, articleService, selectedFeedId);
+  } = useArticleManager(articleService, selectedFeedId);
 
   const isLoading = feedsLoading || articlesLoading;
 
@@ -76,7 +79,7 @@ export function App(props: AppProps = {}) {
   const currentArticle = articles[selectedArticleIndex];
 
   // ピン管理
-  const { pinnedCount, isPinned, togglePin, refreshPinnedState } = usePinManager({
+  const { pinnedArticleIds, pinnedCount, isPinned, togglePin, refreshPinnedState } = usePinManager({
     pinService,
     currentArticleId: currentArticle?.id,
   });
@@ -85,11 +88,28 @@ export function App(props: AppProps = {}) {
   const { addError, clearErrorsBySource } = errorManager;
 
   // 一時的なメッセージを表示する関数
+  const messageTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const showTemporaryMessage = useCallback((message: string, duration = 3000) => {
+    // 既存のタイマーをクリア
+    if (messageTimerRef.current) {
+      clearTimeout(messageTimerRef.current);
+    }
+
     setTemporaryMessage(message);
-    setTimeout(() => {
+    messageTimerRef.current = setTimeout(() => {
       setTemporaryMessage(null);
+      messageTimerRef.current = null;
     }, duration);
+  }, []);
+
+  // クリーンアップ：アンマウント時にタイマーをクリア
+  useEffect(() => {
+    return () => {
+      if (messageTimerRef.current) {
+        clearTimeout(messageTimerRef.current);
+      }
+    };
   }, []);
 
   // フィードエラーの管理
@@ -323,6 +343,7 @@ export function App(props: AppProps = {}) {
     onOpenAllPinned: () => {
       void handleOpenAllPinned();
     },
+    onToggleFavoriteMode: () => setShowFavorites((prev) => !prev),
   });
 
   if (isLoading) {
@@ -409,6 +430,38 @@ export function App(props: AppProps = {}) {
     return <HelpOverlay isVisible={true} />;
   }
 
+  // お気に入りモード表示
+  if (showFavorites) {
+    return (
+      <>
+        <FavoriteList
+          favoriteService={favoriteService}
+          isPinned={(articleId) => pinnedArticleIds.has(articleId)}
+          onOpenInBrowser={(url) => void openUrlInBrowser(url)}
+          onToggleFavorite={(articleId) => {
+            articleService.toggleFavoriteWithPin(articleId);
+            refreshPinnedState();
+          }}
+          onTogglePin={(articleId) => {
+            pinService.togglePin(articleId);
+            refreshPinnedState();
+          }}
+          onFavoriteChange={() => {}}
+        />
+        {temporaryMessage && (
+          <Box position="absolute" marginLeft={2} marginTop={2}>
+            <Box borderStyle="round" padding={1}>
+              <Text color="yellow">{temporaryMessage}</Text>
+            </Box>
+          </Box>
+        )}
+      </>
+    );
+  }
+
+  // 選択された記事のお気に入り状態を判定
+  const isFavorite = selectedArticle ? favoriteService.isFavorite(selectedArticle.id) : false;
+
   return (
     <>
       <TwoPaneLayout
@@ -424,6 +477,7 @@ export function App(props: AppProps = {}) {
             scrollOffset={scrollOffset}
             onScrollOffsetChange={setScrollOffset}
             isPinned={isPinned}
+            isFavorite={isFavorite}
           />
         }
       />

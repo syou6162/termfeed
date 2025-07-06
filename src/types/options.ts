@@ -1,5 +1,7 @@
 // オプション型の定義
 
+export type ArticleFilter = 'all' | 'favorites';
+
 export type ArticleQueryOptions = {
   feedId?: number;
   isRead?: boolean;

@@ -2,7 +2,7 @@
 
 import type { Feed, Article } from './domain';
 import type { FeedUpdateResult, AddFeedResult, CrawlResult, UpdateAllFeedsResult } from './dto';
-import type { UpdateProgressCallback, UpdateCancelledResult } from './options';
+import type { UpdateProgressCallback, UpdateCancelledResult, ArticleFilter } from './options';
 
 // FeedServiceの型定義（実装クラスに基づく）
 export type FeedService = {
@@ -15,7 +15,6 @@ export type FeedService = {
   ): Promise<UpdateAllFeedsResult | UpdateCancelledResult>;
   markArticleAsRead(articleId: number): boolean;
   markArticleAsUnread(articleId: number): boolean;
-  toggleArticleFavorite(articleId: number): boolean;
   markAllAsRead(feedId?: number): void;
   getUnreadCount(feedId?: number): number;
   getFeedList(): Feed[];
@@ -24,7 +23,6 @@ export type FeedService = {
   getArticles(options?: {
     feed_id?: number;
     is_read?: boolean;
-    is_favorite?: boolean;
     limit?: number;
     offset?: number;
   }): Article[];
@@ -39,7 +37,7 @@ export type ArticleService = {
   getArticles(options?: {
     feedId?: number;
     isRead?: boolean;
-    isFavorite?: boolean;
+    filter?: ArticleFilter;
     limit?: number;
     offset?: number;
   }): Article[];

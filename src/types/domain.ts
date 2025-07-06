@@ -20,7 +20,6 @@ export type Article = {
   author?: string;
   published_at: Date;
   is_read: boolean;
-  is_favorite: boolean;
   thumbnail_url?: string;
   created_at: Date;
   updated_at: Date;
@@ -37,7 +36,6 @@ export type ArticleRow = {
   author?: string;
   published_at: number;
   is_read: number;
-  is_favorite: number;
   thumbnail_url?: string;
   created_at: number;
   updated_at: number;
@@ -52,10 +50,15 @@ export type CreateFeedInput = {
 
 export type UpdateArticleInput = {
   is_read?: boolean;
-  is_favorite?: boolean;
 };
 
 export type Pin = {
+  id: number;
+  article_id: number;
+  created_at: Date;
+};
+
+export type Favorite = {
   id: number;
   article_id: number;
   created_at: Date;

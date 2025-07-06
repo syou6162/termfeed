@@ -34,6 +34,7 @@ type KeyboardNavigationProps = {
   onSetFeedRating?: (rating: number) => void;
   onTogglePin?: () => void;
   onOpenAllPinned?: () => void;
+  onToggleFavoriteMode?: () => void;
 };
 
 export function useKeyboardNavigation({
@@ -59,6 +60,7 @@ export function useKeyboardNavigation({
   onSetFeedRating,
   onTogglePin,
   onOpenAllPinned,
+  onToggleFavoriteMode,
 }: KeyboardNavigationProps) {
   const handleInput = useCallback(
     (input: string, key: KeyEvent) => {
@@ -108,6 +110,12 @@ export function useKeyboardNavigation({
       // お気に入りトグル
       if (input === 'f') {
         onToggleFavorite?.();
+        return;
+      }
+
+      // お気に入りモードトグル
+      if (input === 'F') {
+        onToggleFavoriteMode?.();
         return;
       }
 
@@ -193,6 +201,7 @@ export function useKeyboardNavigation({
       onSetFeedRating,
       onTogglePin,
       onOpenAllPinned,
+      onToggleFavoriteMode,
     ]
   );
 

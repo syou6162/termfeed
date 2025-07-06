@@ -16,11 +16,17 @@ termfeedは、ターミナルで動作するRSSリーダーです。Vim風のキ
   - 開発時とビルド後で異なるパス解決を実装
 - **FeedModel**: フィードのCRUD操作、レーティング管理
   - `setRating()`: 0-5の範囲でフィードレーティングを設定
-- **ArticleModel**: 記事のCRUD操作、既読管理、お気に入り機能
+- **ArticleModel**: 記事のCRUD操作、既読管理
   - `getUnreadCountsByFeedIds()`: N+1クエリ回避のバッチ処理メソッド
   - `count()`: 記事の総数を取得
   - `findAllWithPinStatus()`: LEFT JOINでピン状態を含む記事取得
   - `getPinnedArticles()`: INNER JOINでピン留めされた記事のみ取得
+  - `getFavoriteArticles()`: INNER JOINでお気に入り記事を取得
+- **FavoriteModel**: お気に入り機能のCRUD操作
+  - `create()`: 記事をお気に入りに追加（UNIQUE制約で重複防止）
+  - `delete()`: お気に入りから削除
+  - `isFavorite()`: お気に入り状態の確認
+  - `getFavoriteCount()`: お気に入り数を取得
 - **PinModel**: ピン機能のCRUD操作
   - `create()`: 記事にピンを立てる（UNIQUE制約で重複防止）
   - `delete()`: ピンを外す
@@ -37,7 +43,13 @@ termfeedは、ターミナルで動作するRSSリーダーです。Vim風のキ
   - `setFeedRating()`: フィードレーティング設定
   - `getUnreadFeeds()`: レーティング優先・未読件数副次のソート
 - **ArticleService**: 記事管理のビジネスロジック（ArticleModelのラッパー）
-  - `toggleFavoriteWithPin()`: お気に入りとピンを連動させる（v0.4.0〜）
+  - `toggleFavoriteWithPin()`: お気に入りとピンを連動させる（FavoriteServiceと連携）
+- **FavoriteService**: お気に入り機能のビジネスロジック
+  - `toggleFavorite()`: お気に入り状態の切り替え（戻り値で追加/削除を判定）
+  - `addFavorite()`: お気に入りに追加
+  - `removeFavorite()`: お気に入りから削除
+  - `isFavorite()`: お気に入り状態の確認
+  - `getFavoriteCount()`: お気に入り数を取得
 - **PinService**: ピン機能のビジネスロジック
   - `togglePin()`: ピン状態の切り替え（戻り値でピン/アンピンを判定）
   - `getPinnedArticles()`: ピン留めされた記事を取得（作成日時の降順）
@@ -57,7 +69,8 @@ termfeedは、ターミナルで動作するRSSリーダーです。Vim風のキ
 - **src/apps/tui/**: ターミナルUI実装（Ink/React）
   - `App.tsx`: メインコンポーネント、自動既読機能実装
     - `AppProps`型でDatabaseManagerを外部から注入可能（チュートリアルモード用）
-  - `components/`: ArticleList, FeedList, TwoPaneLayout, HelpOverlay
+  - `components/`: ArticleList, FeedList, FavoriteList, TwoPaneLayout, HelpOverlay
+    - `FavoriteList`: お気に入り記事専用の1ペイン表示コンポーネント
   - `hooks/useKeyboardNavigation.ts`: キーバインド処理
   - `hooks/useFeedManager.ts`: フィード選択状態の自動同期
   - `hooks/usePinManager.ts`: ピン状態管理（pinnedArticleIds Set管理）
@@ -70,9 +83,10 @@ termfeedは、ターミナルで動作するRSSリーダーです。Vim風のキ
 
 ### 型定義 (src/types/)
 すべての型定義を集約管理：
-- **domain.ts**: DBエンティティ（Feed, Article, Pin）
+- **domain.ts**: DBエンティティ（Feed, Article, Pin, Favorite）
   - `Feed.rating`: 0-5の整数値（必須）
   - `Pin`: article_id, created_atを持つピン情報
+  - `Favorite`: article_id, created_atを持つお気に入り情報
 - **dto.ts**: データ転送オブジェクト（RSSItem, CrawlResult）
 - **options.ts**: 関数引数・設定（ArticleQueryOptions, ServiceError）
 - **services.ts**: サービス層のインターフェース
@@ -125,6 +139,7 @@ npm run dev mcp-server  # MCPサーバー起動
 - `s/a`: フィード移動（s=次、a=前）
 - `v`: ブラウザで開く（spawn使用でセキュア実装）
 - `f`: お気に入りトグル（自動でピンも設定、v0.4.0〜）
+- `Shift+F`: お気に入り一覧表示に切り替え
 - `p`: ピントグル（後で読む記事をマーク）
 - `o`: ピンした記事をまとめてブラウザで開く（最大10件ずつ、古い順）
 - `g`: 記事内の先頭へスクロール
@@ -160,6 +175,11 @@ npm run dev mcp-server  # MCPサーバー起動
   - `f`キーでお気に入り追加時に自動でピンも設定
   - お気に入りを外すとピンも解除される
 
+### お気に入り一覧表示
+- `Shift+F`キーでお気に入り記事専用の1ペイン表示に切り替え
+- 記事のスクロール、ピン、お気に入り解除などの操作が可能
+- 通常の2ペイン表示に戻るには再度`Shift+F`キーを押す
+
 ### パフォーマンス最適化
 - `getUnreadCountsForAllFeeds()`でN+1クエリ回避
 - レーティング優先・未読件数副次のソート表示
@@ -175,8 +195,11 @@ SQLiteを使用（src/models/schema.sql）：
 
 ### テーブル構造
 - **feeds**: id, url (UNIQUE), title, description, rating (INTEGER DEFAULT 0), last_updated_at, created_at
-- **articles**: id, feed_id (FK), title, url (UNIQUE), content, summary, author, published_at, is_read, is_favorite, thumbnail_url, created_at, updated_at
+- **articles**: id, feed_id (FK), title, url (UNIQUE), content, summary, author, published_at, is_read, thumbnail_url, created_at, updated_at
+  - 注意: `is_favorite`カラムはfavoritesテーブルへ移行済み（v0.5.0〜）
 - **pins**: id, article_id (FK UNIQUE), created_at
+  - 外部キー制約でarticle削除時に自動削除（ON DELETE CASCADE）
+- **favorites**: id, article_id (FK UNIQUE), created_at
   - 外部キー制約でarticle削除時に自動削除（ON DELETE CASCADE）
 
 ### インデックス
@@ -185,6 +208,8 @@ SQLiteを使用（src/models/schema.sql）：
 - `idx_articles_is_read`: 未読記事の高速フィルタリング
 - `idx_pins_article_id`: ピン状態の高速確認
 - `idx_pins_created_at`: ピン作成日時でのソート用
+- `idx_favorites_article_id`: お気に入り状態の高速確認
+- `idx_favorites_created_at`: お気に入り作成日時でのソート用
 
 ### 設計原則
 - データベースは制約のみ、ロジックはアプリケーション側

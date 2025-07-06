@@ -8,7 +8,6 @@ const mockFeedService = {
   updateAllFeeds: vi.fn(),
   getArticles: vi.fn(),
   markArticleAsRead: vi.fn(),
-  toggleArticleFavorite: vi.fn(),
 };
 
 // テスト用データ
@@ -23,7 +22,6 @@ const mockArticles: Article[] = [
     author: 'Author 1',
     published_at: new Date('2024-01-01'),
     is_read: false,
-    is_favorite: false,
     thumbnail_url: undefined,
     created_at: new Date('2024-01-01'),
     updated_at: new Date('2024-01-01'),
@@ -38,7 +36,6 @@ const mockArticles: Article[] = [
     author: 'Author 2',
     published_at: new Date('2024-01-02'),
     is_read: true,
-    is_favorite: true,
     thumbnail_url: undefined,
     created_at: new Date('2024-01-02'),
     updated_at: new Date('2024-01-02'),
@@ -53,7 +50,6 @@ const mockArticles: Article[] = [
     author: 'Author 3',
     published_at: new Date('2024-01-03'),
     is_read: false,
-    is_favorite: false,
     thumbnail_url: undefined,
     created_at: new Date('2024-01-03'),
     updated_at: new Date('2024-01-03'),
@@ -66,7 +62,6 @@ describe('useArticleManager Unit Tests', () => {
 
     // デフォルトのモック実装
     mockFeedService.getArticles.mockReturnValue(mockArticles);
-    mockFeedService.toggleArticleFavorite.mockImplementation(() => {});
   });
 
   it('未読記事のみがフィルタリングされることを確認', () => {
@@ -85,12 +80,6 @@ describe('useArticleManager Unit Tests', () => {
       feed_id: 1,
       limit: 100,
     });
-  });
-
-  it('お気に入りトグルが正しく呼ばれることを確認', () => {
-    mockFeedService.toggleArticleFavorite(1);
-
-    expect(mockFeedService.toggleArticleFavorite).toHaveBeenCalledWith(1);
   });
 
   it('エラーハンドリングが正しく機能することを確認', () => {

@@ -1,9 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
-import { FeedService } from '../../../services/feed-service.js';
-import { RSSCrawler } from '../../../services/rss-crawler.js';
-import { FeedModel } from '../../../models/feed.js';
-import { ArticleModel } from '../../../models/article.js';
+import { DatabaseManager } from '../../../models/database.js';
+import { createFeedServices } from '../../../services/factory.js';
 import type { UpdateAllFeedsResult, UpdateCancelledResult } from '@/types';
 
 type UpdateAllFeedsResponse = {
@@ -17,12 +15,8 @@ type UpdateAllFeedsResponse = {
   };
 };
 
-export function registerFeedTools(
-  server: McpServer,
-  feedModel: FeedModel,
-  articleModel: ArticleModel
-): void {
-  const feedService = new FeedService(feedModel, articleModel, new RSSCrawler());
+export function registerFeedTools(server: McpServer, databaseManager: DatabaseManager): void {
+  const { feedService } = createFeedServices(databaseManager);
 
   // Register update_all_feeds tool
   server.tool(

@@ -649,14 +649,6 @@ describe('FeedService', () => {
       expect(article?.is_read).toBe(false);
     });
 
-    it('記事のお気に入りをトグルする', () => {
-      const result = feedService.toggleArticleFavorite(articleId);
-      expect(result).toBe(true);
-
-      const article = articleModel.findById(articleId);
-      expect(article?.is_favorite).toBe(true);
-    });
-
     it('フィードの全記事を既読にマークする', () => {
       // 追加の記事を作成
       articleModel.create({

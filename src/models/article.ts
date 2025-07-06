@@ -16,7 +16,6 @@ export type CreateArticleInput = {
 export type ArticleFilter = {
   feed_id?: number;
   is_read?: boolean;
-  is_favorite?: boolean;
   limit?: number;
   offset?: number;
 };
@@ -38,7 +37,6 @@ export class ArticleModel {
       author?: string;
       published_at: number;
       is_read: number;
-      is_favorite: number;
       thumbnail_url?: string;
       created_at: number;
       updated_at: number;
@@ -53,7 +51,6 @@ export class ArticleModel {
       author: data.author,
       published_at: unixSecondsToDate(data.published_at),
       is_read: Boolean(data.is_read),
-      is_favorite: Boolean(data.is_favorite),
       thumbnail_url: data.thumbnail_url,
       created_at: unixSecondsToDate(data.created_at),
       updated_at: unixSecondsToDate(data.updated_at),
@@ -65,9 +62,9 @@ export class ArticleModel {
     const stmt = this.db.getDb().prepare(`
       INSERT INTO articles (
         feed_id, title, url, content, author, 
-        published_at, is_read, is_favorite, thumbnail_url, created_at, updated_at
+        published_at, is_read, thumbnail_url, created_at, updated_at
       )
-      VALUES (?, ?, ?, ?, ?, ?, 0, 0, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?)
     `);
 
     try {
@@ -87,7 +84,6 @@ export class ArticleModel {
         id: result.lastInsertRowid as number,
         ...article,
         is_read: false,
-        is_favorite: false,
         created_at: unixSecondsToDate(now),
         updated_at: unixSecondsToDate(now),
       };
@@ -136,11 +132,6 @@ export class ArticleModel {
       params.push(filter.is_read ? 1 : 0);
     }
 
-    if (filter.is_favorite !== undefined) {
-      query += ' AND is_favorite = ?';
-      params.push(filter.is_favorite ? 1 : 0);
-    }
-
     query += ' ORDER BY published_at DESC';
 
     if (filter.limit !== undefined) {
@@ -166,26 +157,22 @@ export class ArticleModel {
         CASE WHEN p.article_id IS NOT NULL THEN 1 ELSE 0 END as is_pinned
       FROM articles a
       LEFT JOIN pins p ON a.id = p.article_id
-      WHERE 1=1
     `;
     const params: unknown[] = [];
 
+    query += ' WHERE 1=1';
+
     if (filter.feed_id !== undefined) {
-      query += ' AND a.feed_id = ?';
+      query += ' AND feed_id = ?';
       params.push(filter.feed_id);
     }
 
     if (filter.is_read !== undefined) {
-      query += ' AND a.is_read = ?';
+      query += ' AND is_read = ?';
       params.push(filter.is_read ? 1 : 0);
     }
 
-    if (filter.is_favorite !== undefined) {
-      query += ' AND a.is_favorite = ?';
-      params.push(filter.is_favorite ? 1 : 0);
-    }
-
-    query += ' ORDER BY a.published_at DESC';
+    query += ' ORDER BY published_at DESC';
 
     if (filter.limit !== undefined) {
       query += ' LIMIT ?';
@@ -223,6 +210,48 @@ export class ArticleModel {
     return rows.map((row) => this.convertRowToArticle(row));
   }
 
+  public getFavoriteArticles(
+    options: {
+      feed_id?: number;
+      is_read?: boolean;
+      limit?: number;
+      offset?: number;
+    } = {}
+  ): Article[] {
+    const conditions: string[] = [];
+    const params: unknown[] = [];
+
+    if (options.feed_id !== undefined) {
+      conditions.push('a.feed_id = ?');
+      params.push(options.feed_id);
+    }
+
+    if (options.is_read !== undefined) {
+      conditions.push('a.is_read = ?');
+      params.push(options.is_read ? 1 : 0);
+    }
+
+    const whereClause = conditions.length > 0 ? `AND ${conditions.join(' AND ')}` : '';
+    const limitClause = options.limit ? `LIMIT ${options.limit}` : '';
+    const offsetClause = options.offset ? `OFFSET ${options.offset}` : '';
+
+    const query = `
+      SELECT 
+        a.*
+      FROM articles a
+      INNER JOIN favorites f ON a.id = f.article_id
+      WHERE 1=1 ${whereClause}
+      ORDER BY f.created_at DESC
+      ${limitClause}
+      ${offsetClause}
+    `;
+
+    const stmt = this.db.getDb().prepare(query);
+    const rows = stmt.all(...params);
+
+    return rows.map((row) => this.convertRowToArticle(row));
+  }
+
   public update(id: number, updates: UpdateArticleInput): Article | null {
     const updateFields: string[] = [];
     const updateValues: unknown[] = [];
@@ -230,11 +259,6 @@ export class ArticleModel {
     if (updates.is_read !== undefined) {
       updateFields.push('is_read = ?');
       updateValues.push(updates.is_read ? 1 : 0);
-    }
-
-    if (updates.is_favorite !== undefined) {
-      updateFields.push('is_favorite = ?');
-      updateValues.push(updates.is_favorite ? 1 : 0);
     }
 
     if (updateFields.length === 0) {
@@ -282,17 +306,6 @@ export class ArticleModel {
   public markAsUnread(id: number): boolean {
     const updated = this.update(id, { is_read: false });
     return updated !== null;
-  }
-
-  public toggleFavorite(id: number): boolean {
-    const article = this.findById(id);
-    if (!article) return false;
-
-    const newFavoriteState = !article.is_favorite;
-    const updated = this.update(id, { is_favorite: newFavoriteState });
-
-    // 更新が成功した場合は新しいお気に入り状態を返す
-    return updated !== null ? newFavoriteState : article.is_favorite;
   }
 
   public countByFeedId(feedId?: number): number {
@@ -357,5 +370,28 @@ export class ArticleModel {
     }
 
     return unreadCounts;
+  }
+
+  /**
+   * 複数の記事を一括で既読にする
+   * @param feedId フィードID（指定した場合はそのフィードの記事のみ）
+   * @returns 更新された記事数
+   */
+  public markAllAsRead(feedId?: number): number {
+    let query = `
+      UPDATE articles 
+      SET is_read = 1, updated_at = ?
+      WHERE is_read = 0
+    `;
+    const params: unknown[] = [nowInUnixSeconds()];
+
+    if (feedId !== undefined) {
+      query += ' AND feed_id = ?';
+      params.push(feedId);
+    }
+
+    const stmt = this.db.getDb().prepare(query);
+    const result = stmt.run(...params);
+    return result.changes;
   }
 }

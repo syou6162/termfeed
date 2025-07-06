@@ -220,19 +220,8 @@ export class FeedService implements IFeedService {
     return this.articleModel.markAsUnread(articleId);
   }
 
-  toggleArticleFavorite(articleId: number): boolean {
-    return this.articleModel.toggleFavorite(articleId);
-  }
-
   markAllAsRead(feedId?: number): void {
-    const articles = this.articleModel.findAll({
-      feed_id: feedId,
-      is_read: false,
-    });
-
-    for (const article of articles) {
-      this.articleModel.markAsRead(article.id);
-    }
+    this.articleModel.markAllAsRead(feedId);
   }
 
   getUnreadCount(feedId?: number): number {
@@ -287,7 +276,6 @@ export class FeedService implements IFeedService {
     options: {
       feed_id?: number;
       is_read?: boolean;
-      is_favorite?: boolean;
       limit?: number;
       offset?: number;
     } = {}

@@ -10,6 +10,7 @@ type ArticleListProps = {
   scrollOffset: number;
   onScrollOffsetChange: (offset: number) => void;
   isPinned?: boolean;
+  isFavorite?: boolean;
 };
 
 export const ArticleList = memo(function ArticleList({
@@ -18,6 +19,7 @@ export const ArticleList = memo(function ArticleList({
   scrollOffset,
   onScrollOffsetChange,
   isPinned = false,
+  isFavorite = false,
 }: ArticleListProps) {
   const { stdout } = useStdout();
   const [contentLines, setContentLines] = useState<string[]>([]);
@@ -161,14 +163,14 @@ export const ArticleList = memo(function ArticleList({
       <Box paddingX={1}>
         <Text color="gray">公開日: {publishedDate}</Text>
         {selectedArticle.author && <Text color="cyan"> | 著者: {selectedArticle.author}</Text>}
-        {selectedArticle.is_favorite && (
+        {isFavorite && (
           <Text color="yellow" bold>
             {selectedArticle.author ? ' | ' : ' | '}★ お気に入り
           </Text>
         )}
         {isPinned && (
           <Text color="yellow" bold>
-            {selectedArticle.author || selectedArticle.is_favorite ? ' | ' : ' | '}📌 ピン
+            {selectedArticle.author || isFavorite ? ' | ' : ' | '}📌 ピン
           </Text>
         )}
       </Box>

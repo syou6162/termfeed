@@ -1,27 +1,44 @@
 import { ArticleModel } from '../models/article.js';
 import { PinService } from './pin.js';
-import type { Article, ArticleService as IArticleService } from '@/types';
+import { FavoriteService } from './favorite.js';
+import type { Article, ArticleService as IArticleService, ArticleFilter } from '@/types';
 
 export class ArticleService implements IArticleService {
   private articleModel: ArticleModel;
   private pinService: PinService;
+  private favoriteService: FavoriteService;
 
-  constructor(articleModel: ArticleModel, pinService: PinService) {
+  constructor(
+    articleModel: ArticleModel,
+    pinService: PinService,
+    favoriteService: FavoriteService
+  ) {
     this.articleModel = articleModel;
     this.pinService = pinService;
+    this.favoriteService = favoriteService;
   }
 
   getArticles(options?: {
     feedId?: number;
     isRead?: boolean;
-    isFavorite?: boolean;
+    filter?: ArticleFilter;
     limit?: number;
     offset?: number;
   }): Article[] {
+    if (options?.filter === 'favorites') {
+      // お気に入り記事のみを取得（データベースレベルでフィルタリング）
+      return this.articleModel.getFavoriteArticles({
+        feed_id: options.feedId,
+        is_read: options.isRead,
+        limit: options.limit,
+        offset: options.offset,
+      });
+    }
+
+    // filter === 'all' または undefined の場合は全記事を返す
     return this.articleModel.findAll({
       feed_id: options?.feedId,
       is_read: options?.isRead,
-      is_favorite: options?.isFavorite,
       limit: options?.limit,
       offset: options?.offset,
     });
@@ -40,7 +57,12 @@ export class ArticleService implements IArticleService {
   }
 
   toggleFavorite(articleId: number): boolean {
-    return this.articleModel.toggleFavorite(articleId);
+    // 記事の存在確認
+    const article = this.articleModel.findById(articleId);
+    if (!article) {
+      return false;
+    }
+    return this.favoriteService.toggleFavorite(articleId);
   }
 
   /**
@@ -49,7 +71,13 @@ export class ArticleService implements IArticleService {
    * @returns お気に入りに設定した場合はtrue、外した場合はfalse
    */
   toggleFavoriteWithPin(articleId: number): boolean {
-    const isFavorite = this.articleModel.toggleFavorite(articleId);
+    // 記事の存在確認
+    const article = this.articleModel.findById(articleId);
+    if (!article) {
+      return false;
+    }
+
+    const isFavorite = this.favoriteService.toggleFavorite(articleId);
 
     if (isFavorite) {
       // お気に入りに設定した場合：ピンを立てる
