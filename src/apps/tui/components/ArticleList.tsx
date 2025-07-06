@@ -164,7 +164,7 @@ export const ArticleList = memo(function ArticleList({
         <Text color="gray">公開日: {publishedDate}</Text>
         {selectedArticle.author && <Text color="cyan"> | 著者: {selectedArticle.author}</Text>}
         {isFavorite && (
-          <Text color="red" bold>
+          <Text color="yellow" bold>
             {selectedArticle.author ? ' | ' : ' | '}★ お気に入り
           </Text>
         )}
