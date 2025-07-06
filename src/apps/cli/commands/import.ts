@@ -58,7 +58,7 @@ export const importCommand = new Command('import')
       // データベースとサービスの初期化
       dbManager = createDatabaseManager();
       dbManager.migrate();
-      const feedService = createFeedServices(dbManager);
+      const { feedService } = createFeedServices(dbManager);
 
       // 各URLを追加
       let successCount = 0;

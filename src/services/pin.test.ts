@@ -161,6 +161,46 @@ describe('PinService', () => {
     });
   });
 
+  describe('setPin', () => {
+    it('ピンが立っていない記事にピンを立てられる', () => {
+      expect(pinService.getPinCount()).toBe(0);
+
+      pinService.setPin(testArticleId1);
+
+      expect(pinService.getPinCount()).toBe(1);
+      expect(pinService.getPinnedArticles()).toHaveLength(1);
+      expect(pinService.getPinnedArticles()[0].id).toBe(testArticleId1);
+    });
+
+    it('既にピンが立っている記事にsetPinしても重複しない', () => {
+      pinService.togglePin(testArticleId1); // 先にピンを立てる
+      expect(pinService.getPinCount()).toBe(1);
+
+      pinService.setPin(testArticleId1); // 再度setPin
+
+      expect(pinService.getPinCount()).toBe(1); // 変わらず
+    });
+  });
+
+  describe('unsetPin', () => {
+    it('ピンが立っている記事のピンを外せる', () => {
+      pinService.togglePin(testArticleId1); // 先にピンを立てる
+      expect(pinService.getPinCount()).toBe(1);
+
+      pinService.unsetPin(testArticleId1);
+
+      expect(pinService.getPinCount()).toBe(0);
+    });
+
+    it('ピンが立っていない記事にunsetPinしても何も起こらない', () => {
+      expect(pinService.getPinCount()).toBe(0);
+
+      pinService.unsetPin(testArticleId1);
+
+      expect(pinService.getPinCount()).toBe(0); // 変わらず
+    });
+  });
+
   describe('clearAllPins', () => {
     it('すべてのピンをクリアできる', () => {
       // 複数のピンを立てる

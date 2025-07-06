@@ -47,10 +47,40 @@ const mockFeedService = {
   updateAllFeeds: vi.fn(),
 };
 
-import { FeedService } from '../../../services/feed-service.js';
+// ArticleServiceのモック
+const mockArticleService = {
+  getArticles: vi.fn(),
+  getArticleById: vi.fn(),
+  markAsRead: vi.fn(),
+  markAsUnread: vi.fn(),
+  toggleFavorite: vi.fn(),
+  toggleFavoriteWithPin: vi.fn(),
+  getUnreadCount: vi.fn(),
+  getTotalCount: vi.fn(),
+};
+
+// PinServiceのモック
+const mockPinService = {
+  togglePin: vi.fn(),
+  getPinnedArticles: vi.fn(() => []),
+  getPinCount: vi.fn(() => 0),
+  getOldestPinnedArticles: vi.fn(() => []),
+  deletePins: vi.fn(),
+  clearAllPins: vi.fn(),
+};
+
+// import { FeedService } from '../../../services/feed-service.js';
 
 vi.mock('../../../services/feed-service.js', () => ({
   FeedService: vi.fn(() => mockFeedService),
+}));
+
+vi.mock('../../../services/article-service.js', () => ({
+  ArticleService: vi.fn(() => mockArticleService),
+}));
+
+vi.mock('../../../services/pin.js', () => ({
+  PinService: vi.fn(() => mockPinService),
 }));
 
 vi.mock('../../../models/feed.js', () => ({
@@ -74,6 +104,14 @@ vi.mock('../../../models/database.js', () => ({
 
 vi.mock('../../cli/utils/database.js', () => ({
   createDatabaseManager: vi.fn(() => mockDatabaseManager),
+}));
+
+vi.mock('../../../services/factory.js', () => ({
+  createFeedServices: vi.fn(() => ({
+    feedService: mockFeedService,
+    articleService: mockArticleService,
+    pinService: mockPinService,
+  })),
 }));
 
 // App コンポーネントのimport（モック設定後）
@@ -156,7 +194,7 @@ describe('App Integration Tests', () => {
     mockFeedService.getUnreadFeeds.mockReturnValue(
       mockFeeds.map((feed) => ({ ...feed, unreadCount: mockUnreadCounts[feed.id] || 0 }))
     );
-    mockFeedService.getArticles.mockReturnValue(mockArticles);
+    mockArticleService.getArticles.mockReturnValue(mockArticles);
     mockFeedService.markArticleAsRead.mockImplementation(() => {});
     mockFeedService.toggleArticleFavorite.mockImplementation(() => {});
     mockFeedService.updateAllFeeds.mockImplementation(() =>
@@ -165,6 +203,18 @@ describe('App Integration Tests', () => {
         failed: [],
       })
     );
+
+    // ArticleServiceのデフォルトモック実装を設定
+    mockArticleService.getArticles.mockReturnValue(mockArticles);
+    mockArticleService.getArticleById.mockImplementation(
+      (id: number) => mockArticles.find((article) => article.id === id) || null
+    );
+    mockArticleService.markAsRead.mockImplementation(() => true);
+    mockArticleService.markAsUnread.mockImplementation(() => true);
+    mockArticleService.toggleFavorite.mockImplementation(() => true);
+    mockArticleService.toggleFavoriteWithPin.mockImplementation(() => true);
+    mockArticleService.getUnreadCount.mockReturnValue(mockArticles.length);
+    mockArticleService.getTotalCount.mockReturnValue(mockArticles.length);
 
     // process.onのモック
     vi.spyOn(process, 'on').mockImplementation(() => process);
@@ -287,7 +337,7 @@ describe('App Integration Tests', () => {
 
       // 初期化の完了を待つ
       await vi.waitFor(() => {
-        expect(mockFeedService.getArticles).toBeCalled();
+        expect(mockArticleService.getArticles).toBeCalled();
       });
 
       // まず次の記事に移動
@@ -297,7 +347,7 @@ describe('App Integration Tests', () => {
       stdin.write('k');
 
       // mockFeedServiceの呼び出しを確認
-      expect(mockFeedService.getArticles).toHaveBeenCalled();
+      expect(mockArticleService.getArticles).toHaveBeenCalled();
     });
 
     it('sキーで次のフィードに移動する', async () => {
@@ -305,7 +355,7 @@ describe('App Integration Tests', () => {
 
       // 初期化の完了を待つ
       await vi.waitFor(() => {
-        expect(mockFeedService.getArticles).toBeCalled();
+        expect(mockArticleService.getArticles).toBeCalled();
       });
 
       // sキーを押す
@@ -313,9 +363,9 @@ describe('App Integration Tests', () => {
 
       // 新しいフィードの記事を読み込むことを確認
       await vi.waitFor(() => {
-        expect(mockFeedService.getArticles).toHaveBeenCalledWith({
-          feed_id: 2,
-          is_read: false,
+        expect(mockArticleService.getArticles).toHaveBeenCalledWith({
+          feedId: 2,
+          isRead: false,
           limit: 100,
         });
       });
@@ -326,7 +376,7 @@ describe('App Integration Tests', () => {
 
       // 初期化の完了を待つ
       await vi.waitFor(() => {
-        expect(mockFeedService.getArticles).toBeCalled();
+        expect(mockArticleService.getArticles).toBeCalled();
       });
 
       // まず次のフィードに移動
@@ -337,9 +387,9 @@ describe('App Integration Tests', () => {
 
       // 元のフィードの記事を読み込むことを確認
       await vi.waitFor(() => {
-        const calls = mockFeedService.getArticles.mock.calls;
+        const calls = mockArticleService.getArticles.mock.calls;
         const lastCall = calls[calls.length - 1];
-        expect(lastCall).toEqual([{ feed_id: 1, is_read: false, limit: 100 }]);
+        expect(lastCall).toEqual([{ feedId: 1, isRead: false, limit: 100 }]);
       });
     });
 
@@ -391,9 +441,9 @@ describe('App Integration Tests', () => {
       // fキーを押す
       stdin.write('f');
 
-      // お気に入りトグルが呼ばれることを確認
+      // お気に入り+ピントグルが呼ばれることを確認
       await vi.waitFor(() => {
-        expect(mockFeedService.toggleArticleFavorite).toHaveBeenCalledWith(1);
+        expect(mockArticleService.toggleFavoriteWithPin).toHaveBeenCalledWith(1);
       });
     });
 
@@ -494,31 +544,14 @@ describe('App Integration Tests', () => {
     });
 
     it('既に既読の記事は既読処理をスキップする', async () => {
-      // このテストのために新しいインスタンスを作成
-      const isolatedFeedService = {
-        getFeedList: vi.fn().mockReturnValue(mockFeeds),
-        getUnreadCountsForAllFeeds: vi.fn().mockReturnValue(mockUnreadCounts),
-        getUnreadFeeds: vi
-          .fn()
-          .mockReturnValue(
-            mockFeeds.map((feed) => ({ ...feed, unreadCount: mockUnreadCounts[feed.id] || 0 }))
-          ),
-        getArticles: vi.fn().mockReturnValue([]),
-        markArticleAsRead: vi.fn(),
-        toggleArticleFavorite: vi.fn(),
-        updateAllFeeds: vi.fn(),
-      };
-
-      // FeedServiceのモックを一時的に置き換え
-      vi.mocked(FeedService).mockImplementationOnce(
-        () => isolatedFeedService as unknown as FeedService
-      );
+      // 既存のmockArticleServiceの戻り値を空の配列に変更
+      vi.mocked(mockArticleService.getArticles).mockReturnValue([]);
 
       const { stdin } = render(<App />);
 
       // 初期化の完了を待つ
       await vi.waitFor(() => {
-        expect(isolatedFeedService.getArticles).toBeCalled();
+        expect(mockArticleService.getArticles).toBeCalled();
       });
 
       // 記事が空の場合、既読化は呼ばれない
@@ -526,7 +559,7 @@ describe('App Integration Tests', () => {
       stdin.write('s');
 
       // 空の記事リストの場合、既読化が呼ばれないことを確認
-      expect(isolatedFeedService.markArticleAsRead).not.toHaveBeenCalled();
+      expect(mockArticleService.markAsRead).not.toHaveBeenCalled();
     });
   });
 
@@ -711,7 +744,7 @@ describe('App Integration Tests', () => {
     it('既読記事は表示されない', async () => {
       // データベースから直接未読記事のみを取得するため、
       // getArticlesは未読記事のみを返す
-      mockFeedService.getArticles.mockReturnValue([
+      mockArticleService.getArticles.mockReturnValue([
         { ...mockArticles[1], is_read: false }, // Article 2のみ（未読）
       ]);
 
@@ -719,7 +752,7 @@ describe('App Integration Tests', () => {
 
       // 初期化の完了を待つ
       await vi.waitFor(() => {
-        expect(mockFeedService.getArticles).toBeCalled();
+        expect(mockArticleService.getArticles).toBeCalled();
       });
 
       // 未読記事のみ表示されることを確認
@@ -769,15 +802,15 @@ describe('App Integration Tests', () => {
       }));
 
       // getArticlesは制限件数（100件）分の記事を返す
-      mockFeedService.getArticles.mockReturnValue(limitedArticles);
+      mockArticleService.getArticles.mockReturnValue(limitedArticles);
 
       const { lastFrame } = render(<App />);
 
       // 初期化の完了を待つ
       await vi.waitFor(() => {
-        expect(mockFeedService.getArticles).toHaveBeenCalledWith({
-          feed_id: 1,
-          is_read: false,
+        expect(mockArticleService.getArticles).toHaveBeenCalledWith({
+          feedId: 1,
+          isRead: false,
           limit: 100,
         });
       });
@@ -803,7 +836,7 @@ describe('App Integration Tests', () => {
       ]; // 次の1件
 
       // getArticlesの呼び出し回数に応じて異なるデータを返す
-      mockFeedService.getArticles.mockImplementation(() => {
+      mockArticleService.getArticles.mockImplementation(() => {
         callCount++;
         if (callCount === 1) {
           return firstBatch; // 1回目: Article 1, 2
@@ -825,7 +858,7 @@ describe('App Integration Tests', () => {
 
       // 2回目の記事取得が実行され、残りの未読記事が取得される
       await vi.waitFor(() => {
-        expect(mockFeedService.getArticles).toHaveBeenCalledTimes(2); // 初期 + 戻り
+        expect(mockArticleService.getArticles).toHaveBeenCalledTimes(2); // 初期 + 戻り
       });
 
       // 新しい記事が表示される
@@ -851,7 +884,7 @@ describe('App Integration Tests', () => {
       }));
 
       mockFeedService.getUnreadFeeds.mockReturnValue(feeds);
-      mockFeedService.getArticles.mockReturnValue(mockArticles);
+      mockArticleService.getArticles.mockReturnValue(mockArticles);
 
       const { stdin, lastFrame } = render(<App />);
 
@@ -877,9 +910,9 @@ describe('App Integration Tests', () => {
       // Feed 11の記事が読み込まれるまで待つ
       await vi.waitFor(
         () => {
-          expect(mockFeedService.getArticles).toHaveBeenCalledWith({
-            feed_id: 11,
-            is_read: false,
+          expect(mockArticleService.getArticles).toHaveBeenCalledWith({
+            feedId: 11,
+            isRead: false,
             limit: 100,
           });
         },
@@ -916,7 +949,7 @@ describe('App Integration Tests', () => {
       }));
 
       mockFeedService.getUnreadFeeds.mockReturnValue(manyFeeds);
-      mockFeedService.getArticles.mockReturnValue(mockArticles);
+      mockArticleService.getArticles.mockReturnValue(mockArticles);
 
       const { lastFrame } = render(<App />);
 
@@ -949,7 +982,7 @@ describe('App Integration Tests', () => {
       }));
 
       mockFeedService.getUnreadFeeds.mockReturnValue(feeds);
-      mockFeedService.getArticles.mockReturnValue(mockArticles);
+      mockArticleService.getArticles.mockReturnValue(mockArticles);
 
       const { stdin, lastFrame } = render(<App />);
 
@@ -966,9 +999,9 @@ describe('App Integration Tests', () => {
       await new Promise((resolve) => setTimeout(resolve, 100));
 
       // getArticlesが複数回呼ばれていることを確認
-      expect(mockFeedService.getArticles).toHaveBeenCalledWith({
-        feed_id: 2,
-        is_read: false,
+      expect(mockArticleService.getArticles).toHaveBeenCalledWith({
+        feedId: 2,
+        isRead: false,
         limit: 100,
       });
 
@@ -980,9 +1013,9 @@ describe('App Integration Tests', () => {
       await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Feed 1に戻っていることを確認
-      expect(mockFeedService.getArticles).toHaveBeenCalledWith({
-        feed_id: 1,
-        is_read: false,
+      expect(mockArticleService.getArticles).toHaveBeenCalledWith({
+        feedId: 1,
+        isRead: false,
         limit: 100,
       });
     });
@@ -1014,7 +1047,7 @@ describe('App Integration Tests', () => {
 
       // Feed 1は未読がないので、getUnreadFeedsからは除外される
       mockFeedService.getUnreadFeeds.mockReturnValue([feeds[1]]);
-      mockFeedService.getArticles.mockReturnValue(mockArticles);
+      mockArticleService.getArticles.mockReturnValue(mockArticles);
 
       const { stdin, lastFrame } = render(<App />);
 
@@ -1033,16 +1066,16 @@ describe('App Integration Tests', () => {
       await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Feed 2が選択されたままであることを確認
-      expect(mockFeedService.getArticles).toHaveBeenLastCalledWith({
-        feed_id: 2,
-        is_read: false,
+      expect(mockArticleService.getArticles).toHaveBeenLastCalledWith({
+        feedId: 2,
+        isRead: false,
         limit: 100,
       });
 
       // Feed 1への移動は発生していない
-      expect(mockFeedService.getArticles).not.toHaveBeenCalledWith({
-        feed_id: 1,
-        is_read: false,
+      expect(mockArticleService.getArticles).not.toHaveBeenCalledWith({
+        feedId: 1,
+        isRead: false,
         limit: 100,
       });
     });
@@ -1062,9 +1095,9 @@ describe('App Integration Tests', () => {
 
       // Feed 2が選択されていることを確認
       await vi.waitFor(() => {
-        expect(mockFeedService.getArticles).toHaveBeenLastCalledWith({
-          feed_id: 2,
-          is_read: false,
+        expect(mockArticleService.getArticles).toHaveBeenLastCalledWith({
+          feedId: 2,
+          isRead: false,
           limit: 100,
         });
       });
@@ -1089,9 +1122,9 @@ describe('App Integration Tests', () => {
       });
 
       // Feed 2が引き続き選択されていることを確認
-      expect(mockFeedService.getArticles).toHaveBeenLastCalledWith({
-        feed_id: 2,
-        is_read: false,
+      expect(mockArticleService.getArticles).toHaveBeenLastCalledWith({
+        feedId: 2,
+        isRead: false,
         limit: 100,
       });
     });
@@ -1108,9 +1141,9 @@ describe('App Integration Tests', () => {
       stdin.write('s');
 
       await vi.waitFor(() => {
-        expect(mockFeedService.getArticles).toHaveBeenCalledWith({
-          feed_id: 2,
-          is_read: false,
+        expect(mockArticleService.getArticles).toHaveBeenCalledWith({
+          feedId: 2,
+          isRead: false,
           limit: 100,
         });
       });
