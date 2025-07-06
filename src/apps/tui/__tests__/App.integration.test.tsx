@@ -747,8 +747,6 @@ describe('App Integration Tests', () => {
 
       // 初期状態を確認（Feed 1-10が表示されている）
       let frame = lastFrame();
-      console.log('=== 初期状態 ===');
-      console.log(frame);
 
       // Feed 11に移動（10回sキーを押す）
       for (let i = 0; i < 10; i++) {
@@ -773,8 +771,6 @@ describe('App Integration Tests', () => {
 
       // スライディングウィンドウ後の状態を確認
       frame = lastFrame();
-      console.log('=== Feed 11選択後 ===');
-      console.log(frame);
 
       // Feed 11が表示されていることを確認
       expect(frame).toContain('Test Feed 11');
