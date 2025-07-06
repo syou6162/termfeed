@@ -748,6 +748,9 @@ describe('App Integration Tests', () => {
       // 初期状態を確認（Feed 1-10が表示されている）
       let frame = lastFrame();
 
+      // 初期状態のスナップショットを記録
+      expect(frame).toMatchSnapshot('sliding-window-initial-state');
+
       // Feed 11に移動（10回sキーを押す）
       for (let i = 0; i < 10; i++) {
         stdin.write('s');
@@ -777,6 +780,9 @@ describe('App Integration Tests', () => {
 
       // Feed 1が表示されていないことを確認（正規表現で正確にマッチ）
       expect(frame).not.toMatch(/Test Feed 1(?!\d)/);
+
+      // スナップショットで全体のUI状態を記録
+      expect(frame).toMatchSnapshot('sliding-window-after-11th-feed');
     });
 
     it('フィード一覧のウィンドウサイズ制限が機能する', async () => {

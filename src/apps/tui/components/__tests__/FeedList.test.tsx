@@ -50,6 +50,9 @@ describe('FeedList', () => {
       for (let i = 11; i <= 20; i++) {
         expect(output).toMatch(new RegExp(`Feed ${i}(?!\\d)`));
       }
+
+      // スナップショットで正確なレイアウトを記録
+      expect(output).toMatchSnapshot('feedlist-sliding-window-11th-item');
     });
 
     it('5番目のフィードを選択した場合、5-14番目が表示される', () => {
@@ -87,6 +90,9 @@ describe('FeedList', () => {
       for (let i = 11; i <= 20; i++) {
         expect(output).toMatch(new RegExp(`Feed ${i}(?!\\d)`));
       }
+
+      // スナップショットで末尾の動作を記録
+      expect(output).toMatchSnapshot('feedlist-sliding-window-last-item');
     });
 
     it('12番目のフィードを選択した場合、6-15番目が表示される', () => {
