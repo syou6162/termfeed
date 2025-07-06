@@ -1,6 +1,6 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment */
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { DatabaseManager } from '../../database.js';
+import type { Database } from 'better-sqlite3';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
@@ -233,8 +233,7 @@ describe('migrate-favorites', () => {
 });
 
 // マイグレーション関数（テスト用に抽出）
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function migrateToFavoritesTable(database: any) {
+function migrateToFavoritesTable(database: Database) {
   // 外部キー制約を一時的に無効化
   database.prepare('PRAGMA foreign_keys = OFF').run();
 
