@@ -1,6 +1,7 @@
 import { Box, Text } from 'ink';
 import { memo, useMemo } from 'react';
 import type { FeedWithUnreadCount } from '../utils/feed-sorter.js';
+import { calculateSlidingWindow } from '../hooks/useSlidingWindow.js';
 
 type FeedListItem = {
   id: number;
@@ -146,24 +147,20 @@ export const FeedList = memo(function FeedList({
                     const selectedFeedItem = allItems[selectedIndex];
 
                     // 現在選択されているフィードのセクション内でのインデックスを計算
-                    // selectedFeedItemがこのセクションに属している場合のみ有効
                     const selectedItemInSection = selectedFeedItem
                       ? section.items.findIndex((item) => item.id === selectedFeedItem.id)
                       : -1;
 
-                    // スライディングウィンドウの開始位置を計算
-                    let startIndex = 0;
-                    if (section.items.length > windowSize && selectedItemInSection >= 0) {
-                      // 常に選択されたアイテムを先頭にして10件表示
-                      startIndex = selectedItemInSection;
-                      // ウィンドウが末尾を超えないように調整
-                      startIndex = Math.min(startIndex, section.items.length - windowSize);
-                    }
+                    // calculateSlidingWindowを使用してウィンドウを計算
+                    const { visibleItems } = calculateSlidingWindow(
+                      section.items,
+                      selectedItemInSection,
+                      {
+                        windowSize,
+                      }
+                    );
 
-                    // 表示するアイテムを取得
-                    const visibleItems = section.items.slice(startIndex, startIndex + windowSize);
-
-                    return visibleItems.map((item, _index) => {
+                    return visibleItems.map((item) => {
                       const globalIndex = allItems.findIndex(
                         (globalItem) => globalItem.id === item.id
                       );
