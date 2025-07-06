@@ -750,9 +750,10 @@ describe('App Integration Tests', () => {
       });
     });
 
-    it('上限以上の未読記事がある場合、最新の制限件数分のみ取得される', async () => {
-      // 150件の未読記事を持つフィードをシミュレート
-      const manyArticles = Array.from({ length: 150 }, (_, i) => ({
+    it('制限件数を超える未読記事がある場合、制限件数分のみ取得される', async () => {
+      // 制限件数（100件）を超える記事をシミュレート
+      // 実際のgetArticlesは制限件数分のみ返すため、100件のモックデータを作成
+      const limitedArticles = Array.from({ length: 100 }, (_, i) => ({
         id: i + 1,
         feed_id: 1,
         title: `Article ${i + 1}`,
@@ -767,8 +768,7 @@ describe('App Integration Tests', () => {
         updated_at: new Date('2024-01-01T00:00:00Z'),
       }));
 
-      // DBには150件あるが、TUIには最新100件のみが返される
-      const limitedArticles = manyArticles.slice(0, 100);
+      // getArticlesは制限件数（100件）分の記事を返す
       mockFeedService.getArticles.mockReturnValue(limitedArticles);
 
       const { lastFrame } = render(<App />);
@@ -782,11 +782,11 @@ describe('App Integration Tests', () => {
         });
       });
 
-      // 最新の記事（Article 1）が表示され、古い記事（Article 150）は表示されない
+      // 制限件数分の記事が正しく表示される
       await vi.waitFor(() => {
         const frame = lastFrame();
-        expect(frame).toContain('Article 1');
-        expect(frame).not.toContain('Article 150');
+        expect(frame).toContain('Article 1'); // 最初の記事
+        expect(frame).toContain('1/100件'); // 件数表示の確認
       });
     });
 

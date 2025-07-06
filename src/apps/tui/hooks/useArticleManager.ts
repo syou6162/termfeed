@@ -46,11 +46,12 @@ export function useArticleManager(
         setError('');
 
         // データベースから直接未読記事のみを取得（上限付き）
-        const unreadArticles = feedService.getArticles({
-          feed_id: feedId,
-          is_read: false,
-          limit: TUI_CONFIG.DEFAULT_ARTICLE_LIMIT,
-        });
+        const unreadArticles =
+          feedService.getArticles({
+            feed_id: feedId,
+            is_read: false,
+            limit: TUI_CONFIG.DEFAULT_ARTICLE_LIMIT,
+          }) || []; // 防御的プログラミング
         setArticles(unreadArticles);
         setSelectedArticleIndex(0);
         setScrollOffset(0); // スクロール位置をリセット
