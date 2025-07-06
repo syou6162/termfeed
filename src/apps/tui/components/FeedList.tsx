@@ -154,16 +154,10 @@ export const FeedList = memo(function FeedList({
                     // スライディングウィンドウの開始位置を計算
                     let startIndex = 0;
                     if (section.items.length > windowSize && selectedItemInSection >= 0) {
-                      // 選択されたアイテムがウィンドウ内に収まるように調整
-                      if (selectedItemInSection < windowSize) {
-                        // 最初のウィンドウ内（0〜9番目）
-                        startIndex = 0;
-                      } else {
-                        // 10番目以降を選択した場合、選択されたアイテムを先頭にして10件表示
-                        startIndex = selectedItemInSection;
-                        // ウィンドウが末尾を超えないように調整
-                        startIndex = Math.min(startIndex, section.items.length - windowSize);
-                      }
+                      // 常に選択されたアイテムを先頭にして10件表示
+                      startIndex = selectedItemInSection;
+                      // ウィンドウが末尾を超えないように調整
+                      startIndex = Math.min(startIndex, section.items.length - windowSize);
                     }
 
                     // 表示するアイテムを取得

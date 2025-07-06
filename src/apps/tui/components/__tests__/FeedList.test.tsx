@@ -52,19 +52,24 @@ describe('FeedList', () => {
       }
     });
 
-    it('5番目のフィードを選択した場合、1-10番目が表示される', () => {
+    it('5番目のフィードを選択した場合、5-14番目が表示される', () => {
       const feeds = Array.from({ length: 15 }, (_, i) => createMockFeed(i + 1, 3, 10));
       const { lastFrame } = render(<FeedList feeds={feeds} selectedIndex={4} />);
 
       const output = lastFrame();
 
-      // Feed 1から10までが表示されている
-      for (let i = 1; i <= 10; i++) {
-        expect(output).toContain(`Feed ${i}`);
+      // Feed 1-4は表示されていない
+      for (let i = 1; i <= 4; i++) {
+        expect(output).not.toMatch(new RegExp(`Feed ${i}(?!\\d)`));
       }
 
-      // Feed 11以降は表示されていない
-      expect(output).not.toContain('Feed 11');
+      // Feed 5から14までが表示されている
+      for (let i = 5; i <= 14; i++) {
+        expect(output).toMatch(new RegExp(`Feed ${i}(?!\\d)`));
+      }
+
+      // Feed 15は表示されていない
+      expect(output).not.toContain('Feed 15');
     });
 
     it('最後のフィードを選択した場合、最後の10件が表示される', () => {
@@ -236,7 +241,7 @@ describe('FeedList', () => {
   });
 
   describe('selectedIndexの動作確認', () => {
-    it('selectedIndex=0の時、最初の10件が表示される', () => {
+    it('selectedIndex=0の時、1-10番目が表示される', () => {
       const feeds = Array.from({ length: 15 }, (_, i) => createMockFeed(i + 1, 3, 10));
       const { lastFrame } = render(<FeedList feeds={feeds} selectedIndex={0} />);
 
@@ -255,18 +260,44 @@ describe('FeedList', () => {
       expect(feed1Line).toContain('>');
     });
 
-    it('selectedIndex=9の時（10番目のフィード）、最初の10件が表示される', () => {
+    it('selectedIndex=1の時（2番目のフィード）、2-11番目が表示される', () => {
+      const feeds = Array.from({ length: 15 }, (_, i) => createMockFeed(i + 1, 3, 10));
+      const { lastFrame } = render(<FeedList feeds={feeds} selectedIndex={1} />);
+
+      const output = lastFrame();
+
+      // Feed 1は表示されていない
+      expect(output).not.toMatch(/Feed 1(?!\d)/);
+
+      // Feed 2-11が表示されている
+      for (let i = 2; i <= 11; i++) {
+        expect(output).toMatch(new RegExp(`Feed ${i}(?!\\d)`));
+      }
+
+      // Feed 12以降は表示されていない
+      expect(output).not.toContain('Feed 12');
+
+      // Feed 2が選択されている（>マーク）
+      const lines = output?.split('\n') || [];
+      const feed2Line = lines.find((line) => line.includes('Feed 2'));
+      expect(feed2Line).toContain('>');
+    });
+
+    it('selectedIndex=9の時（10番目のフィード）、6-15番目が表示される', () => {
       const feeds = Array.from({ length: 15 }, (_, i) => createMockFeed(i + 1, 3, 10));
       const { lastFrame } = render(<FeedList feeds={feeds} selectedIndex={9} />);
 
       const output = lastFrame();
 
-      // Feed 1-10が表示されている
-      for (let i = 1; i <= 10; i++) {
-        expect(output).toContain(`Feed ${i}`);
+      // Feed 1-5は表示されていない
+      for (let i = 1; i <= 5; i++) {
+        expect(output).not.toMatch(new RegExp(`Feed ${i}(?!\\d)`));
       }
-      // Feed 11以降は表示されていない
-      expect(output).not.toContain('Feed 11');
+
+      // Feed 6-15が表示されている（最後の10件）
+      for (let i = 6; i <= 15; i++) {
+        expect(output).toMatch(new RegExp(`Feed ${i}(?!\\d)`));
+      }
 
       // Feed 10が選択されている（>マーク）
       const lines = output?.split('\n') || [];
