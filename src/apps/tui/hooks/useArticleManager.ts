@@ -39,19 +39,28 @@ export function useArticleManager(
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>('');
 
+  // 共通の記事取得ロジック
+  const fetchArticles = useCallback(
+    (feedId: number): Article[] => {
+      return (
+        feedService.getArticles({
+          feed_id: feedId,
+          is_read: false,
+          limit: TUI_CONFIG.DEFAULT_ARTICLE_LIMIT,
+        }) || []
+      ); // 防御的プログラミング
+    },
+    [feedService]
+  );
+
   const loadArticles = useCallback(
     (feedId: number) => {
       try {
         setIsLoading(true);
         setError('');
 
-        // データベースから直接未読記事のみを取得（上限付き）
-        const unreadArticles =
-          feedService.getArticles({
-            feed_id: feedId,
-            is_read: false,
-            limit: TUI_CONFIG.DEFAULT_ARTICLE_LIMIT,
-          }) || []; // 防御的プログラミング
+        // 共通ロジックを使用して記事を取得
+        const unreadArticles = fetchArticles(feedId);
         setArticles(unreadArticles);
         setSelectedArticleIndex(0);
         setScrollOffset(0); // スクロール位置をリセット
@@ -63,7 +72,7 @@ export function useArticleManager(
         setIsLoading(false);
       }
     },
-    [feedService]
+    [fetchArticles]
   );
 
   const toggleFavorite = useCallback(() => {
@@ -71,13 +80,38 @@ export function useArticleManager(
     if (selectedArticle?.id && currentFeedId) {
       try {
         feedService.toggleArticleFavorite(selectedArticle.id);
-        // 記事リストを再読み込み
-        loadArticles(currentFeedId);
+
+        // パフォーマンス改善: 記事リストの全件再取得を避け、ローカル状態のみ更新
+        setArticles((prevArticles) =>
+          prevArticles.map((article) =>
+            article.id === selectedArticle.id
+              ? { ...article, is_favorite: !article.is_favorite }
+              : article
+          )
+        );
       } catch (err) {
         console.error('お気に入り状態の更新に失敗しました:', err);
+        // エラー時は共通ロジックで記事リストを再取得し、同じ記事を再選択
+        try {
+          const currentArticleId = selectedArticle.id;
+          const unreadArticles = fetchArticles(currentFeedId);
+          setArticles(unreadArticles);
+
+          // 同じ記事を再選択する（エラー時でもカーソル位置を維持）
+          const newIndex = unreadArticles.findIndex((article) => article.id === currentArticleId);
+          if (newIndex !== -1) {
+            setSelectedArticleIndex(newIndex);
+          } else {
+            // 記事が見つからない場合は最初の記事を選択
+            setSelectedArticleIndex(0);
+          }
+        } catch {
+          // フォールバック: 通常のloadArticlesを使用
+          loadArticles(currentFeedId);
+        }
       }
     }
-  }, [articles, selectedArticleIndex, currentFeedId, loadArticles, feedService]);
+  }, [articles, selectedArticleIndex, currentFeedId, feedService, fetchArticles, loadArticles]);
 
   const scrollDown = useCallback(() => {
     setScrollOffset((prev) => prev + 1);
