@@ -67,7 +67,7 @@ export function FavoriteList({
   useEffect(() => {
     const totalHeight = stdout?.rows || TUI_CONFIG.DEFAULT_TERMINAL_HEIGHT;
     // お気に入りモード用の固定行数（ヘッダー、メタ情報、フッター）
-    const favoriteFixedLines = 9; // ヘッダー2行 + メタ情報3行 + フッター2行 + マージン2行
+    const favoriteFixedLines = 10; // ヘッダー3行 + フッター3行 + ボーダー・パディング4行
     const availableLines = Math.max(1, totalHeight - favoriteFixedLines);
     const maxOffset = Math.max(0, totalLines - availableLines);
 
@@ -89,7 +89,7 @@ export function FavoriteList({
   // スクロール関数
   const scrollDown = useCallback(() => {
     const totalHeight = stdout?.rows || TUI_CONFIG.DEFAULT_TERMINAL_HEIGHT;
-    const favoriteFixedLines = 9;
+    const favoriteFixedLines = 10;
     const availableLines = Math.max(1, totalHeight - favoriteFixedLines);
     const maxOffset = Math.max(0, totalLines - availableLines);
     setScrollOffset((prev) => Math.min(prev + 1, maxOffset));
@@ -101,7 +101,7 @@ export function FavoriteList({
 
   const pageDown = useCallback(() => {
     const totalHeight = stdout?.rows || TUI_CONFIG.DEFAULT_TERMINAL_HEIGHT;
-    const favoriteFixedLines = 9;
+    const favoriteFixedLines = 10;
     const availableLines = Math.max(1, totalHeight - favoriteFixedLines);
     const maxOffset = Math.max(0, totalLines - availableLines);
     setScrollOffset((prev) => Math.min(prev + availableLines, maxOffset));
@@ -109,7 +109,7 @@ export function FavoriteList({
 
   const scrollToEnd = useCallback(() => {
     const totalHeight = stdout?.rows || TUI_CONFIG.DEFAULT_TERMINAL_HEIGHT;
-    const favoriteFixedLines = 9;
+    const favoriteFixedLines = 10;
     const availableLines = Math.max(1, totalHeight - favoriteFixedLines);
     const maxOffset = Math.max(0, totalLines - availableLines);
     setScrollOffset(maxOffset);
@@ -187,15 +187,13 @@ export function FavoriteList({
       {/* 選択された記事の詳細を100%幅で表示 */}
       {selectedArticle && (
         <Box flexDirection="column" flexGrow={1} borderStyle="single" padding={1}>
-          {/* タイトル */}
-          <Box>
+          {/* ヘッダー部分：固定 */}
+          <Box paddingBottom={1}>
             <Text bold color="green">
               {selectedArticle.title}
             </Text>
           </Box>
-
-          {/* メタ情報 */}
-          <Box>
+          <Box paddingBottom={1}>
             <Text color="gray">
               公開日: {new Date(selectedArticle.published_at).toLocaleDateString('ja-JP')}
             </Text>
@@ -207,28 +205,24 @@ export function FavoriteList({
               </Text>
             )}
           </Box>
-
-          {/* URL */}
-          <Box>
+          <Box paddingBottom={1}>
             <Text color="yellow">URL: {selectedArticle.url}</Text>
           </Box>
 
-          {/* コンテンツ表示エリア */}
+          {/* コンテンツ部分：スクロール可能 */}
           {selectedArticle.content && (
-            <Box flexDirection="column" marginTop={1}>
+            <Box>
               {(() => {
                 const totalHeight = stdout?.rows || TUI_CONFIG.DEFAULT_TERMINAL_HEIGHT;
-                const favoriteFixedLines = 9;
+                // ヘッダー3行 + フッター3行 + ボーダー・パディング4行 = 10行
+                const favoriteFixedLines = 10;
                 const availableLines = Math.max(1, totalHeight - favoriteFixedLines);
                 const visibleLines = contentLines.slice(
                   scrollOffset,
                   scrollOffset + availableLines
                 );
-                return visibleLines.map((line, index) => (
-                  <Text key={`content-line-${scrollOffset + index}`} wrap="wrap">
-                    {line}
-                  </Text>
-                ));
+                const displayText = visibleLines.join('\n');
+                return <Text wrap="wrap">{displayText}</Text>;
               })()}
             </Box>
           )}
@@ -245,7 +239,7 @@ export function FavoriteList({
             <Text dimColor>
               {(() => {
                 const totalHeight = stdout?.rows || TUI_CONFIG.DEFAULT_TERMINAL_HEIGHT;
-                const favoriteFixedLines = 9;
+                const favoriteFixedLines = 10;
                 const availableLines = Math.max(1, totalHeight - favoriteFixedLines);
                 const hasMoreContent = scrollOffset + availableLines < totalLines;
                 if (totalLines > availableLines) {
