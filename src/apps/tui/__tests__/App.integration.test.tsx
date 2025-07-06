@@ -1,6 +1,21 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach, afterAll } from 'vitest';
 import { render } from 'ink-testing-library';
 import type { Feed, Article, FeedUpdateFailure, UpdateProgress } from '@/types';
+
+// 日付フォーマットを固定化（テスト環境の一貫性のため）
+const originalToLocaleDateString = Date.prototype.toLocaleDateString;
+Date.prototype.toLocaleDateString = function (locale, options) {
+  if (locale === 'ja-JP' && options?.hour === '2-digit') {
+    // テスト用の固定フォーマット（UTC時刻）
+    const year = this.getUTCFullYear();
+    const month = this.getUTCMonth() + 1;
+    const day = this.getUTCDate();
+    const hour = String(this.getUTCHours()).padStart(2, '0');
+    const minute = String(this.getUTCMinutes()).padStart(2, '0');
+    return `${year}年${month}月${day}日 ${hour}:${minute}`;
+  }
+  return originalToLocaleDateString.call(this, locale, options);
+};
 
 // モックの設定
 vi.mock('child_process', () => ({
@@ -61,8 +76,8 @@ const mockFeeds: Feed[] = [
     title: 'Test Feed 1',
     rating: 0,
     description: 'Test feed description 1',
-    last_updated_at: new Date('2024-01-01'),
-    created_at: new Date('2024-01-01'),
+    last_updated_at: new Date('2024-01-01T00:00:00Z'),
+    created_at: new Date('2024-01-01T00:00:00Z'),
   },
   {
     id: 2,
@@ -70,8 +85,8 @@ const mockFeeds: Feed[] = [
     title: 'Test Feed 2',
     rating: 0,
     description: 'Test feed description 2',
-    last_updated_at: new Date('2024-01-02'),
-    created_at: new Date('2024-01-02'),
+    last_updated_at: new Date('2024-01-02T00:00:00Z'),
+    created_at: new Date('2024-01-02T00:00:00Z'),
   },
 ];
 
@@ -85,12 +100,12 @@ const mockArticles: Article[] = [
     content: 'Article 1 content',
     summary: 'Article 1 summary',
     author: 'Author 1',
-    published_at: new Date('2024-01-01'),
+    published_at: new Date('2024-01-01T00:00:00Z'),
     is_read: false,
     is_favorite: false,
     thumbnail_url: undefined,
-    created_at: new Date('2024-01-01'),
-    updated_at: new Date('2024-01-01'),
+    created_at: new Date('2024-01-01T00:00:00Z'),
+    updated_at: new Date('2024-01-01T00:00:00Z'),
   },
   {
     id: 2,
@@ -100,12 +115,12 @@ const mockArticles: Article[] = [
     content: 'Article 2 content',
     summary: 'Article 2 summary',
     author: 'Author 2',
-    published_at: new Date('2024-01-02'),
+    published_at: new Date('2024-01-02T00:00:00Z'),
     is_read: false,
     is_favorite: true,
     thumbnail_url: undefined,
-    created_at: new Date('2024-01-02'),
-    updated_at: new Date('2024-01-02'),
+    created_at: new Date('2024-01-02T00:00:00Z'),
+    updated_at: new Date('2024-01-02T00:00:00Z'),
   },
 ];
 
@@ -115,6 +130,11 @@ const mockUnreadCounts: { [feedId: number]: number } = {
 };
 
 describe('App Integration Tests', () => {
+  afterAll(() => {
+    // 日付フォーマットを元に戻す
+    Date.prototype.toLocaleDateString = originalToLocaleDateString;
+  });
+
   beforeEach(() => {
     // モックのリセット
     vi.clearAllMocks();
@@ -728,8 +748,8 @@ describe('App Integration Tests', () => {
         url: `https://example.com/feed${i + 1}.rss`,
         title: `Test Feed ${i + 1}`,
         description: `Test feed ${i + 1} description`,
-        last_updated_at: new Date('2024-01-01'),
-        created_at: new Date('2024-01-01'),
+        last_updated_at: new Date('2024-01-01T00:00:00Z'),
+        created_at: new Date('2024-01-01T00:00:00Z'),
         rating: 0,
         unreadCount: 10,
       }));
@@ -792,8 +812,8 @@ describe('App Integration Tests', () => {
         url: `https://example.com/feed${i + 1}.rss`,
         title: `Feed ${i + 1}`,
         description: `Test feed ${i + 1} description`,
-        last_updated_at: new Date('2024-01-01'),
-        created_at: new Date('2024-01-01'),
+        last_updated_at: new Date('2024-01-01T00:00:00Z'),
+        created_at: new Date('2024-01-01T00:00:00Z'),
         rating: 3,
         unreadCount: 10,
       }));
@@ -825,8 +845,8 @@ describe('App Integration Tests', () => {
         url: `https://example.com/feed${i + 1}.rss`,
         title: `Feed ${i + 1}`,
         description: `Test feed ${i + 1} description`,
-        last_updated_at: new Date('2024-01-01'),
-        created_at: new Date('2024-01-01'),
+        last_updated_at: new Date('2024-01-01T00:00:00Z'),
+        created_at: new Date('2024-01-01T00:00:00Z'),
         rating: 0,
         unreadCount: 10,
       }));
@@ -876,8 +896,8 @@ describe('App Integration Tests', () => {
           url: 'https://example.com/feed1.rss',
           title: 'Feed 1',
           description: 'Test feed 1 description',
-          last_updated_at: new Date('2024-01-01'),
-          created_at: new Date('2024-01-01'),
+          last_updated_at: new Date('2024-01-01T00:00:00Z'),
+          created_at: new Date('2024-01-01T00:00:00Z'),
           rating: 0,
           unreadCount: 0, // 未読なし
         },
@@ -886,8 +906,8 @@ describe('App Integration Tests', () => {
           url: 'https://example.com/feed2.rss',
           title: 'Feed 2',
           description: 'Test feed 2 description',
-          last_updated_at: new Date('2024-01-01'),
-          created_at: new Date('2024-01-01'),
+          last_updated_at: new Date('2024-01-01T00:00:00Z'),
+          created_at: new Date('2024-01-01T00:00:00Z'),
           rating: 0,
           unreadCount: 10,
         },
@@ -1001,8 +1021,8 @@ describe('App Integration Tests', () => {
             url: 'https://example.com/feed1.rss',
             title: 'Feed 1',
             description: 'Test feed 1 description',
-            last_updated_at: new Date('2024-01-01'),
-            created_at: new Date('2024-01-01'),
+            last_updated_at: new Date('2024-01-01T00:00:00Z'),
+            created_at: new Date('2024-01-01T00:00:00Z'),
             rating: 0,
             unreadCount: 5,
           },
