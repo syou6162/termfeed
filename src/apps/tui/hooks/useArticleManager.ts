@@ -71,13 +71,30 @@ export function useArticleManager(
     if (selectedArticle?.id && currentFeedId) {
       try {
         feedService.toggleArticleFavorite(selectedArticle.id);
+        // 現在の記事IDを保持
+        const currentArticleId = selectedArticle.id;
         // 記事リストを再読み込み
-        loadArticles(currentFeedId);
+        const unreadArticles =
+          feedService.getArticles({
+            feed_id: currentFeedId,
+            is_read: false,
+            limit: TUI_CONFIG.DEFAULT_ARTICLE_LIMIT,
+          }) || [];
+        setArticles(unreadArticles);
+        
+        // 同じ記事を再選択する
+        const newIndex = unreadArticles.findIndex(article => article.id === currentArticleId);
+        if (newIndex !== -1) {
+          setSelectedArticleIndex(newIndex);
+        } else {
+          // 記事が見つからない場合は最初の記事を選択
+          setSelectedArticleIndex(0);
+        }
       } catch (err) {
         console.error('お気に入り状態の更新に失敗しました:', err);
       }
     }
-  }, [articles, selectedArticleIndex, currentFeedId, loadArticles, feedService]);
+  }, [articles, selectedArticleIndex, currentFeedId, feedService]);
 
   const scrollDown = useCallback(() => {
     setScrollOffset((prev) => prev + 1);
