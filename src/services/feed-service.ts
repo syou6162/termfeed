@@ -1,7 +1,6 @@
 import { FeedModel } from '../models/feed.js';
 import { ArticleModel } from '../models/article.js';
 import { RSSCrawler } from './rss-crawler.js';
-import type { FavoriteService } from './favorite.js';
 import type {
   Feed,
   Article,
@@ -30,12 +29,7 @@ export class FeedService implements IFeedService {
   private articleModel: ArticleModel;
   private crawler: RSSCrawler;
 
-  constructor(
-    feedModel: FeedModel,
-    articleModel: ArticleModel,
-    _favoriteService: FavoriteService, // 互換性のため保持（削除予定）
-    crawler?: RSSCrawler
-  ) {
+  constructor(feedModel: FeedModel, articleModel: ArticleModel, crawler?: RSSCrawler) {
     this.feedModel = feedModel;
     this.articleModel = articleModel;
     this.crawler = crawler || new RSSCrawler();

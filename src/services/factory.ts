@@ -18,7 +18,7 @@ export function createFeedServices(databaseManager: DatabaseManager) {
   const pinService = new PinService(databaseManager);
   const favoriteService = new FavoriteService(databaseManager);
   const articleService = new ArticleService(articleModel, pinService, favoriteService);
-  const feedService = new FeedService(feedModel, articleModel, favoriteService);
+  const feedService = new FeedService(feedModel, articleModel);
 
   return {
     feedService,
@@ -38,7 +38,7 @@ export function createModelsAndServices(databaseManager: DatabaseManager) {
   const pinService = new PinService(databaseManager);
   const favoriteService = new FavoriteService(databaseManager);
   const articleService = new ArticleService(articleModel, pinService, favoriteService);
-  const feedService = new FeedService(feedModel, articleModel, favoriteService);
+  const feedService = new FeedService(feedModel, articleModel);
 
   return {
     feedModel,

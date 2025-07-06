@@ -7,7 +7,6 @@ import { FeedModel } from '../models/feed.js';
 import { ArticleModel } from '../models/article.js';
 import { FeedService } from './feed-service.js';
 import { RSSCrawler } from './rss-crawler.js';
-import { FavoriteService } from './favorite.js';
 import { DuplicateFeedError, FeedNotFoundError, FeedUpdateError } from './errors.js';
 import type { UpdateProgress } from '@/types';
 
@@ -34,8 +33,7 @@ describe('FeedService', () => {
       crawl: vi.fn(),
     } as unknown as RSSCrawler;
 
-    const favoriteService = new FavoriteService(db);
-    feedService = new FeedService(feedModel, articleModel, favoriteService, mockCrawler);
+    feedService = new FeedService(feedModel, articleModel, mockCrawler);
   });
 
   afterEach(() => {
