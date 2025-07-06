@@ -99,7 +99,7 @@ describe('FavoriteList', () => {
 
     const output = lastFrame();
     expect(output).toContain('お気に入り記事1');
-    expect(output).toContain('これはお気に入り記事1の内容です。');
+    expect(output).toContain('URL: https://example.com/article1');
   });
 
   it('ピンされた記事にピンアイコンを表示する', async () => {
