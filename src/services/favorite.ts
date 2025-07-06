@@ -65,4 +65,3 @@ export class FavoriteService {
     return this.favoriteModel.clearAllFavorites();
   }
 }
-
