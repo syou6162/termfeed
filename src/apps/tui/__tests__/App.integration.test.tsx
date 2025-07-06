@@ -315,6 +315,7 @@ describe('App Integration Tests', () => {
       await vi.waitFor(() => {
         expect(mockFeedService.getArticles).toHaveBeenCalledWith({
           feed_id: 2,
+          is_read: false,
           limit: 100,
         });
       });
@@ -338,7 +339,7 @@ describe('App Integration Tests', () => {
       await vi.waitFor(() => {
         const calls = mockFeedService.getArticles.mock.calls;
         const lastCall = calls[calls.length - 1];
-        expect(lastCall).toEqual([{ feed_id: 1, limit: 100 }]);
+        expect(lastCall).toEqual([{ feed_id: 1, is_read: false, limit: 100 }]);
       });
     });
 
@@ -708,11 +709,10 @@ describe('App Integration Tests', () => {
 
   describe('記事のフィルタリング', () => {
     it('既読記事は表示されない', async () => {
-      // useArticleManagerが未読記事のみをフィルタリングするため、
-      // getArticlesはすべての記事を返し、フック内でフィルタリングされる
+      // データベースから直接未読記事のみを取得するため、
+      // getArticlesは未読記事のみを返す
       mockFeedService.getArticles.mockReturnValue([
-        { ...mockArticles[0], is_read: true },
-        { ...mockArticles[1], is_read: false },
+        { ...mockArticles[1], is_read: false }, // Article 2のみ（未読）
       ]);
 
       const { lastFrame } = render(<App />);
@@ -747,6 +747,91 @@ describe('App Integration Tests', () => {
 
       await vi.waitFor(() => {
         expect(mockFeedService.markArticleAsRead).toHaveBeenCalledWith(1);
+      });
+    });
+
+    it('制限件数を超える未読記事がある場合、制限件数分のみ取得される', async () => {
+      // 制限件数（100件）を超える記事をシミュレート
+      // 実際のgetArticlesは制限件数分のみ返すため、100件のモックデータを作成
+      const limitedArticles = Array.from({ length: 100 }, (_, i) => ({
+        id: i + 1,
+        feed_id: 1,
+        title: `Article ${i + 1}`,
+        url: `https://example.com/article${i + 1}`,
+        content: `Article ${i + 1} content`,
+        author: `Author ${i + 1}`,
+        published_at: new Date(`2024-01-${String(i + 1).padStart(2, '0')}T00:00:00Z`),
+        is_read: false,
+        is_favorite: false,
+        thumbnail_url: null,
+        created_at: new Date('2024-01-01T00:00:00Z'),
+        updated_at: new Date('2024-01-01T00:00:00Z'),
+      }));
+
+      // getArticlesは制限件数（100件）分の記事を返す
+      mockFeedService.getArticles.mockReturnValue(limitedArticles);
+
+      const { lastFrame } = render(<App />);
+
+      // 初期化の完了を待つ
+      await vi.waitFor(() => {
+        expect(mockFeedService.getArticles).toHaveBeenCalledWith({
+          feed_id: 1,
+          is_read: false,
+          limit: 100,
+        });
+      });
+
+      // 制限件数分の記事が正しく表示される
+      await vi.waitFor(() => {
+        const frame = lastFrame();
+        expect(frame).toContain('Article 1'); // 最初の記事
+        expect(frame).toContain('1/100件'); // 件数表示の確認
+      });
+    });
+
+    it('既読化後の再取得で残りの未読記事が正しく取得される', async () => {
+      let callCount = 0;
+      const firstBatch = mockArticles.slice(0, 2); // 最初の2件
+      const secondBatch = [
+        {
+          ...mockArticles[2],
+          id: 3,
+          title: 'Article 3',
+          url: 'https://example.com/article3',
+        },
+      ]; // 次の1件
+
+      // getArticlesの呼び出し回数に応じて異なるデータを返す
+      mockFeedService.getArticles.mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) {
+          return firstBatch; // 1回目: Article 1, 2
+        } else {
+          return secondBatch; // 2回目以降: Article 3（残りの未読記事）
+        }
+      });
+
+      const { stdin, lastFrame } = render(<App />);
+
+      // 初期化の完了を待つ
+      await vi.waitFor(() => {
+        expect(lastFrame()).toContain('Article 1');
+      });
+
+      // 現在の記事を既読化（フィード移動で自動的に既読化される）
+      stdin.write('s'); // 次のフィードに移動
+      stdin.write('a'); // 元のフィードに戻る
+
+      // 2回目の記事取得が実行され、残りの未読記事が取得される
+      await vi.waitFor(() => {
+        expect(mockFeedService.getArticles).toHaveBeenCalledTimes(2); // 初期 + 戻り
+      });
+
+      // 新しい記事が表示される
+      await vi.waitFor(() => {
+        const frame = lastFrame();
+        expect(frame).toContain('Article 3');
       });
     });
   });
@@ -794,6 +879,7 @@ describe('App Integration Tests', () => {
         () => {
           expect(mockFeedService.getArticles).toHaveBeenCalledWith({
             feed_id: 11,
+            is_read: false,
             limit: 100,
           });
         },
@@ -882,6 +968,7 @@ describe('App Integration Tests', () => {
       // getArticlesが複数回呼ばれていることを確認
       expect(mockFeedService.getArticles).toHaveBeenCalledWith({
         feed_id: 2,
+        is_read: false,
         limit: 100,
       });
 
@@ -895,6 +982,7 @@ describe('App Integration Tests', () => {
       // Feed 1に戻っていることを確認
       expect(mockFeedService.getArticles).toHaveBeenCalledWith({
         feed_id: 1,
+        is_read: false,
         limit: 100,
       });
     });
@@ -947,12 +1035,14 @@ describe('App Integration Tests', () => {
       // Feed 2が選択されたままであることを確認
       expect(mockFeedService.getArticles).toHaveBeenLastCalledWith({
         feed_id: 2,
+        is_read: false,
         limit: 100,
       });
 
       // Feed 1への移動は発生していない
       expect(mockFeedService.getArticles).not.toHaveBeenCalledWith({
         feed_id: 1,
+        is_read: false,
         limit: 100,
       });
     });
@@ -974,6 +1064,7 @@ describe('App Integration Tests', () => {
       await vi.waitFor(() => {
         expect(mockFeedService.getArticles).toHaveBeenLastCalledWith({
           feed_id: 2,
+          is_read: false,
           limit: 100,
         });
       });
@@ -1000,6 +1091,7 @@ describe('App Integration Tests', () => {
       // Feed 2が引き続き選択されていることを確認
       expect(mockFeedService.getArticles).toHaveBeenLastCalledWith({
         feed_id: 2,
+        is_read: false,
         limit: 100,
       });
     });
@@ -1018,6 +1110,7 @@ describe('App Integration Tests', () => {
       await vi.waitFor(() => {
         expect(mockFeedService.getArticles).toHaveBeenCalledWith({
           feed_id: 2,
+          is_read: false,
           limit: 100,
         });
       });

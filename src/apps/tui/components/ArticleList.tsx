@@ -161,6 +161,16 @@ export const ArticleList = memo(function ArticleList({
       <Box paddingX={1}>
         <Text color="gray">公開日: {publishedDate}</Text>
         {selectedArticle.author && <Text color="cyan"> | 著者: {selectedArticle.author}</Text>}
+        {selectedArticle.is_favorite && (
+          <Text color="yellow" bold>
+            {selectedArticle.author ? ' | ' : ' | '}★ お気に入り
+          </Text>
+        )}
+        {isPinned && (
+          <Text color="yellow" bold>
+            {selectedArticle.author || selectedArticle.is_favorite ? ' | ' : ' | '}📌 ピン
+          </Text>
+        )}
       </Box>
       <Box paddingX={1} marginBottom={1}>
         <Text color="yellow">URL: {selectedArticle.url}</Text>
@@ -176,10 +186,8 @@ export const ArticleList = memo(function ArticleList({
       {/* ステータス部分：固定 */}
       <Box paddingX={1} marginTop={1}>
         <Text color="gray" dimColor>
-          {selectedArticle.is_favorite ? '★お気に入り' : ''}
-          {isPinned ? (selectedArticle.is_favorite ? ' | ' : '') + '📌ピン' : ''}
-          {scrollInfo && (selectedArticle.is_favorite || isPinned ? ' | ' : '') + scrollInfo}
-          {hasMoreContent && ' スペースで続きを表示'}
+          {scrollInfo}
+          {hasMoreContent && (scrollInfo ? ' ' : '') + 'スペースで続きを表示'}
         </Text>
       </Box>
 
