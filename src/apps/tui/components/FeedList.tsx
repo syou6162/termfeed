@@ -22,12 +22,14 @@ type FeedListProps = {
   selectedIndex: number;
   pinnedCount?: number;
   onFeedSelect?: (feed: FeedWithUnreadCount) => void;
+  windowSize?: number; // 1つのレーティングセクションに表示する最大フィード数
 };
 
 export const FeedList = memo(function FeedList({
   feeds,
   selectedIndex,
   pinnedCount = 0,
+  windowSize = 10,
 }: FeedListProps) {
   const feedSections: FeedSection[] = useMemo(() => {
     const feedItems: FeedListItem[] = feeds.map((feed) => ({
@@ -138,8 +140,31 @@ export const FeedList = memo(function FeedList({
                   </Text>
                 </Box>
                 {/* 現在のセクションのみフィード一覧を表示 */}
-                {isCurrentSection &&
-                  section.items.map((item, _index) => {
+                {isCurrentSection && (() => {
+                  // 現在選択されているフィードのセクション内でのインデックスを取得
+                  const selectedItemInSection = section.items.findIndex(
+                    item => allItems.findIndex(globalItem => globalItem.id === item.id) === selectedIndex
+                  );
+                  
+                  // スライディングウィンドウの開始位置を計算
+                  let startIndex = 0;
+                  if (selectedItemInSection !== -1 && section.items.length > windowSize) {
+                    // 選択されたアイテムがウィンドウの最後に来るように調整
+                    // ただし、最初の方を選択している場合は先頭から表示
+                    if (selectedItemInSection < windowSize) {
+                      startIndex = 0;
+                    } else {
+                      // 選択されたアイテムがウィンドウの最後に表示されるように
+                      startIndex = selectedItemInSection - windowSize + 1;
+                    }
+                    // ウィンドウが末尾を超えないように調整
+                    startIndex = Math.min(startIndex, Math.max(0, section.items.length - windowSize));
+                  }
+                  
+                  // 表示するアイテムを取得
+                  const visibleItems = section.items.slice(startIndex, startIndex + windowSize);
+                  
+                  return visibleItems.map((item, _index) => {
                     const globalIndex = allItems.findIndex(
                       (globalItem) => globalItem.id === item.id
                     );
@@ -148,7 +173,8 @@ export const FeedList = memo(function FeedList({
                         {renderFeedItem(item, globalIndex === selectedIndex)}
                       </Box>
                     );
-                  })}
+                  });
+                })()}
               </Box>
             );
           })}
