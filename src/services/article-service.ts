@@ -27,30 +27,13 @@ export class ArticleService implements IArticleService {
   }): Article[] {
     if (options?.isFavorite !== undefined) {
       if (options.isFavorite) {
-        // お気に入り記事のみを取得
-        let favoriteArticles = this.articleModel.getFavoriteArticles();
-
-        // 追加のフィルタリングを適用
-        if (options.feedId !== undefined) {
-          favoriteArticles = favoriteArticles.filter(
-            (article) => article.feed_id === options.feedId
-          );
-        }
-        if (options.isRead !== undefined) {
-          favoriteArticles = favoriteArticles.filter(
-            (article) => article.is_read === options.isRead
-          );
-        }
-
-        // limitとoffsetを適用
-        if (options.offset) {
-          favoriteArticles = favoriteArticles.slice(options.offset);
-        }
-        if (options.limit) {
-          favoriteArticles = favoriteArticles.slice(0, options.limit);
-        }
-
-        return favoriteArticles;
+        // お気に入り記事のみを取得（データベースレベルでフィルタリング）
+        return this.articleModel.getFavoriteArticles({
+          feed_id: options.feedId,
+          is_read: options.isRead,
+          limit: options.limit,
+          offset: options.offset,
+        });
       } else {
         // お気に入りでない記事のみを取得
         // まず全記事を取得し、お気に入りでない記事をフィルタ

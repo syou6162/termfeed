@@ -221,14 +221,7 @@ export class FeedService implements IFeedService {
   }
 
   markAllAsRead(feedId?: number): void {
-    const articles = this.articleModel.findAll({
-      feed_id: feedId,
-      is_read: false,
-    });
-
-    for (const article of articles) {
-      this.articleModel.markAsRead(article.id);
-    }
+    this.articleModel.markAllAsRead(feedId);
   }
 
   getUnreadCount(feedId?: number): number {

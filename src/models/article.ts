@@ -254,17 +254,44 @@ export class ArticleModel {
     return rows.map((row) => this.convertRowToArticle(row));
   }
 
-  public getFavoriteArticles(): Article[] {
+  public getFavoriteArticles(
+    options: {
+      feed_id?: number;
+      is_read?: boolean;
+      limit?: number;
+      offset?: number;
+    } = {}
+  ): Article[] {
+    const conditions: string[] = [];
+    const params: unknown[] = [];
+
+    if (options.feed_id !== undefined) {
+      conditions.push('a.feed_id = ?');
+      params.push(options.feed_id);
+    }
+
+    if (options.is_read !== undefined) {
+      conditions.push('a.is_read = ?');
+      params.push(options.is_read ? 1 : 0);
+    }
+
+    const whereClause = conditions.length > 0 ? `AND ${conditions.join(' AND ')}` : '';
+    const limitClause = options.limit ? `LIMIT ${options.limit}` : '';
+    const offsetClause = options.offset ? `OFFSET ${options.offset}` : '';
+
     const query = `
       SELECT 
         a.*
       FROM articles a
       INNER JOIN favorites f ON a.id = f.article_id
+      WHERE 1=1 ${whereClause}
       ORDER BY f.created_at DESC
+      ${limitClause}
+      ${offsetClause}
     `;
 
     const stmt = this.db.getDb().prepare(query);
-    const rows = stmt.all();
+    const rows = stmt.all(...params);
 
     return rows.map((row) => this.convertRowToArticle(row));
   }
@@ -387,5 +414,28 @@ export class ArticleModel {
     }
 
     return unreadCounts;
+  }
+
+  /**
+   * 複数の記事を一括で既読にする
+   * @param feedId フィードID（指定した場合はそのフィードの記事のみ）
+   * @returns 更新された記事数
+   */
+  public markAllAsRead(feedId?: number): number {
+    let query = `
+      UPDATE articles 
+      SET is_read = 1, updated_at = ?
+      WHERE is_read = 0
+    `;
+    const params: unknown[] = [nowInUnixSeconds()];
+
+    if (feedId !== undefined) {
+      query += ' AND feed_id = ?';
+      params.push(feedId);
+    }
+
+    const stmt = this.db.getDb().prepare(query);
+    const result = stmt.run(...params);
+    return result.changes;
   }
 }
