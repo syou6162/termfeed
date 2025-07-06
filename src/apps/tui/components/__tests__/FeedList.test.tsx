@@ -240,6 +240,138 @@ describe('FeedList', () => {
     });
   });
 
+  describe('最後の方の挙動確認', () => {
+    it('20件中、10番目から11番目に移動した時の挙動', () => {
+      const feeds = Array.from({ length: 20 }, (_, i) => createMockFeed(i + 1, 3, 10));
+
+      // 10番目を選択（インデックス9）
+      const { rerender, lastFrame } = render(<FeedList feeds={feeds} selectedIndex={9} />);
+      let output = lastFrame();
+
+      console.log('=== 20件中、selectedIndex=9（10番目）===');
+      console.log(output);
+
+      // Feed 10-19が表示されている
+      for (let i = 10; i <= 19; i++) {
+        expect(output).toMatch(new RegExp(`Feed ${i}(?!\\d)`));
+      }
+      expect(output).not.toContain('Feed 20');
+
+      // 11番目に移動（インデックス10）
+      rerender(<FeedList feeds={feeds} selectedIndex={10} />);
+      output = lastFrame();
+
+      console.log('=== 20件中、selectedIndex=10（11番目）===');
+      console.log(output);
+
+      // Feed 11-20が表示されている（最後の10件）
+      for (let i = 11; i <= 20; i++) {
+        expect(output).toMatch(new RegExp(`Feed ${i}(?!\\d)`));
+      }
+      expect(output).not.toContain('Feed 10');
+    });
+
+    it('20件中、15番目から16番目に移動した時の挙動', () => {
+      const feeds = Array.from({ length: 20 }, (_, i) => createMockFeed(i + 1, 3, 10));
+
+      // 15番目を選択（インデックス14）
+      const { rerender, lastFrame } = render(<FeedList feeds={feeds} selectedIndex={14} />);
+      let output = lastFrame();
+
+      console.log('=== 20件中、selectedIndex=14（15番目）===');
+      console.log(output);
+
+      // Feed 11-20が表示されている（15番目から始めたいが、最後の10件になる）
+      for (let i = 11; i <= 20; i++) {
+        expect(output).toMatch(new RegExp(`Feed ${i}(?!\\d)`));
+      }
+
+      // 16番目に移動（インデックス15）
+      rerender(<FeedList feeds={feeds} selectedIndex={15} />);
+      output = lastFrame();
+
+      console.log('=== 20件中、selectedIndex=15（16番目）===');
+      console.log(output);
+
+      // 同じくFeed 11-20が表示されている
+      for (let i = 11; i <= 20; i++) {
+        expect(output).toMatch(new RegExp(`Feed ${i}(?!\\d)`));
+      }
+    });
+
+    it('20件中、最後のフィード（20番目）を選択した時の挙動', () => {
+      const feeds = Array.from({ length: 20 }, (_, i) => createMockFeed(i + 1, 3, 10));
+      const { lastFrame } = render(<FeedList feeds={feeds} selectedIndex={19} />);
+
+      const output = lastFrame();
+
+      console.log('=== 20件中、selectedIndex=19（20番目）===');
+      console.log(output);
+
+      // Feed 11-20が表示されている（最後の10件）
+      for (let i = 11; i <= 20; i++) {
+        expect(output).toMatch(new RegExp(`Feed ${i}(?!\\d)`));
+      }
+
+      // Feed 20が選択されている
+      const lines = output?.split('\n') || [];
+      const feed20Line = lines.find((line) => line.includes('Feed 20'));
+      expect(feed20Line).toContain('>');
+    });
+
+    it('ちょうど10件の場合の挙動', () => {
+      const feeds = Array.from({ length: 10 }, (_, i) => createMockFeed(i + 1, 3, 10));
+
+      // 5番目を選択
+      const { rerender, lastFrame } = render(<FeedList feeds={feeds} selectedIndex={4} />);
+      let output = lastFrame();
+
+      console.log('=== 10件中、selectedIndex=4（5番目）===');
+      console.log(output);
+
+      // 全て表示されている（10件しかないので）
+      for (let i = 1; i <= 10; i++) {
+        expect(output).toContain(`Feed ${i}`);
+      }
+
+      // 10番目に移動
+      rerender(<FeedList feeds={feeds} selectedIndex={9} />);
+      output = lastFrame();
+
+      console.log('=== 10件中、selectedIndex=9（10番目）===');
+      console.log(output);
+
+      // 同じく全て表示されている
+      for (let i = 1; i <= 10; i++) {
+        expect(output).toContain(`Feed ${i}`);
+      }
+    });
+
+    it('11件の場合の境界動作', () => {
+      const feeds = Array.from({ length: 11 }, (_, i) => createMockFeed(i + 1, 3, 10));
+
+      // 1番目を選択
+      const { rerender, lastFrame } = render(<FeedList feeds={feeds} selectedIndex={0} />);
+      let output = lastFrame();
+
+      // Feed 1-10が表示
+      for (let i = 1; i <= 10; i++) {
+        expect(output).toContain(`Feed ${i}`);
+      }
+      expect(output).not.toContain('Feed 11');
+
+      // 2番目に移動
+      rerender(<FeedList feeds={feeds} selectedIndex={1} />);
+      output = lastFrame();
+
+      // Feed 2-11が表示（11件全て）
+      expect(output).not.toMatch(/Feed 1(?!\d)/);
+      for (let i = 2; i <= 11; i++) {
+        expect(output).toMatch(new RegExp(`Feed ${i}(?!\\d)`));
+      }
+    });
+  });
+
   describe('selectedIndexの動作確認', () => {
     it('selectedIndex=0の時、1-10番目が表示される', () => {
       const feeds = Array.from({ length: 15 }, (_, i) => createMockFeed(i + 1, 3, 10));
