@@ -223,6 +223,19 @@ export class ArticleModel {
     return rows.map((row) => this.convertRowToArticle(row));
   }
 
+  public getFavoriteArticles(): Article[] {
+    const query = `
+      SELECT * FROM articles 
+      WHERE is_favorite = 1 
+      ORDER BY created_at DESC
+    `;
+
+    const stmt = this.db.getDb().prepare(query);
+    const rows = stmt.all();
+
+    return rows.map((row) => this.convertRowToArticle(row));
+  }
+
   public update(id: number, updates: UpdateArticleInput): Article | null {
     const updateFields: string[] = [];
     const updateValues: unknown[] = [];

@@ -45,3 +45,15 @@ CREATE TABLE IF NOT EXISTS pins (
 CREATE INDEX IF NOT EXISTS idx_pins_article_id ON pins(article_id);
 CREATE INDEX IF NOT EXISTS idx_pins_created_at ON pins(created_at DESC);
 
+-- Favoritesテーブル
+CREATE TABLE IF NOT EXISTS favorites (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  article_id INTEGER NOT NULL UNIQUE,
+  created_at INTEGER NOT NULL,
+  FOREIGN KEY (article_id) REFERENCES articles(id) ON DELETE CASCADE
+);
+
+-- Favoritesテーブルのインデックス
+CREATE INDEX IF NOT EXISTS idx_favorites_article_id ON favorites(article_id);
+CREATE INDEX IF NOT EXISTS idx_favorites_created_at ON favorites(created_at DESC);
+

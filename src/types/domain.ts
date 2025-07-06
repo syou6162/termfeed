@@ -60,3 +60,9 @@ export type Pin = {
   article_id: number;
   created_at: Date;
 };
+
+export type Favorite = {
+  id: number;
+  article_id: number;
+  created_at: Date;
+};
