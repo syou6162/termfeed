@@ -46,14 +46,14 @@ export function useArticleManager(
   const fetchArticles = useCallback(
     (feedId: number): Article[] => {
       return (
-        feedService.getArticles({
-          feed_id: feedId,
-          is_read: false,
+        articleService.getArticles({
+          feedId: feedId,
+          isRead: false,
           limit: TUI_CONFIG.DEFAULT_ARTICLE_LIMIT,
         }) || []
       ); // 防御的プログラミング
     },
-    [feedService]
+    [articleService]
   );
 
   const loadArticles = useCallback(
