@@ -15,7 +15,7 @@ export function createRmCommand(): Command {
       try {
         const id = parsePositiveInteger(feedId, 'feed ID');
 
-        const feedService = createFeedServices(dbManager);
+        const { feedService } = createFeedServices(dbManager);
 
         const success = feedService.removeFeed(id);
         if (success) {

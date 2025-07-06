@@ -125,6 +125,15 @@ export class MockFeedService implements FeedService {
     return [...this.feeds];
   }
 
+  getFeedListByRating(): Feed[] {
+    return [...this.feeds].sort((a, b) => {
+      if (a.rating !== b.rating) {
+        return b.rating - a.rating; // レーティング降順
+      }
+      return a.id - b.id; // 同じレーティングの場合はID昇順
+    });
+  }
+
   getArticles(_options?: {
     feed_id?: number;
     is_read?: boolean;

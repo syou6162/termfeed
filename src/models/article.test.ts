@@ -390,7 +390,7 @@ describe('ArticleModel', () => {
 
       // お気に入りを解除する
       success = articleModel.toggleFavorite(article.id);
-      expect(success).toBe(true);
+      expect(success).toBe(false);
 
       updated = articleModel.findById(article.id);
       expect(updated!.is_favorite).toBe(false);

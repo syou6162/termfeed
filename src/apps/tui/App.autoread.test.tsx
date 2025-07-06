@@ -1,111 +1,95 @@
 import { render } from 'ink-testing-library';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { App } from './App.js';
 
-// モジュールのモック
-vi.mock('../cli/utils/database.js', () => ({
-  createDatabaseManager: vi.fn(() => ({
-    migrate: vi.fn(),
-  })),
-}));
-
-// processイベントのモック
-type EventHandler = (...args: unknown[]) => void;
-const processOnHandlers = new Map<string, EventHandler[]>();
-const processOffHandlers = new Map<string, EventHandler[]>();
-
-vi.spyOn(process, 'on').mockImplementation((event: string | symbol, handler: EventHandler) => {
-  const eventStr = String(event);
-  if (!processOnHandlers.has(eventStr)) {
-    processOnHandlers.set(eventStr, []);
-  }
-  const handlers = processOnHandlers.get(eventStr);
-  if (handlers) {
-    handlers.push(handler);
-  }
-  return process;
-});
-
-vi.spyOn(process, 'off').mockImplementation((event: string | symbol, handler: EventHandler) => {
-  const eventStr = String(event);
-  if (processOffHandlers.has(eventStr)) {
-    const handlers = processOffHandlers.get(eventStr);
-    if (handlers) {
-      const index = handlers.indexOf(handler);
-      if (index > -1) {
-        handlers.splice(index, 1);
-      }
-    }
-  }
-  return process;
-});
-
-// モックサービスを関数として定義して、毎回新しいインスタンスを返す
-const createMockFeedService = () => ({
-  getFeedList: vi.fn(() => [
-    { id: 1, title: 'Test Feed 1', rating: 0, url: 'https://example.com/feed1.rss' },
-    { id: 2, title: 'Test Feed 2', rating: 0, url: 'https://example.com/feed2.rss' },
-  ]),
-  getUnreadCount: vi.fn(() => 2),
-  getUnreadCountsForAllFeeds: vi.fn(() => ({ 1: 2, 2: 1 })),
-  getUnreadFeeds: vi.fn(() => [
-    {
-      id: 1,
-      title: 'Test Feed 1',
-      rating: 0,
-      url: 'https://example.com/feed1.rss',
-      unreadCount: 2,
-    },
-    {
-      id: 2,
-      title: 'Test Feed 2',
-      rating: 0,
-      url: 'https://example.com/feed2.rss',
-      unreadCount: 1,
-    },
-  ]),
-  getArticles: vi.fn(() => [
-    {
-      id: 1,
-      title: 'Test Article 1',
-      url: 'https://example.com/article1',
-      is_read: false, // 未読
-      is_favorite: false,
-      published_at: new Date('2024-01-01'),
-      content: 'Test content 1',
-      author: 'Test Author',
-    },
-    {
-      id: 2,
-      title: 'Test Article 2',
-      url: 'https://example.com/article2',
-      is_read: false, // 未読
-      is_favorite: false,
-      published_at: new Date('2024-01-02'),
-      content: 'Test content 2',
-      author: 'Test Author 2',
-    },
-  ]),
+// モックサービスの定義（グローバルスコープ）
+const mockFeedService = {
+  getFeedList: vi.fn(),
+  getUnreadCount: vi.fn(),
+  getUnreadCountsForAllFeeds: vi.fn(),
+  getUnreadFeeds: vi.fn(),
+  getArticles: vi.fn(),
   updateAllFeeds: vi.fn(),
   markArticleAsRead: vi.fn(),
   markArticleAsUnread: vi.fn(),
   toggleArticleFavorite: vi.fn(),
-});
+  setFeedRating: vi.fn(),
+};
 
-let mockFeedService = createMockFeedService();
+const mockArticleService = {
+  getArticles: vi.fn(),
+  getArticleById: vi.fn(),
+  markAsRead: vi.fn(),
+  markAsUnread: vi.fn(),
+  toggleFavorite: vi.fn(),
+  toggleFavoriteWithPin: vi.fn(),
+  getUnreadCount: vi.fn(),
+  getTotalCount: vi.fn(),
+};
 
-vi.mock('../../services/feed-service.js', () => ({
-  FeedService: vi.fn(() => mockFeedService),
+const mockPinService = {
+  togglePin: vi.fn(),
+  getPinnedArticles: vi.fn(() => []),
+  getPinCount: vi.fn(() => 0),
+  setPin: vi.fn(),
+  unsetPin: vi.fn(),
+  clearAllPins: vi.fn(),
+};
+
+// child_processのモック
+vi.mock('child_process', () => ({
+  spawn: vi.fn(() => ({
+    on: vi.fn(),
+    unref: vi.fn(),
+  })),
 }));
 
+// DatabaseManagerのモック
+const mockDatabaseManager = {
+  migrate: vi.fn(),
+};
+
+vi.mock('../../models/database.js', () => ({
+  DatabaseManager: vi.fn().mockImplementation(() => mockDatabaseManager),
+}));
+
+// モデルのモック
 vi.mock('../../models/feed.js', () => ({
-  FeedModel: vi.fn(),
+  FeedModel: vi.fn().mockImplementation(() => ({})),
 }));
 
 vi.mock('../../models/article.js', () => ({
   ArticleModel: vi.fn(() => ({
     getPinnedArticles: vi.fn(() => []),
   })),
+}));
+
+// FeedServiceのモック
+vi.mock('../../services/feed-service.js', () => ({
+  FeedService: vi.fn().mockImplementation(() => mockFeedService),
+}));
+
+// ArticleServiceのモック
+vi.mock('../../services/article-service.js', () => ({
+  ArticleService: vi.fn().mockImplementation(() => mockArticleService),
+}));
+
+// PinServiceのモック
+vi.mock('../../services/pin.js', () => ({
+  PinService: vi.fn().mockImplementation(() => mockPinService),
+}));
+
+// Factoryのモック
+vi.mock('../../services/factory.js', () => ({
+  createFeedServices: vi.fn(() => ({
+    feedService: mockFeedService,
+    articleService: mockArticleService,
+    pinService: mockPinService,
+  })),
+}));
+
+// データベースユーティリティのモック
+vi.mock('../cli/utils/database.js', () => ({
+  createDatabaseManager: vi.fn(() => mockDatabaseManager),
 }));
 
 vi.mock('ink', async () => {
@@ -115,6 +99,14 @@ vi.mock('ink', async () => {
     useApp: () => ({ exit: vi.fn() }),
   };
 });
+
+// processイベントのモック
+type EventHandler = (...args: unknown[]) => void;
+const processOnHandlers = new Map<string, EventHandler[]>();
+const processOffHandlers = new Map<string, EventHandler[]>();
+
+// App コンポーネントのimport（モック設定後）
+import { App } from './App.js';
 
 describe('App - 自動既読機能', () => {
   let originalConsoleLog: typeof console.log;
@@ -136,8 +128,108 @@ describe('App - 自動既読機能', () => {
     // モックのリセット
     vi.clearAllMocks();
 
-    // 新しいモックサービスインスタンスを作成
-    mockFeedService = createMockFeedService();
+    // デフォルトのモック実装を設定
+    const testArticles = [
+      {
+        id: 1,
+        feed_id: 1,
+        title: 'Test Article 1',
+        url: 'https://example.com/article1',
+        is_read: false, // 未読
+        is_favorite: false,
+        published_at: new Date('2024-01-01'),
+        content: 'Test content 1',
+        summary: 'Test summary 1',
+        author: 'Test Author',
+        thumbnail_url: undefined,
+        created_at: new Date('2024-01-01'),
+        updated_at: new Date('2024-01-01'),
+      },
+      {
+        id: 2,
+        feed_id: 1,
+        title: 'Test Article 2',
+        url: 'https://example.com/article2',
+        is_read: false, // 未読
+        is_favorite: false,
+        published_at: new Date('2024-01-02'),
+        content: 'Test content 2',
+        summary: 'Test summary 2',
+        author: 'Test Author 2',
+        thumbnail_url: undefined,
+        created_at: new Date('2024-01-02'),
+        updated_at: new Date('2024-01-02'),
+      },
+    ];
+
+    mockFeedService.getFeedList.mockReturnValue([
+      { id: 1, title: 'Test Feed 1', rating: 0, url: 'https://example.com/feed1.rss' },
+      { id: 2, title: 'Test Feed 2', rating: 0, url: 'https://example.com/feed2.rss' },
+    ]);
+    mockFeedService.getUnreadCount.mockReturnValue(2);
+    mockFeedService.getUnreadCountsForAllFeeds.mockReturnValue({ 1: 2, 2: 1 });
+    mockFeedService.getUnreadFeeds.mockReturnValue([
+      {
+        id: 1,
+        title: 'Test Feed 1',
+        rating: 0,
+        url: 'https://example.com/feed1.rss',
+        unreadCount: 2,
+      },
+      {
+        id: 2,
+        title: 'Test Feed 2',
+        rating: 0,
+        url: 'https://example.com/feed2.rss',
+        unreadCount: 1,
+      },
+    ]);
+    mockFeedService.getArticles.mockReturnValue(testArticles);
+    mockFeedService.updateAllFeeds.mockResolvedValue({
+      summary: { successCount: 1, failureCount: 0 },
+      failed: [],
+    });
+    mockFeedService.markArticleAsRead.mockImplementation(() => {});
+    mockFeedService.toggleArticleFavorite.mockImplementation(() => {});
+
+    // ArticleServiceのモック実装
+    mockArticleService.getArticles.mockReturnValue(testArticles);
+    mockArticleService.getArticleById.mockImplementation(
+      (id: number) => testArticles.find((article) => article.id === id) || null
+    );
+    mockArticleService.markAsRead.mockImplementation(() => true);
+    mockArticleService.markAsUnread.mockImplementation(() => true);
+    mockArticleService.toggleFavorite.mockImplementation(() => true);
+    mockArticleService.toggleFavoriteWithPin.mockImplementation(() => true);
+    mockArticleService.getUnreadCount.mockReturnValue(testArticles.length);
+    mockArticleService.getTotalCount.mockReturnValue(testArticles.length);
+
+    // process.on/offのモック
+    vi.spyOn(process, 'on').mockImplementation((event: string | symbol, handler: EventHandler) => {
+      const eventStr = String(event);
+      if (!processOnHandlers.has(eventStr)) {
+        processOnHandlers.set(eventStr, []);
+      }
+      const handlers = processOnHandlers.get(eventStr);
+      if (handlers) {
+        handlers.push(handler);
+      }
+      return process;
+    });
+
+    vi.spyOn(process, 'off').mockImplementation((event: string | symbol, handler: EventHandler) => {
+      const eventStr = String(event);
+      if (processOffHandlers.has(eventStr)) {
+        const handlers = processOffHandlers.get(eventStr);
+        if (handlers) {
+          const index = handlers.indexOf(handler);
+          if (index > -1) {
+            handlers.splice(index, 1);
+          }
+        }
+      }
+      return process;
+    });
   });
 
   afterEach(() => {
@@ -152,7 +244,7 @@ describe('App - 自動既読機能', () => {
     // 初期化が完了するまで待機
     await vi.waitFor(
       () => {
-        expect(mockFeedService.getArticles).toHaveBeenCalled();
+        expect(mockFeedService.getUnreadFeeds).toHaveBeenCalled();
       },
       { timeout: 1000 }
     );
@@ -178,20 +270,12 @@ describe('App - 自動既読機能', () => {
 
   it('フィード移動時に既読記事は既読マークしない', async () => {
     // 既読記事のデータをセット（useArticleManagerが未読記事のみをフィルタリングするため、記事なしになる）
-    mockFeedService.getArticles.mockReturnValue([
-      {
-        id: 1,
-        title: 'Test Article 1',
-        url: 'https://example.com/article1',
-        is_read: true, // 既読
-        is_favorite: false,
-        published_at: new Date('2024-01-01'),
-        content: 'Test content 1',
-        author: 'Test Author',
-      },
-    ]);
+    mockArticleService.getArticles.mockReturnValue([]);
 
     const { stdin, unmount } = render(<App />);
+
+    // 初期化待ち
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // markArticleAsReadの呼び出し状況をクリア（初期化時の呼び出しを無視）
     vi.clearAllMocks();
@@ -200,13 +284,7 @@ describe('App - 自動既読機能', () => {
     stdin.write('s');
 
     // フィード変更処理が完了するまで少し待機
-    await vi.waitFor(
-      () => {
-        // 他のフィードサービスの呼び出しがあることを確認（フィード移動が完了していることの指標）
-        expect(mockFeedService.getArticles).toHaveBeenCalled();
-      },
-      { timeout: 1000 }
-    );
+    await new Promise((resolve) => setTimeout(resolve, 200));
 
     // 記事がフィルタリングされているので markArticleAsRead は呼ばれない
     expect(mockFeedService.markArticleAsRead).not.toHaveBeenCalled();
@@ -221,7 +299,7 @@ describe('App - 自動既読機能', () => {
     // 初期化が完了するまで待機
     await vi.waitFor(
       () => {
-        expect(mockFeedService.getArticles).toHaveBeenCalled();
+        expect(mockFeedService.getUnreadFeeds).toHaveBeenCalled();
       },
       { timeout: 1000 }
     );
@@ -274,7 +352,7 @@ describe('App - 自動既読機能', () => {
 
   it('記事がない場合はエラーにならない', async () => {
     // 記事なしのデータをセット
-    mockFeedService.getArticles.mockReturnValue([]);
+    mockArticleService.getArticles.mockReturnValue([]);
 
     const { stdin, unmount } = render(<App />);
 
@@ -292,7 +370,6 @@ describe('App - 自動既読機能', () => {
 
     // markArticleAsRead は呼ばれない（記事がないため）
     expect(mockFeedService.markArticleAsRead).not.toHaveBeenCalled();
-    // Maximum update depth エラーは無視（React の内部警告）
 
     // クリーンアップ
     unmount();
@@ -331,6 +408,47 @@ describe('App - 自動既読機能', () => {
   });
 
   it('aキーでの前のフィード移動でも既読化される', async () => {
+    // フィード2の記事を別のものに設定
+    mockArticleService.getArticles.mockImplementation((options: { feedId?: number }) => {
+      if (options.feedId === 2) {
+        return [
+          {
+            id: 3,
+            feed_id: 2,
+            title: 'Test Article 3',
+            url: 'https://example.com/article3',
+            is_read: false,
+            is_favorite: false,
+            published_at: new Date('2024-01-03'),
+            content: 'Test content 3',
+            summary: 'Test summary 3',
+            author: 'Test Author 3',
+            thumbnail_url: undefined,
+            created_at: new Date('2024-01-03'),
+            updated_at: new Date('2024-01-03'),
+          },
+        ];
+      }
+      // フィード1の記事
+      return [
+        {
+          id: 1,
+          feed_id: 1,
+          title: 'Test Article 1',
+          url: 'https://example.com/article1',
+          is_read: false,
+          is_favorite: false,
+          published_at: new Date('2024-01-01'),
+          content: 'Test content 1',
+          summary: 'Test summary 1',
+          author: 'Test Author',
+          thumbnail_url: undefined,
+          created_at: new Date('2024-01-01'),
+          updated_at: new Date('2024-01-01'),
+        },
+      ];
+    });
+
     const { stdin, unmount } = render(<App />);
 
     // 初期化待ち
@@ -349,8 +467,8 @@ describe('App - 自動既読機能', () => {
     // 少し待ってから確認
     await new Promise((resolve) => setTimeout(resolve, 100));
 
-    // 前のフィードの記事が既読にマークされる
-    expect(mockFeedService.markArticleAsRead).toHaveBeenCalled();
+    // フィード2の記事（ID=3）が既読にマークされる
+    expect(mockFeedService.markArticleAsRead).toHaveBeenCalledWith(3);
 
     // クリーンアップ
     unmount();
@@ -377,7 +495,6 @@ describe('App - 自動既読機能', () => {
 
     // j/kキーの移動だけでは既読化は発生しない
     const finalCallCount = mockFeedService.markArticleAsRead.mock.calls.length;
-    // クリーンアップ時の既読化を削除したので、j/k移動では既読化されない
     expect(finalCallCount).toBe(initialCallCount);
 
     // クリーンアップ
@@ -413,16 +530,21 @@ describe('App - 自動既読機能', () => {
 
   it('記事IDがundefinedの場合は既読化をスキップ', async () => {
     // IDがundefinedの記事データ
-    mockFeedService.getArticles.mockReturnValue([
+    mockArticleService.getArticles.mockReturnValue([
       {
         id: undefined as unknown as number, // IDがない
+        feed_id: 1,
         title: 'Test Article without ID',
         url: 'https://example.com/article1',
         is_read: false,
         is_favorite: false,
         published_at: new Date('2024-01-01'),
         content: 'Test content',
+        summary: 'Test summary',
         author: 'Test Author',
+        thumbnail_url: undefined,
+        created_at: new Date('2024-01-01'),
+        updated_at: new Date('2024-01-01'),
       },
     ]);
 
@@ -440,7 +562,6 @@ describe('App - 自動既読機能', () => {
 
     // IDがないので markArticleAsRead は呼ばれない
     expect(mockFeedService.markArticleAsRead).not.toHaveBeenCalled();
-    // Maximum update depth エラーは無視（React の内部警告）
 
     // クリーンアップ
     unmount();

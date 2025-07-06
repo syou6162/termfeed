@@ -14,7 +14,7 @@ export function createAddCommand(): Command {
 
       try {
         dbManager.migrate();
-        const feedService = createFeedServices(dbManager);
+        const { feedService } = createFeedServices(dbManager);
 
         console.log(`Adding feed: ${url}`);
 

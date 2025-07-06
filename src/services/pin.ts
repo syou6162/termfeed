@@ -83,6 +83,28 @@ export class PinService {
   }
 
   /**
+   * 記事にピンを立てる（既に立っている場合は何もしない）
+   * @param articleId 記事ID
+   */
+  public setPin(articleId: number): void {
+    const isPinned = this.pinModel.isPinned(articleId);
+    if (!isPinned) {
+      this.pinModel.create(articleId);
+    }
+  }
+
+  /**
+   * 記事のピンを外す（立っていない場合は何もしない）
+   * @param articleId 記事ID
+   */
+  public unsetPin(articleId: number): void {
+    const isPinned = this.pinModel.isPinned(articleId);
+    if (isPinned) {
+      this.pinModel.delete(articleId);
+    }
+  }
+
+  /**
    * すべてのピンをクリアする（内部用）
    * @internal
    */
