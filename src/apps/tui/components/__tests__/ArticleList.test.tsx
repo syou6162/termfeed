@@ -219,8 +219,8 @@ describe('ArticleList', () => {
         <ArticleList {...defaultProps} articles={[article]} selectedArticle={article} />
       );
 
-      const output = lastFrame();
-      const lines = output.split('\n');
+      const frameOutput = lastFrame()!;
+      const lines = frameOutput.split('\n');
 
       // 公開日とお気に入りが同一行に表示されることを検証
       const infoLine = lines.find(
@@ -245,8 +245,8 @@ describe('ArticleList', () => {
         <ArticleList {...defaultProps} articles={[article]} selectedArticle={article} />
       );
 
-      const output = lastFrame();
-      const lines = output.split('\n');
+      const frameOutput = lastFrame()!;
+      const lines = frameOutput.split('\n');
 
       // 公開日、著者、お気に入りが同一行に表示されることを検証
       const infoLine = lines.find(
@@ -276,8 +276,8 @@ describe('ArticleList', () => {
         />
       );
 
-      const output = lastFrame();
-      const lines = output.split('\n');
+      const frameOutput = lastFrame()!;
+      const lines = frameOutput.split('\n');
 
       // すべての情報が同一行に表示されることを検証
       const infoLine = lines.find(
@@ -310,8 +310,8 @@ describe('ArticleList', () => {
         />
       );
 
-      const output = lastFrame();
-      const lines = output.split('\n');
+      const frameOutput = lastFrame()!;
+      const lines = frameOutput.split('\n');
 
       // 公開日、著者、ピンが同一行に表示されることを検証
       const infoLine = lines.find(
@@ -375,8 +375,8 @@ describe('ArticleList', () => {
         />
       );
 
-      const output = lastFrame();
-      const lines = output.split('\n');
+      const frameOutput = lastFrame()!;
+      const lines = frameOutput.split('\n');
 
       // お気に入りとピンの情報が含まれる行を探す
       const favoriteAndPinLine = lines.find(
@@ -438,15 +438,15 @@ describe('ArticleList', () => {
         />
       );
 
-      const output = lastFrame();
+      const frameOutput = lastFrame()!;
 
       // 修正前のような独立行パターンが存在しないことを確認
       // 例: お気に入りが単独で表示される行
-      expect(output).not.toMatch(/^\s*★ お気に入り\s*$/m);
-      expect(output).not.toMatch(/^\s*📌 ピン\s*$/m);
+      expect(frameOutput).not.toMatch(/^\s*★ お気に入り\s*$/m);
+      expect(frameOutput).not.toMatch(/^\s*📌 ピン\s*$/m);
 
       // タイトル直後にお気に入り・ピンの独立行がないことを確認
-      const lines = output.split('\n');
+      const lines = frameOutput.split('\n');
       const titleLineIndex = lines.findIndex((line) => line.includes('Article 1'));
       if (titleLineIndex !== -1 && titleLineIndex + 1 < lines.length) {
         const nextLine = lines[titleLineIndex + 1];
