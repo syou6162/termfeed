@@ -749,6 +749,91 @@ describe('App Integration Tests', () => {
         expect(mockFeedService.markArticleAsRead).toHaveBeenCalledWith(1);
       });
     });
+
+    it('上限以上の未読記事がある場合、最新の制限件数分のみ取得される', async () => {
+      // 150件の未読記事を持つフィードをシミュレート
+      const manyArticles = Array.from({ length: 150 }, (_, i) => ({
+        id: i + 1,
+        feed_id: 1,
+        title: `Article ${i + 1}`,
+        url: `https://example.com/article${i + 1}`,
+        content: `Article ${i + 1} content`,
+        author: `Author ${i + 1}`,
+        published_at: new Date(`2024-01-${String(i + 1).padStart(2, '0')}T00:00:00Z`),
+        is_read: false,
+        is_favorite: false,
+        thumbnail_url: null,
+        created_at: new Date('2024-01-01T00:00:00Z'),
+        updated_at: new Date('2024-01-01T00:00:00Z'),
+      }));
+
+      // DBには150件あるが、TUIには最新100件のみが返される
+      const limitedArticles = manyArticles.slice(0, 100);
+      mockFeedService.getArticles.mockReturnValue(limitedArticles);
+
+      const { lastFrame } = render(<App />);
+
+      // 初期化の完了を待つ
+      await vi.waitFor(() => {
+        expect(mockFeedService.getArticles).toHaveBeenCalledWith({
+          feed_id: 1,
+          is_read: false,
+          limit: 100,
+        });
+      });
+
+      // 最新の記事（Article 1）が表示され、古い記事（Article 150）は表示されない
+      await vi.waitFor(() => {
+        const frame = lastFrame();
+        expect(frame).toContain('Article 1');
+        expect(frame).not.toContain('Article 150');
+      });
+    });
+
+    it('既読化後の再取得で残りの未読記事が正しく取得される', async () => {
+      let callCount = 0;
+      const firstBatch = mockArticles.slice(0, 2); // 最初の2件
+      const secondBatch = [
+        {
+          ...mockArticles[2],
+          id: 3,
+          title: 'Article 3',
+          url: 'https://example.com/article3',
+        },
+      ]; // 次の1件
+
+      // getArticlesの呼び出し回数に応じて異なるデータを返す
+      mockFeedService.getArticles.mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) {
+          return firstBatch; // 1回目: Article 1, 2
+        } else {
+          return secondBatch; // 2回目以降: Article 3（残りの未読記事）
+        }
+      });
+
+      const { stdin, lastFrame } = render(<App />);
+
+      // 初期化の完了を待つ
+      await vi.waitFor(() => {
+        expect(lastFrame()).toContain('Article 1');
+      });
+
+      // 現在の記事を既読化（フィード移動で自動的に既読化される）
+      stdin.write('s'); // 次のフィードに移動
+      stdin.write('a'); // 元のフィードに戻る
+
+      // 2回目の記事取得が実行され、残りの未読記事が取得される
+      await vi.waitFor(() => {
+        expect(mockFeedService.getArticles).toHaveBeenCalledTimes(2); // 初期 + 戻り
+      });
+
+      // 新しい記事が表示される
+      await vi.waitFor(() => {
+        const frame = lastFrame();
+        expect(frame).toContain('Article 3');
+      });
+    });
   });
 
   describe('スライディングウィンドウページネーション', () => {
