@@ -1,9 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import {
-  createTestContext,
-  runCommand,
-  type TestContext,
-} from '@/test-helpers/index.js';
+import { createTestContext, runCommand, type TestContext } from '@/test-helpers/index.js';
 import { DatabaseManager } from '../../../../models/database.js';
 import { FeedModel } from '../../../../models/feed.js';
 import { ArticleModel } from '../../../../models/article.js';
@@ -29,6 +25,7 @@ describe('favorites E2E tests', () => {
       url: 'https://example.com/feed',
       title: 'Test Feed',
       description: 'Test Description',
+      rating: 0,
     });
 
     // 記事を3つ作成
@@ -122,7 +119,7 @@ describe('favorites E2E tests', () => {
 
     it('同じ記事を重複してお気に入りに追加できない', () => {
       const article = articleModel.findAll()[0];
-      
+
       // 1回目の追加は成功
       favoriteModel.create(article.id);
       expect(favoriteModel.getFavoriteCount()).toBe(1);
@@ -132,7 +129,6 @@ describe('favorites E2E tests', () => {
       expect(favoriteModel.getFavoriteCount()).toBe(1); // 件数は変わらない
     });
   });
-
 
   describe('listコマンドでのお気に入り表示', () => {
     it('お気に入り数が表示される', async () => {
@@ -148,7 +144,7 @@ describe('favorites E2E tests', () => {
 
       expect(stderr).toBe('');
       expect(exitCode).toBeUndefined();
-      
+
       // お気に入り数が表示されることを確認
       // ※実際の出力形式に応じて調整が必要
       expect(stdout).toContain('Test Feed');

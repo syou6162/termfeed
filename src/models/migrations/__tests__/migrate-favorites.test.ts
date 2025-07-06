@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment */
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { DatabaseManager } from '../../database.js';
 import fs from 'fs';
@@ -232,6 +233,7 @@ describe('migrate-favorites', () => {
 });
 
 // マイグレーション関数（テスト用に抽出）
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function migrateToFavoritesTable(database: any) {
   // 外部キー制約を一時的に無効化
   database.prepare('PRAGMA foreign_keys = OFF').run();
@@ -333,7 +335,9 @@ function migrateToFavoritesTable(database: any) {
     // 6. インデックスを再作成
     database.prepare('CREATE INDEX IF NOT EXISTS idx_articles_feed_id ON articles(feed_id)').run();
     database
-      .prepare('CREATE INDEX IF NOT EXISTS idx_articles_published_at ON articles(published_at DESC)')
+      .prepare(
+        'CREATE INDEX IF NOT EXISTS idx_articles_published_at ON articles(published_at DESC)'
+      )
       .run();
     database.prepare('CREATE INDEX IF NOT EXISTS idx_articles_is_read ON articles(is_read)').run();
 
