@@ -65,7 +65,7 @@ export function App(props: AppProps = {}) {
     pageDown,
     pageUp,
     scrollToEnd,
-  } = useArticleManager(feedService, articleService, selectedFeedId);
+  } = useArticleManager(articleService, selectedFeedId);
 
   const isLoading = feedsLoading || articlesLoading;
 

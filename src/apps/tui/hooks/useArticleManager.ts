@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react';
 import type { Article } from '../../../types/index.js';
-import type { FeedService } from '../../../services/feed-service.js';
 import type { ArticleService } from '../../../services/article-service.js';
 import { TUI_CONFIG } from '../config/constants.js';
 
@@ -31,7 +30,6 @@ export type ArticleManagerActions = {
  * - お気に入りのトグル機能
  */
 export function useArticleManager(
-  _feedService: FeedService,
   articleService: ArticleService,
   currentFeedId: number | null
 ): ArticleManagerState & ArticleManagerActions {

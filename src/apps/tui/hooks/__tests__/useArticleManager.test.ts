@@ -8,7 +8,6 @@ const mockFeedService = {
   updateAllFeeds: vi.fn(),
   getArticles: vi.fn(),
   markArticleAsRead: vi.fn(),
-  toggleArticleFavorite: vi.fn(),
 };
 
 // テスト用データ
@@ -63,7 +62,6 @@ describe('useArticleManager Unit Tests', () => {
 
     // デフォルトのモック実装
     mockFeedService.getArticles.mockReturnValue(mockArticles);
-    mockFeedService.toggleArticleFavorite.mockImplementation(() => {});
   });
 
   it('未読記事のみがフィルタリングされることを確認', () => {
@@ -82,12 +80,6 @@ describe('useArticleManager Unit Tests', () => {
       feed_id: 1,
       limit: 100,
     });
-  });
-
-  it('お気に入りトグルが正しく呼ばれることを確認', () => {
-    mockFeedService.toggleArticleFavorite(1);
-
-    expect(mockFeedService.toggleArticleFavorite).toHaveBeenCalledWith(1);
   });
 
   it('エラーハンドリングが正しく機能することを確認', () => {
