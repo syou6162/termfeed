@@ -51,12 +51,13 @@ export class ArticleService implements IArticleService {
   toggleFavoriteWithPin(articleId: number): boolean {
     const isFavorite = this.articleModel.toggleFavorite(articleId);
 
-    // お気に入りに設定した場合のみピンを立てる
-    if (isFavorite && this.pinService) {
-      const isPinned = this.pinService.togglePin(articleId);
-      // 既にピンが立っている場合は元に戻す（ピンを立てたままにする）
-      if (!isPinned) {
-        this.pinService.togglePin(articleId);
+    if (this.pinService) {
+      if (isFavorite) {
+        // お気に入りに設定した場合：ピンを立てる
+        this.pinService.setPin(articleId);
+      } else {
+        // お気に入りを外した場合：ピンも外す
+        this.pinService.unsetPin(articleId);
       }
     }
 

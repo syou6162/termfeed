@@ -307,7 +307,7 @@ export function App(props: AppProps = {}) {
     onRefreshAll: () => {
       void updateAllFeeds();
     },
-    onToggleFavorite: toggleFavoriteWithPin,
+    onToggleFavorite: () => toggleFavoriteWithPin(refreshPinnedState),
     onToggleHelp: () => setShowHelp((prev) => !prev),
     onQuit: handleQuit,
     onScrollDown: scrollDown,

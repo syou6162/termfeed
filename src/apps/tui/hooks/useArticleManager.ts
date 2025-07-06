@@ -17,7 +17,7 @@ export type ArticleManagerActions = {
   setSelectedArticleIndex: (index: number) => void;
   setScrollOffset: (offset: number) => void;
   toggleFavorite: () => void;
-  toggleFavoriteWithPin: () => void;
+  toggleFavoriteWithPin: (onPinStateChanged?: () => void) => void;
   scrollDown: () => void;
   scrollUp: () => void;
   pageDown: (totalHeight?: number) => void;
@@ -116,41 +116,47 @@ export function useArticleManager(
     }
   }, [articles, selectedArticleIndex, currentFeedId, feedService, fetchArticles, loadArticles]);
 
-  const toggleFavoriteWithPin = useCallback(() => {
-    const selectedArticle = articles[selectedArticleIndex];
-    if (selectedArticle?.id && currentFeedId) {
-      try {
-        const isFavorite = articleService.toggleFavoriteWithPin(selectedArticle.id);
-
-        // パフォーマンス改善: 記事リストの全件再取得を避け、ローカル状態のみ更新
-        setArticles((prevArticles) =>
-          prevArticles.map((article) =>
-            article.id === selectedArticle.id ? { ...article, is_favorite: isFavorite } : article
-          )
-        );
-      } catch (err) {
-        console.error('お気に入り状態の更新に失敗しました:', err);
-        // エラー時は共通ロジックで記事リストを再取得し、同じ記事を再選択
+  const toggleFavoriteWithPin = useCallback(
+    (onPinStateChanged?: () => void) => {
+      const selectedArticle = articles[selectedArticleIndex];
+      if (selectedArticle?.id && currentFeedId) {
         try {
-          const currentArticleId = selectedArticle.id;
-          const unreadArticles = fetchArticles(currentFeedId);
-          setArticles(unreadArticles);
+          const isFavorite = articleService.toggleFavoriteWithPin(selectedArticle.id);
 
-          // 同じ記事を再選択する（エラー時でもカーソル位置を維持）
-          const newIndex = unreadArticles.findIndex((article) => article.id === currentArticleId);
-          if (newIndex !== -1) {
-            setSelectedArticleIndex(newIndex);
-          } else {
-            // 記事が見つからない場合は最初の記事を選択
-            setSelectedArticleIndex(0);
+          // パフォーマンス改善: 記事リストの全件再取得を避け、ローカル状態のみ更新
+          setArticles((prevArticles) =>
+            prevArticles.map((article) =>
+              article.id === selectedArticle.id ? { ...article, is_favorite: isFavorite } : article
+            )
+          );
+
+          // ピン状態の変更を通知
+          onPinStateChanged?.();
+        } catch (err) {
+          console.error('お気に入り状態の更新に失敗しました:', err);
+          // エラー時は共通ロジックで記事リストを再取得し、同じ記事を再選択
+          try {
+            const currentArticleId = selectedArticle.id;
+            const unreadArticles = fetchArticles(currentFeedId);
+            setArticles(unreadArticles);
+
+            // 同じ記事を再選択する（エラー時でもカーソル位置を維持）
+            const newIndex = unreadArticles.findIndex((article) => article.id === currentArticleId);
+            if (newIndex !== -1) {
+              setSelectedArticleIndex(newIndex);
+            } else {
+              // 記事が見つからない場合は最初の記事を選択
+              setSelectedArticleIndex(0);
+            }
+          } catch {
+            // フォールバック: 通常のloadArticlesを使用
+            loadArticles(currentFeedId);
           }
-        } catch {
-          // フォールバック: 通常のloadArticlesを使用
-          loadArticles(currentFeedId);
         }
       }
-    }
-  }, [articles, selectedArticleIndex, currentFeedId, articleService, fetchArticles, loadArticles]);
+    },
+    [articles, selectedArticleIndex, currentFeedId, articleService, fetchArticles, loadArticles]
+  );
 
   const scrollDown = useCallback(() => {
     setScrollOffset((prev) => prev + 1);
