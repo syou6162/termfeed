@@ -187,12 +187,14 @@ export function FavoriteList({
       {/* 選択された記事の詳細を100%幅で表示 */}
       {selectedArticle && (
         <Box flexDirection="column" flexGrow={1} borderStyle="single" padding={1}>
+          {/* タイトル */}
           <Box marginBottom={1}>
             <Text bold color="green">
               {selectedArticle.title}
             </Text>
           </Box>
 
+          {/* メタ情報 */}
           <Box marginBottom={1}>
             <Text color="gray">
               公開日: {new Date(selectedArticle.published_at).toLocaleDateString('ja-JP')}
@@ -206,23 +208,26 @@ export function FavoriteList({
             )}
           </Box>
 
+          {/* URL */}
           <Box marginBottom={1}>
             <Text color="yellow">URL: {selectedArticle.url}</Text>
           </Box>
 
+          {/* コンテンツ表示エリア */}
           {selectedArticle.content && (
-            <Box flexGrow={1}>
-              {(() => {
-                const totalHeight = stdout?.rows || TUI_CONFIG.DEFAULT_TERMINAL_HEIGHT;
-                const favoriteFixedLines = 9;
-                const availableLines = Math.max(1, totalHeight - favoriteFixedLines);
-                const visibleLines = contentLines.slice(
-                  scrollOffset,
-                  scrollOffset + availableLines
-                );
-                const displayText = visibleLines.join('\n');
-                return <Text wrap="wrap">{displayText}</Text>;
-              })()}
+            <Box flexDirection="column" flexGrow={1}>
+              <Text wrap="wrap">
+                {(() => {
+                  const totalHeight = stdout?.rows || TUI_CONFIG.DEFAULT_TERMINAL_HEIGHT;
+                  const favoriteFixedLines = 9;
+                  const availableLines = Math.max(1, totalHeight - favoriteFixedLines);
+                  const visibleLines = contentLines.slice(
+                    scrollOffset,
+                    scrollOffset + availableLines
+                  );
+                  return visibleLines.join('\n');
+                })()}
+              </Text>
             </Box>
           )}
         </Box>
