@@ -315,7 +315,7 @@ describe('App Integration Tests', () => {
       await vi.waitFor(() => {
         expect(mockFeedService.getArticles).toHaveBeenCalledWith({
           feed_id: 2,
-          limit: 100,
+          is_read: false,
         });
       });
     });
@@ -338,7 +338,7 @@ describe('App Integration Tests', () => {
       await vi.waitFor(() => {
         const calls = mockFeedService.getArticles.mock.calls;
         const lastCall = calls[calls.length - 1];
-        expect(lastCall).toEqual([{ feed_id: 1, limit: 100 }]);
+        expect(lastCall).toEqual([{ feed_id: 1, is_read: false }]);
       });
     });
 
@@ -794,7 +794,7 @@ describe('App Integration Tests', () => {
         () => {
           expect(mockFeedService.getArticles).toHaveBeenCalledWith({
             feed_id: 11,
-            limit: 100,
+            is_read: false,
           });
         },
         { timeout: 3000 }
@@ -882,7 +882,7 @@ describe('App Integration Tests', () => {
       // getArticlesが複数回呼ばれていることを確認
       expect(mockFeedService.getArticles).toHaveBeenCalledWith({
         feed_id: 2,
-        limit: 100,
+        is_read: false,
       });
 
       // aキーで前のフィードに戻る
@@ -895,7 +895,7 @@ describe('App Integration Tests', () => {
       // Feed 1に戻っていることを確認
       expect(mockFeedService.getArticles).toHaveBeenCalledWith({
         feed_id: 1,
-        limit: 100,
+        is_read: false,
       });
     });
 
@@ -947,13 +947,13 @@ describe('App Integration Tests', () => {
       // Feed 2が選択されたままであることを確認
       expect(mockFeedService.getArticles).toHaveBeenLastCalledWith({
         feed_id: 2,
-        limit: 100,
+        is_read: false,
       });
 
       // Feed 1への移動は発生していない
       expect(mockFeedService.getArticles).not.toHaveBeenCalledWith({
         feed_id: 1,
-        limit: 100,
+        is_read: false,
       });
     });
   });
@@ -974,7 +974,7 @@ describe('App Integration Tests', () => {
       await vi.waitFor(() => {
         expect(mockFeedService.getArticles).toHaveBeenLastCalledWith({
           feed_id: 2,
-          limit: 100,
+          is_read: false,
         });
       });
 
@@ -1000,7 +1000,7 @@ describe('App Integration Tests', () => {
       // Feed 2が引き続き選択されていることを確認
       expect(mockFeedService.getArticles).toHaveBeenLastCalledWith({
         feed_id: 2,
-        limit: 100,
+        is_read: false,
       });
     });
 
@@ -1018,7 +1018,7 @@ describe('App Integration Tests', () => {
       await vi.waitFor(() => {
         expect(mockFeedService.getArticles).toHaveBeenCalledWith({
           feed_id: 2,
-          limit: 100,
+          is_read: false,
         });
       });
 
