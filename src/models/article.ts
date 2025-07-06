@@ -288,8 +288,11 @@ export class ArticleModel {
     const article = this.findById(id);
     if (!article) return false;
 
-    const updated = this.update(id, { is_favorite: !article.is_favorite });
-    return updated !== null;
+    const newFavoriteState = !article.is_favorite;
+    const updated = this.update(id, { is_favorite: newFavoriteState });
+
+    // 更新が成功した場合は新しいお気に入り状態を返す
+    return updated !== null ? newFavoriteState : article.is_favorite;
   }
 
   public countByFeedId(feedId?: number): number {
