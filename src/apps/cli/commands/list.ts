@@ -7,7 +7,7 @@ export const createListCommand = () => {
     const databaseManager = createDatabaseManager();
     databaseManager.migrate();
 
-    const feedService = createFeedServices(databaseManager);
+    const { feedService } = createFeedServices(databaseManager);
     const feeds = feedService.getFeedList();
 
     if (feeds.length === 0) {
