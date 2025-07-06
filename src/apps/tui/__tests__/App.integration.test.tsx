@@ -47,10 +47,40 @@ const mockFeedService = {
   updateAllFeeds: vi.fn(),
 };
 
+// ArticleServiceのモック
+const mockArticleService = {
+  getArticles: vi.fn(),
+  getArticleById: vi.fn(),
+  markAsRead: vi.fn(),
+  markAsUnread: vi.fn(),
+  toggleFavorite: vi.fn(),
+  toggleFavoriteWithPin: vi.fn(),
+  getUnreadCount: vi.fn(),
+  getTotalCount: vi.fn(),
+};
+
+// PinServiceのモック
+const mockPinService = {
+  togglePin: vi.fn(),
+  getPinnedArticles: vi.fn(() => []),
+  getPinCount: vi.fn(() => 0),
+  getOldestPinnedArticles: vi.fn(() => []),
+  deletePins: vi.fn(),
+  clearAllPins: vi.fn(),
+};
+
 import { FeedService } from '../../../services/feed-service.js';
 
 vi.mock('../../../services/feed-service.js', () => ({
   FeedService: vi.fn(() => mockFeedService),
+}));
+
+vi.mock('../../../services/article-service.js', () => ({
+  ArticleService: vi.fn(() => mockArticleService),
+}));
+
+vi.mock('../../../services/pin.js', () => ({
+  PinService: vi.fn(() => mockPinService),
 }));
 
 vi.mock('../../../models/feed.js', () => ({
@@ -74,6 +104,14 @@ vi.mock('../../../models/database.js', () => ({
 
 vi.mock('../../cli/utils/database.js', () => ({
   createDatabaseManager: vi.fn(() => mockDatabaseManager),
+}));
+
+vi.mock('../../../services/factory.js', () => ({
+  createFeedServices: vi.fn(() => ({
+    feedService: mockFeedService,
+    articleService: mockArticleService,
+    pinService: mockPinService,
+  })),
 }));
 
 // App コンポーネントのimport（モック設定後）
@@ -391,9 +429,9 @@ describe('App Integration Tests', () => {
       // fキーを押す
       stdin.write('f');
 
-      // お気に入りトグルが呼ばれることを確認
+      // お気に入り+ピントグルが呼ばれることを確認
       await vi.waitFor(() => {
-        expect(mockFeedService.toggleArticleFavorite).toHaveBeenCalledWith(1);
+        expect(mockArticleService.toggleFavoriteWithPin).toHaveBeenCalledWith(1);
       });
     });
 
