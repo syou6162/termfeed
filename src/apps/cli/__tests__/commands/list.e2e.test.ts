@@ -77,21 +77,21 @@ describe('list command E2E', () => {
     // Assert
     expect(output.exitCode).toBeUndefined();
     const stdout = output.stdout;
-    
+
     // レーティング5のセクションが3より前に表示される
     const rating5Index = stdout.indexOf('## Rating 5');
     const rating3Index = stdout.indexOf('## Rating 3');
     expect(rating5Index).toBeGreaterThan(-1);
     expect(rating3Index).toBeGreaterThan(-1);
     expect(rating5Index).toBeLessThan(rating3Index);
-    
+
     // レーティング5のフィード順序確認（ID順）
     const feed1Index = stdout.indexOf(`${feed1.id}: Feed A`);
     const feed3Index = stdout.indexOf(`${feed3.id}: Feed C`);
     expect(feed1Index).toBeGreaterThan(-1);
     expect(feed3Index).toBeGreaterThan(-1);
     expect(feed1Index).toBeLessThan(feed3Index); // feed1(ID小)がfeed3(ID大)より前
-    
+
     // レーティング3のフィード確認
     expect(stdout).toContain(`${feed2.id}: Feed B`);
   });
