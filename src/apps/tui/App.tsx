@@ -29,7 +29,7 @@ export function App(props: AppProps = {}) {
   const [temporaryMessage, setTemporaryMessage] = useState<string | null>(null);
 
   // データベースとサービスを初期化
-  const { feedService, articleService, pinService, articleModel } =
+  const { feedService, articleService, pinService, favoriteService, articleModel } =
     useTermfeedData(databaseManager);
 
   // フィード管理
@@ -441,6 +441,9 @@ export function App(props: AppProps = {}) {
     );
   }
 
+  // 選択された記事のお気に入り状態を判定
+  const isFavorite = selectedArticle ? favoriteService.isFavorite(selectedArticle.id) : false;
+
   return (
     <>
       <TwoPaneLayout
@@ -456,6 +459,7 @@ export function App(props: AppProps = {}) {
             scrollOffset={scrollOffset}
             onScrollOffsetChange={setScrollOffset}
             isPinned={isPinned}
+            isFavorite={isFavorite}
           />
         }
       />
