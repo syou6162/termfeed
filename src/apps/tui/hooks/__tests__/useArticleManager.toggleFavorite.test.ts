@@ -74,7 +74,19 @@ describe('toggleFavorite修正のテスト', () => {
       setFeedRating: vi.fn(),
       deleteFeed: vi.fn(),
       addFeed: vi.fn(),
-    } as FeedService;
+      removeFeed: vi.fn(),
+      updateFeed: vi.fn(),
+      markArticleAsUnread: vi.fn(),
+      markAllAsRead: vi.fn(),
+      incrementReadCount: vi.fn(),
+      getReadCount: vi.fn(),
+      getUnreadArticlesByFeedId: vi.fn(),
+      getFavoritedArticlesByFeedId: vi.fn(),
+      getUnreadCount: vi.fn(),
+      getUnreadFeeds: vi.fn(),
+      getFeedById: vi.fn(),
+      getArticleById: vi.fn(),
+    } as unknown as FeedService;
 
     // デフォルトでmockArticlesを返す
     vi.mocked(mockFeedService.getArticles).mockReturnValue(mockArticles);
