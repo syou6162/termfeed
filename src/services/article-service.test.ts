@@ -96,14 +96,14 @@ describe('ArticleService', () => {
       // 1つの記事をお気に入りにする
       articleService.toggleFavorite(testArticleId1);
 
-      const favoriteArticles = articleService.getArticles({ isFavorite: true });
-      const allArticles = articleService.getArticles({ isFavorite: false });
+      const favoriteArticles = articleService.getArticles({ filter: 'favorites' });
+      const allArticles = articleService.getArticles({ filter: 'all' });
       const allArticlesNoFilter = articleService.getArticles();
 
       expect(favoriteArticles).toHaveLength(1);
       expect(favoriteArticles[0].id).toBe(testArticleId1);
 
-      // isFavorite: falseの場合は全記事を返す（フィルタリングしない）
+      // filter: 'all' または undefined の場合は全記事を返す
       expect(allArticles).toHaveLength(2);
       expect(allArticlesNoFilter).toHaveLength(2);
     });

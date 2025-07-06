@@ -1,7 +1,7 @@
 import { ArticleModel } from '../models/article.js';
 import { PinService } from './pin.js';
 import { FavoriteService } from './favorite.js';
-import type { Article, ArticleService as IArticleService } from '@/types';
+import type { Article, ArticleService as IArticleService, ArticleFilter } from '@/types';
 
 export class ArticleService implements IArticleService {
   private articleModel: ArticleModel;
@@ -21,11 +21,11 @@ export class ArticleService implements IArticleService {
   getArticles(options?: {
     feedId?: number;
     isRead?: boolean;
-    isFavorite?: boolean;
+    filter?: ArticleFilter;
     limit?: number;
     offset?: number;
   }): Article[] {
-    if (options?.isFavorite === true) {
+    if (options?.filter === 'favorites') {
       // お気に入り記事のみを取得（データベースレベルでフィルタリング）
       return this.articleModel.getFavoriteArticles({
         feed_id: options.feedId,
@@ -35,6 +35,7 @@ export class ArticleService implements IArticleService {
       });
     }
 
+    // filter === 'all' または undefined の場合は全記事を返す
     return this.articleModel.findAll({
       feed_id: options?.feedId,
       is_read: options?.isRead,

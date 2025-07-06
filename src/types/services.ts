@@ -2,7 +2,7 @@
 
 import type { Feed, Article } from './domain';
 import type { FeedUpdateResult, AddFeedResult, CrawlResult, UpdateAllFeedsResult } from './dto';
-import type { UpdateProgressCallback, UpdateCancelledResult } from './options';
+import type { UpdateProgressCallback, UpdateCancelledResult, ArticleFilter } from './options';
 
 // FeedServiceの型定義（実装クラスに基づく）
 export type FeedService = {
@@ -38,7 +38,7 @@ export type ArticleService = {
   getArticles(options?: {
     feedId?: number;
     isRead?: boolean;
-    isFavorite?: boolean;
+    filter?: ArticleFilter;
     limit?: number;
     offset?: number;
   }): Article[];

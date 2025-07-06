@@ -23,6 +23,7 @@ export type {
 
 // オプション型
 export type {
+  ArticleFilter,
   ArticleQueryOptions,
   CrawlerOptions,
   ServiceError,
