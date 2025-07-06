@@ -81,9 +81,9 @@ export function useArticleManager(
             limit: TUI_CONFIG.DEFAULT_ARTICLE_LIMIT,
           }) || [];
         setArticles(unreadArticles);
-        
+
         // 同じ記事を再選択する
-        const newIndex = unreadArticles.findIndex(article => article.id === currentArticleId);
+        const newIndex = unreadArticles.findIndex((article) => article.id === currentArticleId);
         if (newIndex !== -1) {
           setSelectedArticleIndex(newIndex);
         } else {
