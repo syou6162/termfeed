@@ -111,12 +111,6 @@ describe('toggleFavorite修正のテスト', () => {
       expect(newIndex).toBe(-1);
     });
 
-    it('ローカル状態更新でお気に入り状態がトグルされる', () => {
-      // お気に入り状態のトグルと確認はis_favoriteプロパティがないため削除
-      // 実際のお気に入り状態はfavoritesテーブルで管理される
-      expect(true).toBe(true); // テスト自体は残す
-    });
-
     it('エラー処理: エラー時でもカーソル位置を維持', () => {
       // エラーが発生した場合でも、共通ロジックで記事を再取得し同じ記事を再選択することをテスト
       const currentArticleId = 2;
