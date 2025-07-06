@@ -1,6 +1,6 @@
-import type { DatabaseManager } from '@/models/database';
-import { FavoriteModel } from '@/models/favorite';
-import type { Favorite } from '@/types';
+import type { DatabaseManager } from '../models/database.js';
+import { FavoriteModel } from '../models/favorite.js';
+import type { Favorite } from '../types/index.js';
 
 export class FavoriteService {
   private favoriteModel: FavoriteModel;
