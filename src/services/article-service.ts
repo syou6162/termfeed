@@ -25,10 +25,48 @@ export class ArticleService implements IArticleService {
     limit?: number;
     offset?: number;
   }): Article[] {
+    if (options?.isFavorite !== undefined) {
+      if (options.isFavorite) {
+        // お気に入り記事のみを取得
+        let favoriteArticles = this.articleModel.getFavoriteArticles();
+
+        // 追加のフィルタリングを適用
+        if (options.feedId !== undefined) {
+          favoriteArticles = favoriteArticles.filter(
+            (article) => article.feed_id === options.feedId
+          );
+        }
+        if (options.isRead !== undefined) {
+          favoriteArticles = favoriteArticles.filter(
+            (article) => article.is_read === options.isRead
+          );
+        }
+
+        // limitとoffsetを適用
+        if (options.offset) {
+          favoriteArticles = favoriteArticles.slice(options.offset);
+        }
+        if (options.limit) {
+          favoriteArticles = favoriteArticles.slice(0, options.limit);
+        }
+
+        return favoriteArticles;
+      } else {
+        // お気に入りでない記事のみを取得
+        // まず全記事を取得し、お気に入りでない記事をフィルタ
+        const allArticles = this.articleModel.findAll({
+          feed_id: options?.feedId,
+          is_read: options?.isRead,
+          limit: options?.limit,
+          offset: options?.offset,
+        });
+        return allArticles.filter((article) => !this.favoriteService.isFavorite(article.id));
+      }
+    }
+
     return this.articleModel.findAll({
       feed_id: options?.feedId,
       is_read: options?.isRead,
-      is_favorite: options?.isFavorite,
       limit: options?.limit,
       offset: options?.offset,
     });
@@ -47,6 +85,11 @@ export class ArticleService implements IArticleService {
   }
 
   toggleFavorite(articleId: number): boolean {
+    // 記事の存在確認
+    const article = this.articleModel.findById(articleId);
+    if (!article) {
+      return false;
+    }
     return this.favoriteService.toggleFavorite(articleId);
   }
 
@@ -56,6 +99,12 @@ export class ArticleService implements IArticleService {
    * @returns お気に入りに設定した場合はtrue、外した場合はfalse
    */
   toggleFavoriteWithPin(articleId: number): boolean {
+    // 記事の存在確認
+    const article = this.articleModel.findById(articleId);
+    if (!article) {
+      return false;
+    }
+
     const isFavorite = this.favoriteService.toggleFavorite(articleId);
 
     if (isFavorite) {
