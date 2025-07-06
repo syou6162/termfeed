@@ -721,6 +721,68 @@ describe('App Integration Tests', () => {
   });
 
   describe('スライディングウィンドウページネーション', () => {
+    it('11番目のフィードに移動した時にスライディングウィンドウが動作する', async () => {
+      // 15件のフィードを持つデータを設定
+      const feeds = Array.from({ length: 15 }, (_, i) => ({
+        id: i + 1,
+        url: `https://example.com/feed${i + 1}.rss`,
+        title: `Test Feed ${i + 1}`,
+        description: `Test feed ${i + 1} description`,
+        last_updated_at: new Date('2024-01-01'),
+        created_at: new Date('2024-01-01'),
+        rating: 0,
+        unreadCount: 10,
+      }));
+
+      mockFeedService.getUnreadFeeds.mockReturnValue(feeds);
+      mockFeedService.getArticles.mockReturnValue(mockArticles);
+
+      const { stdin, lastFrame } = render(<App />);
+
+      // 初期化を待つ
+      await vi.waitFor(() => {
+        const frame = lastFrame();
+        expect(frame).toContain('Test Feed 1');
+      });
+
+      // 初期状態を確認（Feed 1-10が表示されている）
+      let frame = lastFrame();
+      console.log('=== 初期状態 ===');
+      console.log(frame);
+
+      // Feed 11に移動（10回sキーを押す）
+      for (let i = 0; i < 10; i++) {
+        stdin.write('s');
+        // 各キー入力の間に少し待つ
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      }
+
+      // Feed 11の記事が読み込まれるまで待つ
+      await vi.waitFor(
+        () => {
+          expect(mockFeedService.getArticles).toHaveBeenCalledWith({
+            feed_id: 11,
+            limit: 100,
+          });
+        },
+        { timeout: 3000 }
+      );
+
+      // 画面の更新を待つ
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
+      // スライディングウィンドウ後の状態を確認
+      frame = lastFrame();
+      console.log('=== Feed 11選択後 ===');
+      console.log(frame);
+
+      // Feed 11が表示されていることを確認
+      expect(frame).toContain('Test Feed 11');
+
+      // Feed 1が表示されていないことを確認（正規表現で正確にマッチ）
+      expect(frame).not.toMatch(/Test Feed 1(?!\d)/);
+    });
+
     it('フィード一覧のウィンドウサイズ制限が機能する', async () => {
       // 15件のフィードを持つデータを設定
       const manyFeeds = Array.from({ length: 15 }, (_, i) => ({

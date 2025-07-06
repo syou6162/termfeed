@@ -142,23 +142,25 @@ export const FeedList = memo(function FeedList({
                 {/* 現在のセクションのみフィード一覧を表示 */}
                 {isCurrentSection &&
                   (() => {
-                    // 現在選択されているフィードのセクション内でのインデックスを取得
-                    const selectedItemInSection = section.items.findIndex(
-                      (item) =>
-                        allItems.findIndex((globalItem) => globalItem.id === item.id) ===
-                        selectedIndex
-                    );
+                    // 現在選択されているフィードを取得
+                    const selectedFeedItem = allItems[selectedIndex];
+
+                    // 現在選択されているフィードのセクション内でのインデックスを計算
+                    // selectedFeedItemがこのセクションに属している場合のみ有効
+                    const selectedItemInSection = selectedFeedItem
+                      ? section.items.findIndex((item) => item.id === selectedFeedItem.id)
+                      : -1;
 
                     // スライディングウィンドウの開始位置を計算
                     let startIndex = 0;
-                    if (section.items.length > windowSize) {
+                    if (section.items.length > windowSize && selectedItemInSection >= 0) {
                       // 選択されたアイテムがウィンドウ内に収まるように調整
                       if (selectedItemInSection < windowSize) {
                         // 最初のウィンドウ内（0〜9番目）
                         startIndex = 0;
                       } else {
-                        // 10番目以降を選択した場合、常に選択アイテムがウィンドウの最後に表示されるようにスライド
-                        startIndex = selectedItemInSection - windowSize + 1;
+                        // 10番目以降を選択した場合、選択されたアイテムを先頭にして10件表示
+                        startIndex = selectedItemInSection;
                         // ウィンドウが末尾を超えないように調整
                         startIndex = Math.min(startIndex, section.items.length - windowSize);
                       }

@@ -35,17 +35,19 @@ describe('FeedList', () => {
       expect(output).not.toContain('Feed 11');
     });
 
-    it('11番目のフィードを選択した場合、2-11番目が表示される', () => {
-      const feeds = Array.from({ length: 11 }, (_, i) => createMockFeed(i + 1, 3, 10));
+    it('11番目のフィードを選択した場合、11番目から10件が表示される', () => {
+      const feeds = Array.from({ length: 20 }, (_, i) => createMockFeed(i + 1, 3, 10));
       const { lastFrame } = render(<FeedList feeds={feeds} selectedIndex={10} />);
 
       const output = lastFrame();
 
-      // Feed 1は表示されていない（Feed 10やFeed 11と区別するため正確にマッチ）
-      expect(output).not.toMatch(/Feed 1(?!\d)/);
+      // Feed 1-10は表示されていない
+      for (let i = 1; i <= 10; i++) {
+        expect(output).not.toMatch(new RegExp(`Feed ${i}(?!\\d)`));
+      }
 
-      // Feed 2から11までが表示されている
-      for (let i = 2; i <= 11; i++) {
+      // Feed 11から20までが表示されている
+      for (let i = 11; i <= 20; i++) {
         expect(output).toMatch(new RegExp(`Feed ${i}(?!\\d)`));
       }
     });
@@ -82,17 +84,19 @@ describe('FeedList', () => {
       }
     });
 
-    it('12番目のフィードを選択した場合、3-12番目が表示される', () => {
+    it('12番目のフィードを選択した場合、6-15番目が表示される', () => {
       const feeds = Array.from({ length: 15 }, (_, i) => createMockFeed(i + 1, 3, 10));
       const { lastFrame } = render(<FeedList feeds={feeds} selectedIndex={11} />);
 
       const output = lastFrame();
 
-      // Feed 1,2は表示されていない
-      expect(output).not.toMatch(/Feed [12](?!\d)/);
+      // Feed 1-5は表示されていない
+      for (let i = 1; i <= 5; i++) {
+        expect(output).not.toMatch(new RegExp(`Feed ${i}(?!\\d)`));
+      }
 
-      // Feed 3から12までが表示されている
-      for (let i = 3; i <= 12; i++) {
+      // Feed 6から15までが表示されている（最後の10件）
+      for (let i = 6; i <= 15; i++) {
         expect(output).toMatch(new RegExp(`Feed ${i}(?!\\d)`));
       }
     });
@@ -228,6 +232,131 @@ describe('FeedList', () => {
 
       expect(output).toContain('フィードが登録されていません');
       expect(output).toContain('ヒント: `termfeed add [URL]` でフィードを追加できます');
+    });
+  });
+
+  describe('selectedIndexの動作確認', () => {
+    it('selectedIndex=0の時、最初の10件が表示される', () => {
+      const feeds = Array.from({ length: 15 }, (_, i) => createMockFeed(i + 1, 3, 10));
+      const { lastFrame } = render(<FeedList feeds={feeds} selectedIndex={0} />);
+
+      const output = lastFrame();
+
+      // Feed 1-10が表示されている
+      for (let i = 1; i <= 10; i++) {
+        expect(output).toContain(`Feed ${i}`);
+      }
+      // Feed 11以降は表示されていない
+      expect(output).not.toContain('Feed 11');
+
+      // Feed 1が選択されている（>マーク）
+      const lines = output?.split('\n') || [];
+      const feed1Line = lines.find((line) => line.includes('Feed 1'));
+      expect(feed1Line).toContain('>');
+    });
+
+    it('selectedIndex=9の時（10番目のフィード）、最初の10件が表示される', () => {
+      const feeds = Array.from({ length: 15 }, (_, i) => createMockFeed(i + 1, 3, 10));
+      const { lastFrame } = render(<FeedList feeds={feeds} selectedIndex={9} />);
+
+      const output = lastFrame();
+
+      // Feed 1-10が表示されている
+      for (let i = 1; i <= 10; i++) {
+        expect(output).toContain(`Feed ${i}`);
+      }
+      // Feed 11以降は表示されていない
+      expect(output).not.toContain('Feed 11');
+
+      // Feed 10が選択されている（>マーク）
+      const lines = output?.split('\n') || [];
+      const feed10Line = lines.find((line) => line.includes('Feed 10'));
+      expect(feed10Line).toContain('>');
+    });
+
+    it('selectedIndex=10の時（11番目のフィード）、6-15番目が表示される（15件しかないため）', () => {
+      const feeds = Array.from({ length: 15 }, (_, i) => createMockFeed(i + 1, 3, 10));
+      const { lastFrame } = render(<FeedList feeds={feeds} selectedIndex={10} />);
+
+      const output = lastFrame();
+
+      // デバッグ出力
+      console.log('=== selectedIndex=10の出力 ===');
+      console.log(output);
+      console.log('=== 終了 ===');
+
+      // Feed 1-5は表示されていない
+      for (let i = 1; i <= 5; i++) {
+        expect(output).not.toMatch(new RegExp(`Feed ${i}(?!\\d)`));
+      }
+
+      // Feed 6-15が表示されている（最後の10件）
+      for (let i = 6; i <= 15; i++) {
+        expect(output).toMatch(new RegExp(`Feed ${i}(?!\\d)`));
+      }
+
+      // Feed 11が選択されている（>マーク）
+      const lines = output?.split('\n') || [];
+      const feed11Line = lines.find((line) => line.includes('Feed 11'));
+      expect(feed11Line).toContain('>');
+    });
+
+    it('selectedIndex=10の時（11番目のフィード）、20件ある場合は11-20番目が表示される', () => {
+      const feeds = Array.from({ length: 20 }, (_, i) => createMockFeed(i + 1, 3, 10));
+      const { lastFrame } = render(<FeedList feeds={feeds} selectedIndex={10} />);
+
+      const output = lastFrame();
+
+      // Feed 1-10は表示されていない
+      for (let i = 1; i <= 10; i++) {
+        expect(output).not.toMatch(new RegExp(`Feed ${i}(?!\\d)`));
+      }
+
+      // Feed 11-20が表示されている
+      for (let i = 11; i <= 20; i++) {
+        expect(output).toMatch(new RegExp(`Feed ${i}(?!\\d)`));
+      }
+
+      // Feed 11が選択されている（>マーク）
+      const lines = output?.split('\n') || [];
+      const feed11Line = lines.find((line) => line.includes('Feed 11'));
+      expect(feed11Line).toContain('>');
+    });
+
+    it('グローバルインデックスからセクション内インデックスへの変換が正しく動作する', () => {
+      // 異なるレーティングのフィードを作成
+      const feeds = [
+        ...Array.from({ length: 5 }, (_, i) => createMockFeed(i + 1, 5, 10)), // rating 5
+        ...Array.from({ length: 15 }, (_, i) => createMockFeed(i + 6, 3, 10)), // rating 3
+      ];
+
+      // rating 3セクションの11番目（グローバルインデックス15）を選択
+      const { lastFrame } = render(<FeedList feeds={feeds} selectedIndex={15} />);
+
+      const output = lastFrame();
+
+      // デバッグ出力
+      console.log('=== rating混在時のselectedIndex=15の出力 ===');
+      console.log(output);
+      console.log('=== 終了 ===');
+
+      // rating 5のフィードは表示されていない（折りたたまれている）
+      expect(output).not.toMatch(/Feed [1-5](?!\d)/);
+
+      // rating 3のFeed 11-20が表示されている（最後の10件）
+      for (let i = 11; i <= 20; i++) {
+        expect(output).toMatch(new RegExp(`Feed ${i}(?!\\d)`));
+      }
+
+      // Feed 6-10は表示されていない
+      for (let i = 6; i <= 10; i++) {
+        expect(output).not.toMatch(new RegExp(`Feed ${i}(?!\\d)`));
+      }
+
+      // Feed 16が選択されている（>マーク）
+      const lines = output?.split('\n') || [];
+      const feed16Line = lines.find((line) => line.includes('Feed 16'));
+      expect(feed16Line).toContain('>');
     });
   });
 });
