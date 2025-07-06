@@ -293,9 +293,9 @@ await vi.waitFor(() => {
 
 1. **実装詳細への依存**
    ```typescript
-   // ❌ 悪い例
+   // 悪い例
    expect(component.state.selectedIndex).toBe(1);
-   // ✅ 良い例
+   // 良い例
    expect(lastFrame()).toContain('選択された記事');
    ```
 
@@ -359,6 +359,55 @@ await vi.waitFor(() => {
 - CLIコマンドからモデル層への直接アクセスは禁止
 - 必ず`createFeedServices()`または`createModelsAndServices()`を使用
 - 依存関係: CLI → Services → Models
+
+## 開発時の重要な注意事項
+
+### 1. コード品質の維持
+- **必ずリントを通す**: ファイル修正後は毎回 `npm run lint` を実行
+- **必ずテストを通す**: 変更に関連するテストは必ず実行（`npm run test:run`）
+- **型チェックも忘れずに**: `npm run typecheck` で型エラーがないことを確認
+
+### 2. Gitコミットの原則
+- **意味のある最小単位でコミット**: 各コミットは1つの論理的な変更を表す
+- **異なる目的の変更を混ぜない**: 機能追加とリファクタリングは別コミット
+- **頻繁にコミット**: ただし、変更のたびではなく意味のある単位で
+
+**良いコミットの例**:
+```bash
+# 機能追加
+git add src/services/pin-service.ts src/services/pin-service.test.ts
+git commit -m "feat: PinServiceにgetOldestPinnedArticlesメソッドを追加"
+
+# バグ修正
+git add src/models/article.ts
+git commit -m "fix: ArticleModelのタイムスタンプ変換エラーを修正"
+
+# リファクタリング
+git add src/apps/tui/hooks/useKeyboardNavigation.ts
+git commit -m "refactor: キーボードナビゲーションの重複コードを削除"
+```
+
+**悪いコミットの例**:
+```bash
+# 複数の目的が混在
+git add .
+git commit -m "機能追加とバグ修正とリファクタリング"
+
+# コミットが大きすぎる
+git add src/**/*.ts
+git commit -m "大量の変更"
+
+# 意味のない単位
+git add src/models/feed.ts
+git commit -m "一行修正"
+git add src/models/feed.ts
+git commit -m "もう一行修正"
+```
+
+### 3. pre-commitフックの活用
+- プロジェクトにはpre-commitフックが設定されている
+- コミット前に自動でlint、format、typecheckが実行される
+- フックが失敗した場合は、エラーを修正してから再度コミット
 
 ## 新機能追加時の注意点
 
