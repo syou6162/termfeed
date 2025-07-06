@@ -19,7 +19,6 @@ CREATE TABLE IF NOT EXISTS articles (
   author TEXT,
   published_at INTEGER NOT NULL,
   is_read BOOLEAN NOT NULL DEFAULT FALSE,
-  is_favorite BOOLEAN NOT NULL DEFAULT FALSE,
   thumbnail_url TEXT,
   created_at INTEGER NOT NULL,
   updated_at INTEGER NOT NULL,
@@ -30,7 +29,6 @@ CREATE TABLE IF NOT EXISTS articles (
 CREATE INDEX IF NOT EXISTS idx_articles_feed_id ON articles(feed_id);
 CREATE INDEX IF NOT EXISTS idx_articles_published_at ON articles(published_at DESC);
 CREATE INDEX IF NOT EXISTS idx_articles_is_read ON articles(is_read);
-CREATE INDEX IF NOT EXISTS idx_articles_is_favorite ON articles(is_favorite);
 CREATE INDEX IF NOT EXISTS idx_feeds_rating ON feeds(rating DESC);
 
 -- Pinsテーブル
