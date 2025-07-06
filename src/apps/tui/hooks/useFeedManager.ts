@@ -56,10 +56,13 @@ export function useFeedManager(feedService: FeedService): FeedManagerState & Fee
           if (newIndex !== -1) {
             return { index: newIndex, id: currentSelection.id };
           }
-        } else if (feedsData.length > 0 && feedsData[0].id) {
-          // 初回読み込み時は最初のフィードを選択
+        }
+
+        // フィードが見つからない場合、または初回読み込み時は最初のフィードを選択
+        if (feedsData.length > 0 && feedsData[0].id) {
           return { index: 0, id: feedsData[0].id };
         }
+
         return currentSelection;
       });
     } catch (err) {
