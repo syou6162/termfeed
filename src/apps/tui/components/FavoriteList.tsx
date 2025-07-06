@@ -66,9 +66,7 @@ export function FavoriteList({
   // スクロールオフセットを最大値に制限
   useEffect(() => {
     const totalHeight = stdout?.rows || TUI_CONFIG.DEFAULT_TERMINAL_HEIGHT;
-    // お気に入りモード用の固定行数（ヘッダー、メタ情報、フッター）
-    const favoriteFixedLines = 10; // ヘッダー3行 + フッター3行 + ボーダー・パディング4行
-    const availableLines = Math.max(1, totalHeight - favoriteFixedLines);
+    const availableLines = Math.max(1, totalHeight - TUI_CONFIG.ARTICLE_FIXED_LINES);
     const maxOffset = Math.max(0, totalLines - availableLines);
 
     if (scrollOffset > maxOffset) {
@@ -89,8 +87,7 @@ export function FavoriteList({
   // スクロール関数
   const scrollDown = useCallback(() => {
     const totalHeight = stdout?.rows || TUI_CONFIG.DEFAULT_TERMINAL_HEIGHT;
-    const favoriteFixedLines = 10;
-    const availableLines = Math.max(1, totalHeight - favoriteFixedLines);
+    const availableLines = Math.max(1, totalHeight - TUI_CONFIG.ARTICLE_FIXED_LINES);
     const maxOffset = Math.max(0, totalLines - availableLines);
     setScrollOffset((prev) => Math.min(prev + 1, maxOffset));
   }, [totalLines, stdout?.rows]);
@@ -101,16 +98,14 @@ export function FavoriteList({
 
   const pageDown = useCallback(() => {
     const totalHeight = stdout?.rows || TUI_CONFIG.DEFAULT_TERMINAL_HEIGHT;
-    const favoriteFixedLines = 10;
-    const availableLines = Math.max(1, totalHeight - favoriteFixedLines);
+    const availableLines = Math.max(1, totalHeight - TUI_CONFIG.ARTICLE_FIXED_LINES);
     const maxOffset = Math.max(0, totalLines - availableLines);
     setScrollOffset((prev) => Math.min(prev + availableLines, maxOffset));
   }, [totalLines, stdout?.rows]);
 
   const scrollToEnd = useCallback(() => {
     const totalHeight = stdout?.rows || TUI_CONFIG.DEFAULT_TERMINAL_HEIGHT;
-    const favoriteFixedLines = 10;
-    const availableLines = Math.max(1, totalHeight - favoriteFixedLines);
+    const availableLines = Math.max(1, totalHeight - TUI_CONFIG.ARTICLE_FIXED_LINES);
     const maxOffset = Math.max(0, totalLines - availableLines);
     setScrollOffset(maxOffset);
   }, [totalLines, stdout?.rows]);
@@ -186,46 +181,79 @@ export function FavoriteList({
 
       {/* 選択された記事の詳細を100%幅で表示 */}
       {selectedArticle && (
-        <Box flexDirection="column" flexGrow={1} borderStyle="single" padding={1}>
+        <Box
+          flexDirection="column"
+          borderStyle="single"
+          height="100%"
+          width="100%"
+          flexShrink={0}
+          flexGrow={1}
+        >
           {/* ヘッダー部分：固定 */}
-          <Box paddingBottom={1}>
+          <Box paddingTop={1} paddingX={1}>
             <Text bold color="green">
               {selectedArticle.title}
             </Text>
           </Box>
-          <Box paddingBottom={1}>
+          <Box paddingX={1}>
             <Text color="gray">
               公開日: {new Date(selectedArticle.published_at).toLocaleDateString('ja-JP')}
             </Text>
             {selectedArticle.author && <Text color="cyan"> | 著者: {selectedArticle.author}</Text>}
             {isPinned(selectedArticle.id) && (
               <Text color="yellow" bold>
-                {' '}
-                | 📌 ピン
+                {selectedArticle.author ? ' | ' : ' | '}📌 ピン
               </Text>
             )}
           </Box>
-          <Box paddingBottom={1}>
+          <Box paddingX={1} marginBottom={1}>
             <Text color="yellow">URL: {selectedArticle.url}</Text>
           </Box>
 
           {/* コンテンツ部分：スクロール可能 */}
           {selectedArticle.content && (
-            <Box>
-              {(() => {
+            <Box
+              paddingX={1}
+              height={(() => {
                 const totalHeight = stdout?.rows || TUI_CONFIG.DEFAULT_TERMINAL_HEIGHT;
-                // ヘッダー3行 + フッター3行 + ボーダー・パディング4行 = 10行
-                const favoriteFixedLines = 10;
-                const availableLines = Math.max(1, totalHeight - favoriteFixedLines);
-                const visibleLines = contentLines.slice(
-                  scrollOffset,
-                  scrollOffset + availableLines
-                );
-                const displayText = visibleLines.join('\n');
-                return <Text wrap="wrap">{displayText}</Text>;
+                const availableLines = Math.max(1, totalHeight - TUI_CONFIG.ARTICLE_FIXED_LINES);
+                return availableLines;
               })()}
+              overflow="hidden"
+            >
+              <Text wrap="wrap">
+                {(() => {
+                  const totalHeight = stdout?.rows || TUI_CONFIG.DEFAULT_TERMINAL_HEIGHT;
+                  const availableLines = Math.max(1, totalHeight - TUI_CONFIG.ARTICLE_FIXED_LINES);
+                  const visibleLines = contentLines.slice(
+                    scrollOffset,
+                    scrollOffset + availableLines
+                  );
+                  return visibleLines.join('\n');
+                })()}
+              </Text>
             </Box>
           )}
+
+          {/* ステータス部分：固定 */}
+          <Box paddingX={1} marginTop={1}>
+            <Text color="gray" dimColor>
+              {(() => {
+                const totalHeight = stdout?.rows || TUI_CONFIG.DEFAULT_TERMINAL_HEIGHT;
+                const availableLines = Math.max(1, totalHeight - TUI_CONFIG.ARTICLE_FIXED_LINES);
+                const hasMoreContent = scrollOffset + availableLines < totalLines;
+                const scrollInfo =
+                  totalLines > availableLines
+                    ? `(${scrollOffset + 1}-${Math.min(scrollOffset + availableLines, totalLines)} / ${totalLines}行)`
+                    : '';
+                return (
+                  scrollInfo +
+                  (hasMoreContent && scrollInfo ? ' ' : '') +
+                  (hasMoreContent ? 'スペースで続きを表示' : '')
+                );
+              })()}
+            </Text>
+          </Box>
         </Box>
       )}
 
@@ -235,20 +263,9 @@ export function FavoriteList({
             j/k: 移動 | v: ブラウザで開く | f: お気に入り解除 | p: ピン | Space: スクロール | g/G:
             先頭/末尾 | F: 戻る
           </Text>
-          {selectedArticle?.content && totalLines > 0 && (
-            <Text dimColor>
-              {(() => {
-                const totalHeight = stdout?.rows || TUI_CONFIG.DEFAULT_TERMINAL_HEIGHT;
-                const favoriteFixedLines = 10;
-                const availableLines = Math.max(1, totalHeight - favoriteFixedLines);
-                const hasMoreContent = scrollOffset + availableLines < totalLines;
-                if (totalLines > availableLines) {
-                  return `(${scrollOffset + 1}-${Math.min(scrollOffset + availableLines, totalLines)} / ${totalLines}行)${hasMoreContent ? ' スペースで続きを表示' : ''}`;
-                }
-                return '';
-              })()}
-            </Text>
-          )}
+          <Text dimColor>
+            {favoriteArticles.length > 0 ? `${selectedIndex + 1}/${favoriteArticles.length}件` : ''}
+          </Text>
         </Box>
       </Box>
     </Box>
