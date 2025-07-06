@@ -45,10 +45,11 @@ export function useArticleManager(
         setIsLoading(true);
         setError('');
 
-        // データベースから直接未読記事のみを取得
+        // データベースから直接未読記事のみを取得（上限付き）
         const unreadArticles = feedService.getArticles({
           feed_id: feedId,
           is_read: false,
+          limit: TUI_CONFIG.DEFAULT_ARTICLE_LIMIT,
         });
         setArticles(unreadArticles);
         setSelectedArticleIndex(0);
