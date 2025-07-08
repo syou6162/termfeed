@@ -51,7 +51,6 @@ jobs:
           
           # Optional: Allow Claude to run specific commands
           allowed_tools: |
-            mcp__github_file_ops__commit_files,
             mcp__github__create_pull_request
           
           # Optional: Add custom instructions for Claude to customize its behavior for your project
