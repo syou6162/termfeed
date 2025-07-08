@@ -2,302 +2,301 @@
 
 [![npm version](https://badge.fury.io/js/termfeed.svg)](https://badge.fury.io/js/termfeed) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-ターミナルで動作するモダンなRSSリーダー
+A modern RSS reader that runs in the terminal
 
 <p align="center">
   <img src="./termfeed_icon.png" alt="termfeed icon" width="200">
 </p>
 
-## 概要
+## Overview
 
-termfeedは、ターミナル内で完全に動作するローカルRSSリーダーです。コマンドラインから離れることなく、高速でキーボード駆動のインターフェースでRSSフィードを管理・閲読できます。
+termfeed is a fully local RSS reader that runs entirely within the terminal. You can manage and read RSS feeds with a fast, keyboard-driven interface without leaving the command line.
 
-## 主な機能
+## Key Features
 
-### 🎯 ターミナルUI（メイン機能）
-- **2ペインレイアウト**: 左側フィード一覧（30%）、右側記事詳細（70%）
-- **Vim風キーバインド**: `j`/`k`（記事移動）、`s`/`a`（フィード移動）、`v`（ブラウザ開く）
-- **自動既読機能**: フィード移動時・アプリ終了時の自動既読化
-- **未読記事フォーカス**: 未読記事のみナビゲーション、既読化で自動除外
-- **ピン機能**: `p`キーで後で読む記事をマーク、`o`キーでまとめて開く（livedoor Reader風）
-- **お気に入り連動**: `f`キーでお気に入り追加時に自動でピンも設定（v0.4.0〜）
-- **お気に入り一覧**: `Shift+F`キーでお気に入り記事専用の1ペイン表示に切り替え
-- **フィードレーティング**: `0`-`5`キーでフィードに重要度を設定、レーティング別セクション表示
-- **インテリジェント表示**: 現在選択中のレーティングセクションのみ展開表示
-- **ヘルプオーバーレイ**: `?`キーでキーボードショートカット一覧表示
+### 🎯 Terminal UI (Main Feature)
+- **Two-pane layout**: Left pane for feeds (30%), right pane for article details (70%)
+- **Vim-style key bindings**: `j`/`k` (article navigation), `s`/`a` (feed navigation), `v` (open in browser)
+- **Auto-read functionality**: Automatic marking as read when moving feeds or exiting the app
+- **Unread article focus**: Navigate only unread articles, automatically excluding read ones
+- **Pin feature**: Mark articles for later reading with `p` key, batch open with `o` key (livedoor Reader style)
+- **Favorite integration**: `f` key automatically sets pin when adding to favorites (v0.4.0+)
+- **Favorites list**: `Shift+F` key switches to single-pane view for favorite articles only
+- **Feed rating**: Set feed importance with `0`-`5` keys, display by rating sections
+- **Intelligent display**: Only expand currently selected rating section
+- **Help overlay**: `?` key shows keyboard shortcut list
 
-### ⚙️ CLI管理機能
-- コマンドラインからRSSフィードの追加・更新・削除
-- 記事の既読管理、お気に入り機能
-- バッチ処理による高速フィード更新
-- **チュートリアルモード**: サンプルフィード付きでお試し可能
+### ⚙️ CLI Management Features
+- Add, update, and remove RSS feeds from command line
+- Article read status management and favorite functionality
+- High-speed feed updates with batch processing
+- **Tutorial mode**: Try with sample feeds included
 
-### 💾 データ管理
-- ローカルSQLiteで記事、既読状態、お気に入りを管理
-- 完全ローカル動作で外部サービスに依存しない設計
+### 💾 Data Management
+- Manage articles, read status, and favorites with local SQLite
+- Fully local operation with no external service dependencies
 
-### 🤖 MCP（Model Context Protocol）対応
-- Claude CodeなどのAIエージェントから記事データにアクセス可能
-- RESTful APIではなくMCP経由でデータ提供
-- リアルタイムな記事分析・要約が可能
+### 🤖 MCP (Model Context Protocol) Support
+- Access article data from AI agents like Claude Code
+- Provide data via MCP instead of RESTful API
+- Enable real-time article analysis and summarization
 
-## 技術スタック
+## Tech Stack
 
 - TypeScript
-- Ink（ReactベースのターミナルUI）
-- better-sqlite3（SQLiteデータベース）
-- axios（HTTP通信）
-- @modelcontextprotocol/sdk（MCP連携）
+- Ink (React-based terminal UI)
+- better-sqlite3 (SQLite database)
+- axios (HTTP communication)
+- @modelcontextprotocol/sdk (MCP integration)
 
-## インストール
+## Installation
 
-### npxで実行（推奨）
+### Run with npx (Recommended)
 
 ```bash
-# チュートリアルモードで試す（サンプルフィード付き）
+# Try tutorial mode (with sample feeds)
 npx termfeed tutorial
 
-# 最新版を直接実行
+# Run latest version directly
 npx termfeed tui
 
-# 特定のコマンドを実行
+# Run specific commands
 npx termfeed add https://example.com/feed.rss
 npx termfeed update
 ```
 
-### npmでグローバルインストール
+### Global Installation with npm
 
 ```bash
-# グローバルにインストール
+# Install globally
 npm install -g termfeed
 
-# 実行
+# Run
 termfeed tui
 ```
 
-### ソースからビルド
+### Build from Source
 
 ```bash
-# リポジトリのクローン
+# Clone repository
 git clone https://github.com/syou6162/termfeed.git
 cd termfeed
 
-# 依存関係のインストール
+# Install dependencies
 npm install
 
-# ビルド
+# Build
 npm run build
 
-# グローバルにインストール（オプション）
+# Install globally (optional)
 npm link
 ```
 
-## 使い方
+## Usage
 
-### ターミナルUI（推奨）
+### Terminal UI (Recommended)
 
-#### 起動
+#### Launch
 
 ```bash
-# チュートリアルモードで試す（初回推奨）
+# Try tutorial mode (recommended for first time)
 termfeed tutorial
 
-# TUIモードでRSSリーダーを起動
+# Launch RSS reader in TUI mode
 termfeed tui
 ```
 
-#### チュートリアルモード
+#### Tutorial Mode
 
-初めてtermfeedを使用する場合は、チュートリアルモードがおすすめです：
+For first-time users, tutorial mode is recommended:
 
 ```bash
 termfeed tutorial
 ```
 
-- **サンプルフィード付き**: 4つの技術ブログフィードが自動登録済み
-- **インメモリDB**: データは終了時に自動削除されるため、お試しに最適
-- **即座に体験**: フィード登録の手間なく、すぐにtermfeedの機能を試せます
+- **Sample feeds included**: 4 tech blog feeds are automatically registered
+- **In-memory DB**: Data is automatically deleted on exit, perfect for trying out
+- **Instant experience**: Try termfeed features immediately without feed registration hassle
 
-#### キーボード操作
+#### Keyboard Operations
 
-| キー | 機能 |
+| Key | Function |
 |------|------|
-| `j` / `↓` | 次の記事に移動（未読のみ） |
-| `k` / `↑` | 前の記事に移動（未読のみ） |
-| `s` | 次のフィードに移動 |
-| `a` | 前のフィードに移動 |
-| `v` | 選択記事をブラウザで開く（バックグラウンド） |
-| `f` | お気に入り切り替え（自動でピンも設定） |
-| `Shift+F` | お気に入り一覧表示に切り替え |
-| `p` | ピン切り替え（後で読む記事をマーク） |
-| `o` | ピンした記事を開く（最大10件ずつ、古い順） |
-| `g` | 記事内の先頭へスクロール |
-| `G` | 記事内の末尾へスクロール |
-| `e` | エラー詳細表示トグル |
-| `r` | 全フィードを更新 |
-| `0`-`5` | フィードレーティング設定 |
-| `?` | ヘルプ表示/非表示 |
-| `q` | 終了 |
-| `Ctrl+C` | 強制終了 |
+| `j` / `↓` | Move to next article (unread only) |
+| `k` / `↑` | Move to previous article (unread only) |
+| `s` | Move to next feed |
+| `a` | Move to previous feed |
+| `v` | Open selected article in browser (background) |
+| `f` | Toggle favorite (automatically sets pin) |
+| `Shift+F` | Switch to favorites list view |
+| `p` | Toggle pin (mark articles for later reading) |
+| `o` | Open pinned articles (max 10 at a time, oldest first) |
+| `g` | Scroll to top of article |
+| `G` | Scroll to bottom of article |
+| `e` | Toggle error details display |
+| `r` | Update all feeds |
+| `0`-`5` | Set feed rating |
+| `?` | Show/hide help |
+| `q` | Exit |
+| `Ctrl+C` | Force exit |
 
-#### 特徴
+#### Features
 
-- **自動既読化**: フィード移動時（`s`/`a`）や終了時（`q`）に選択中の記事が自動的に既読になります
-- **未読フォーカス**: `j`/`k`で移動できるのは未読記事のみ。既読になった記事は自動的にリストから除外されます
-- **フィード優先表示**: 未読記事があるフィードが上位に表示され、効率的にチェックできます
-- **バックグラウンドブラウザ**: `v`キーでブラウザを開いてもターミナルのフォーカスが維持されます
-- **ピン機能**: `p`キーで記事をピン（後で読む）でき、`o`キーでピンした記事を最大10件ずつブラウザで開けます。古いピンから順に開かれ、開いた記事は自動的にピンが解除されます。複数回`o`キーを押すことで次の10件を開けます。一部のURLが開けなかった場合でも、成功したURLのピンは解除されます
-- **お気に入りとピンの連動**: `f`キーでお気に入りに追加すると自動的にピンも設定されます。お気に入りを外すとピンも解除されます（v0.4.0〜）
-- **お気に入り一覧表示**: `Shift+F`キーでお気に入り記事専用の1ペイン表示に切り替わります。記事のスクロール、ピン、お気に入り解除などの操作が可能です
+- **Auto-read**: Selected articles are automatically marked as read when moving feeds (`s`/`a`) or exiting (`q`)
+- **Unread focus**: Only unread articles are navigable with `j`/`k`. Read articles are automatically excluded from the list
+- **Priority feed display**: Feeds with unread articles are shown at the top for efficient checking
+- **Background browser**: `v` key opens browser while maintaining terminal focus
+- **Pin feature**: `p` key pins articles for later reading, `o` key opens up to 10 pinned articles in browser. Articles are opened in chronological order (oldest first), and opened articles are automatically unpinned. Press `o` multiple times to open the next 10 articles. Even if some URLs fail to open, successfully opened URLs will be unpinned
+- **Favorite and pin integration**: `f` key automatically sets pin when adding to favorites. Removing from favorites also removes pin (v0.4.0+)
+- **Favorites list view**: `Shift+F` key switches to single-pane view for favorite articles only. Article scrolling, pinning, and favorite removal operations are available
 
-### CLIコマンド（管理用）
+### CLI Commands (Management)
 
-#### はじめに
+#### Getting Started
 
-まずは**チュートリアルモード**で機能を体験してみてください：
+First, try the **tutorial mode** to experience the features:
 
 ```bash
 termfeed tutorial
 ```
 
-#### フィードの管理
+#### Feed Management
 
 ```bash
-# RSSフィードを追加
+# Add RSS feed
 termfeed add <RSS_URL>
 
-# 例：はてなブックマークの人気エントリーを追加
+# Example: Add Hatena Bookmark popular entries
 termfeed add https://b.hatena.ne.jp/hotentry.rss
 
-# フィードを削除
+# Remove feed
 termfeed rm <FEED_ID>
 
-# フィード一覧を表示（ID付き、レーティング別セクション表示）
+# List feeds (with IDs, grouped by rating sections)
 termfeed list
 
-# フィード一覧をエクスポート形式で確認
-termfeed export -  # 標準出力に表示
+# Check feed list in export format
+termfeed export -  # Display to stdout
 ```
 
-#### 記事の閲覧
+#### Article Reading
 
-**TUIモード（`termfeed tui`）を使用してください。**
-TUIでは未読記事の閲覧、お気に入り管理、ブラウザで開く、フィードレーティングなどの機能がインタラクティブに利用できます。
+**Use TUI mode (`termfeed tui`).**
+TUI provides interactive features including unread article browsing, favorite management, browser opening, and feed rating.
 
-##### フィードレーティング機能
-- `0`-`5`キーでフィードに重要度を設定（0=評価なし、5=最高評価）
-- フィードはレーティング別にセクション表示され、高評価順にソート
-- 現在選択中のフィードが属するセクションのみ展開表示
-- 未読記事数が各セクションに表示され、情報量を最適化
+##### Feed Rating Feature
+- Set feed importance with `0`-`5` keys (0=no rating, 5=highest rating)
+- Feeds are displayed in rating sections, sorted by highest rating first
+- Only the section containing the currently selected feed is expanded
+- Unread article counts are displayed for each section, optimizing information density
 
-#### フィードの更新
+#### Feed Updates
 
-フィードの更新は以下の方法で行えます：
+Feeds can be updated through the following methods:
 
-- **TUIモード**: `termfeed tui` 起動後、`r`キーで全フィード更新
-- **MCPサーバー**: `update_all_feeds` ツールを使用
+- **TUI mode**: After launching `termfeed tui`, press `r` key to update all feeds
+- **MCP server**: Use `update_all_feeds` tool
 
-TUIではリアルタイムで更新状況を確認でき、新着記事を即座に閲覧できます。
+TUI allows real-time monitoring of update status and immediate viewing of new articles.
 
-
-#### フィードのエクスポート/インポート
+#### Feed Export/Import
 
 ```bash
-# フィードをOPML形式でエクスポート（デフォルト）
+# Export feeds in OPML format (default)
 termfeed export
-# -> subscriptions.opml に出力
+# -> outputs to subscriptions.opml
 
-# ファイル名を指定してエクスポート
+# Export with specified filename
 termfeed export my-feeds.opml
 
-# テキスト形式（1行1URL）でエクスポート
+# Export in text format (one URL per line)
 termfeed export feeds.txt --format text
 
-# 拡張子から自動判別（.txt → テキスト形式）
+# Auto-detect from extension (.txt → text format)
 termfeed export feeds.txt
 
-# OPMLファイルからインポート
+# Import from OPML file
 termfeed import subscriptions.opml
 
-# テキストファイルからインポート（1行1URL）
+# Import from text file (one URL per line)
 termfeed import feeds.txt
 
-# フォーマットを明示的に指定
+# Explicitly specify format
 termfeed import feeds.xml --format opml
 ```
 
-**対応フォーマット：**
-- **OPML形式**: 標準的なRSSリーダー間でのデータ移行に使用（.opml, .xml）
-- **テキスト形式**: シンプルな1行1URLのフォーマット。コメント行（#で始まる）対応
+**Supported formats:**
+- **OPML format**: Standard format for data migration between RSS readers (.opml, .xml)
+- **Text format**: Simple one-URL-per-line format. Supports comment lines (starting with #)
 
-### MCPサーバー（AIエージェント連携）
+### MCP Server (AI Agent Integration)
 
-termfeedはMCP（Model Context Protocol）サーバーとして動作し、Claude CodeなどのAIエージェントから記事データにアクセスできます。
+termfeed operates as an MCP (Model Context Protocol) server, allowing AI agents like Claude Code to access article data.
 
-#### MCPサーバーの起動
+#### Starting MCP Server
 
 ```bash
-# MCPサーバーとして起動（stdio通信）
+# Start as MCP server (stdio communication)
 termfeed mcp-server
 ```
 
-#### Claude Codeでの使用方法
+#### Usage with Claude Code
 
-Claude CodeにMCPサーバーとして登録：
+Register as MCP server in Claude Code:
 
 ```bash
-# 開発版を登録（リポジトリのパスを指定）
+# Register development version (specify repository path)
 claude mcp add --scope user termfeed -- npx tsx /path/to/termfeed/src/index.ts mcp-server
 
-# ビルド版/インストール版を登録
+# Register built/installed version
 claude mcp add --scope user termfeed -- termfeed mcp-server
 ```
 
-#### 利用可能なリソース
+#### Available Resources
 
-Claude Code内で以下のようにtermfeedのデータにアクセスできます：
+Access termfeed data in Claude Code as follows:
 
-**リソース（データ読み取り）:**
+**Resources (data reading):**
 ```
-@termfeed:articles://unread          # 未読記事10件（デフォルト）
-@termfeed:articles://favorites       # お気に入り記事10件
-```
-
-**ツール（操作実行）:**
-- `update_all_feeds`: 全フィードを更新して新しい記事を取得
-- `get_article`: 記事IDを指定して個別記事の詳細（全文）を取得
-
-**ツール使用例:**
-```
-get_article(id: 123)  # 記事ID 123の詳細を取得
+@termfeed:articles://unread          # 10 unread articles (default)
+@termfeed:articles://favorites       # 10 favorite articles
 ```
 
-**注意:** 個別記事の取得は、Claude Codeでの発見性を向上させるため、リソースではなくツールとして実装されています。
+**Tools (operation execution):**
+- `update_all_feeds`: Update all feeds and fetch new articles
+- `get_article`: Get detailed article content (full text) by article ID
 
-#### 使用例
+**Tool usage example:**
+```
+get_article(id: 123)  # Get details for article ID 123
+```
 
-Claude Codeでの自然言語クエリ例：
+**Note:** Individual article retrieval is implemented as a tool rather than a resource to improve discoverability in Claude Code.
 
-- 「termfeedの未読記事を要約して」
-- 「お気に入りの記事からトレンドを分析して」  
-- 「記事ID 456の内容を教えて」
+#### Usage Examples
 
-#### MCPの利点
+Natural language query examples in Claude Code:
 
-- **リアルタイム**: 最新の記事データに即座にアクセス
-- **構造化**: JSON形式でメタデータも含む詳細情報
-- **セキュア**: ローカル通信のみ、外部APIなし
-- **効率的**: 必要なデータのみを動的に取得
+- "Summarize unread articles from termfeed"
+- "Analyze trends from favorite articles"
+- "Tell me about article ID 456"
 
-### データベースの場所
+#### MCP Benefits
 
-SQLiteデータベースはデフォルトで `~/.local/share/termfeed/termfeed.db` に作成されます（XDG Base Directory準拠）。
-環境変数 `TERMFEED_DB` で場所を変更できます：
+- **Real-time**: Instant access to latest article data
+- **Structured**: Detailed information in JSON format including metadata
+- **Secure**: Local communication only, no external APIs
+- **Efficient**: Dynamic retrieval of only needed data
+
+### Database Location
+
+SQLite database is created by default at `~/.local/share/termfeed/termfeed.db` (XDG Base Directory compliant).
+You can change the location with the `TERMFEED_DB` environment variable:
 
 ```bash
 export TERMFEED_DB=/path/to/your/termfeed.db
 ```
 
-## ライセンス
+## License
 
-MIT License - 詳細は[LICENSE](./LICENSE)を参照してください。
+MIT License - See [LICENSE](./LICENSE) for details.
