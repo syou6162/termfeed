@@ -13,6 +13,7 @@ import { useTermfeedData } from './hooks/useTermfeedData.js';
 import { useFeedManager } from './hooks/useFeedManager.js';
 import { useArticleManager } from './hooks/useArticleManager.js';
 import { useErrorManager } from './hooks/useErrorManager.js';
+import { useErrorSync } from './hooks/useErrorSync.js';
 import { useViewedArticles } from './hooks/useViewedArticles.js';
 import { usePinManager } from './hooks/usePinManager.js';
 import { useTemporaryMessage } from './hooks/useTemporaryMessage.js';
@@ -93,7 +94,13 @@ export function App(props: AppProps = {}) {
   });
 
   // エラーを統合管理
-  const { addError, clearErrorsBySource } = errorManager;
+  const { addError } = errorManager;
+
+  // フィードエラーの同期
+  useErrorSync(errorManager, ERROR_SOURCES.FEED, error);
+
+  // 記事エラーの同期
+  useErrorSync(errorManager, ERROR_SOURCES.ARTICLE, articlesError);
 
   // ブラウザアクション管理
   const { handleOpenInBrowser, handleOpenAllPinned } = useBrowserActions({
@@ -104,34 +111,6 @@ export function App(props: AppProps = {}) {
     showTemporaryMessage,
     refreshPinnedState,
   });
-
-  // フィードエラーの管理
-  useEffect(() => {
-    if (error) {
-      addError({
-        source: ERROR_SOURCES.FEED,
-        message: error,
-        timestamp: new Date(),
-        recoverable: true,
-      });
-    } else {
-      clearErrorsBySource(ERROR_SOURCES.FEED);
-    }
-  }, [error, addError, clearErrorsBySource]);
-
-  // 記事エラーの管理
-  useEffect(() => {
-    if (articlesError) {
-      addError({
-        source: ERROR_SOURCES.ARTICLE,
-        message: articlesError,
-        timestamp: new Date(),
-        recoverable: true,
-      });
-    } else {
-      clearErrorsBySource(ERROR_SOURCES.ARTICLE);
-    }
-  }, [articlesError, addError, clearErrorsBySource]);
 
   const handleFeedSelectionChange = useCallback(
     (index: number) => {
