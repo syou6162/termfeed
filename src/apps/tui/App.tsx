@@ -1,10 +1,13 @@
-import { Box, Text, useApp, useStdout } from 'ink';
+import { useApp, useStdout } from 'ink';
 import { useCallback, useEffect, useState, useRef } from 'react';
 import { ArticleList } from './components/ArticleList.js';
 import { FeedList } from './components/FeedList.js';
 import { TwoPaneLayout } from './components/TwoPaneLayout.js';
 import { HelpOverlay } from './components/HelpOverlay.js';
 import { FavoriteList } from './components/FavoriteList.js';
+import { LoadingView } from './components/LoadingView.js';
+import { ErrorView } from './components/ErrorView.js';
+import { TemporaryMessage } from './components/TemporaryMessage.js';
 import { useKeyboardNavigation } from './hooks/useKeyboardNavigation.js';
 import { useTermfeedData } from './hooks/useTermfeedData.js';
 import { useFeedManager } from './hooks/useFeedManager.js';
@@ -12,7 +15,9 @@ import { useArticleManager } from './hooks/useArticleManager.js';
 import { useErrorManager } from './hooks/useErrorManager.js';
 import { useViewedArticles } from './hooks/useViewedArticles.js';
 import { usePinManager } from './hooks/usePinManager.js';
-import { openUrlInBrowser, type OpenUrlResult } from './utils/browser.js';
+import { useTemporaryMessage } from './hooks/useTemporaryMessage.js';
+import { useBrowserActions } from './hooks/useBrowserActions.js';
+import { openUrlInBrowser } from './utils/browser.js';
 import { ERROR_SOURCES } from './types/error.js';
 import type { DatabaseManager } from '../../models/database.js';
 
@@ -26,7 +31,9 @@ export function App(props: AppProps = {}) {
   const { stdout } = useStdout();
   const [showHelp, setShowHelp] = useState(false);
   const [showFavorites, setShowFavorites] = useState(false);
-  const [temporaryMessage, setTemporaryMessage] = useState<string | null>(null);
+
+  // 一時的なメッセージ管理
+  const { message: temporaryMessage, showMessage: showTemporaryMessage } = useTemporaryMessage();
 
   // データベースとサービスを初期化
   const { feedService, articleService, pinService, favoriteService } =
@@ -87,30 +94,15 @@ export function App(props: AppProps = {}) {
   // エラーを統合管理
   const { addError, clearErrorsBySource } = errorManager;
 
-  // 一時的なメッセージを表示する関数
-  const messageTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const showTemporaryMessage = useCallback((message: string, duration = 3000) => {
-    // 既存のタイマーをクリア
-    if (messageTimerRef.current) {
-      clearTimeout(messageTimerRef.current);
-    }
-
-    setTemporaryMessage(message);
-    messageTimerRef.current = setTimeout(() => {
-      setTemporaryMessage(null);
-      messageTimerRef.current = null;
-    }, duration);
-  }, []);
-
-  // クリーンアップ：アンマウント時にタイマーをクリア
-  useEffect(() => {
-    return () => {
-      if (messageTimerRef.current) {
-        clearTimeout(messageTimerRef.current);
-      }
-    };
-  }, []);
+  // ブラウザアクション管理
+  const { handleOpenInBrowser, handleOpenAllPinned } = useBrowserActions({
+    articles,
+    selectedArticleIndex,
+    pinService,
+    errorManager,
+    showTemporaryMessage,
+    refreshPinnedState,
+  });
 
   // フィードエラーの管理
   useEffect(() => {
@@ -167,77 +159,6 @@ export function App(props: AppProps = {}) {
     },
     [articles, selectedArticleIndex, recordArticleView, setSelectedArticleIndex]
   );
-
-  // vキー: 現在の記事を開く
-  const handleOpenInBrowser = useCallback(async () => {
-    const selectedArticle = articles[selectedArticleIndex];
-    if (selectedArticle?.url) {
-      try {
-        await openUrlInBrowser(selectedArticle.url);
-      } catch (error) {
-        addError({
-          source: ERROR_SOURCES.NETWORK,
-          message: error instanceof Error ? error.message : 'ブラウザの起動に失敗しました',
-          timestamp: new Date(),
-          recoverable: true,
-        });
-      }
-    }
-  }, [articles, selectedArticleIndex, addError]);
-
-  // oキー: ピンした記事を10個ずつ開く
-  const handleOpenAllPinned = useCallback(async () => {
-    const PINS_PER_BATCH = 10;
-    const totalPinCount = pinService.getPinCount();
-
-    if (totalPinCount === 0) {
-      showTemporaryMessage('📌 ピンした記事がありません');
-      return;
-    }
-
-    // 古い順に最大10個取得
-    const articlesToOpen = pinService.getOldestPinnedArticles(PINS_PER_BATCH);
-    const urls = articlesToOpen.map((article) => article.url);
-    const articleIds = articlesToOpen.map((article) => article.id);
-
-    try {
-      await openUrlInBrowser(urls);
-      // すべて成功した場合は開いたピンを削除
-      pinService.deletePins(articleIds);
-      // ピン状態を更新
-      refreshPinnedState();
-    } catch (error) {
-      // エラーがOpenUrlResultを含むかチェック
-      const openUrlError = error as Error & { result?: OpenUrlResult };
-
-      // 成功したURLに対応する記事IDを特定
-      if (openUrlError.result?.succeeded?.length && openUrlError.result.succeeded.length > 0) {
-        const succeededArticleIds = articlesToOpen
-          .filter((article) => openUrlError.result!.succeeded.includes(article.url))
-          .map((article) => article.id);
-
-        if (succeededArticleIds.length > 0) {
-          pinService.deletePins(succeededArticleIds);
-          // ピン状態を更新
-          refreshPinnedState();
-        }
-      }
-
-      // エラーメッセージをより詳細に
-      let errorMessage = error instanceof Error ? error.message : 'ブラウザの起動に失敗しました';
-      if (openUrlError.result?.failed?.length && openUrlError.result.failed.length > 0) {
-        const failedUrls = openUrlError.result.failed.map((f) => f.url).join(', ');
-        errorMessage = `一部のURLを開けませんでした (${openUrlError.result.failed.length}件失敗): ${failedUrls}`;
-      }
-
-      addError({
-        source: ERROR_SOURCES.NETWORK,
-        message: errorMessage,
-        timestamp: new Date(),
-        recoverable: true,
-      });
-    }
-  }, [pinService, showTemporaryMessage, refreshPinnedState, addError]);
 
   // pキー: ピンのトグル
   const handleTogglePin = useCallback(() => {
@@ -347,79 +268,18 @@ export function App(props: AppProps = {}) {
   });
 
   if (isLoading) {
-    return (
-      <Box justifyContent="center" alignItems="center" height="100%">
-        <Box flexDirection="column" alignItems="center">
-          {updateProgress ? (
-            <>
-              <Text color="yellow">
-                フィード更新中 ({updateProgress.currentIndex}/{updateProgress.totalFeeds})
-              </Text>
-              <Text color="gray">現在: {updateProgress.currentFeedTitle}</Text>
-              <Text color="gray" dimColor>
-                {updateProgress.currentFeedUrl}
-              </Text>
-              <Box marginTop={1}>
-                <Text color="cyan">ESC: キャンセル</Text>
-              </Box>
-            </>
-          ) : (
-            <Text color="yellow">読み込み中...</Text>
-          )}
-        </Box>
-      </Box>
-    );
+    return <LoadingView updateProgress={updateProgress ?? undefined} />;
   }
 
   if (errorManager.hasError) {
     const latestError = errorManager.getLatestError();
     return (
-      <Box flexDirection="column" padding={1}>
-        <Text bold color="red">
-          エラーが発生しました
-        </Text>
-        {latestError && (
-          <>
-            <Text color="red">
-              [{latestError.source.toUpperCase()}] {latestError.message}
-            </Text>
-            <Text color="gray" dimColor>
-              発生時刻: {latestError.timestamp.toLocaleTimeString('ja-JP')}
-            </Text>
-          </>
-        )}
-        {errorManager.errors.length > 1 && (
-          <Box marginTop={1} flexDirection="column">
-            <Text color="yellow">エラー履歴 ({errorManager.errors.length}件):</Text>
-            {errorManager.errors.slice(-3).map((err, index) => (
-              <Text key={index} color="gray" dimColor>
-                • [{err.source}]{' '}
-                {err.message.length > 40 ? err.message.substring(0, 40) + '...' : err.message}
-              </Text>
-            ))}
-          </Box>
-        )}
-        <Box marginTop={1}>
-          <Text color="gray">
-            r: 再試行 | {failedFeeds.length > 0 ? 'e: エラー詳細 | ' : ''}q: 終了
-          </Text>
-        </Box>
-        {showFailedFeeds && failedFeeds.length > 0 && (
-          <Box marginTop={1} flexDirection="column">
-            <Text bold color="yellow">
-              失敗したフィード:
-            </Text>
-            {failedFeeds.map((failed, index) => (
-              <Box key={index} flexDirection="column" marginLeft={2}>
-                <Text color="red">• {failed.feedUrl}</Text>
-                <Text color="gray" dimColor>
-                  エラー: {failed.error.message}
-                </Text>
-              </Box>
-            ))}
-          </Box>
-        )}
-      </Box>
+      <ErrorView
+        latestError={latestError ?? undefined}
+        errors={errorManager.errors}
+        failedFeeds={failedFeeds}
+        showFailedFeeds={showFailedFeeds}
+      />
     );
   }
 
@@ -448,13 +308,7 @@ export function App(props: AppProps = {}) {
           }}
           onFavoriteChange={() => {}}
         />
-        {temporaryMessage && (
-          <Box position="absolute" marginLeft={2} marginTop={2}>
-            <Box borderStyle="round" padding={1}>
-              <Text color="yellow">{temporaryMessage}</Text>
-            </Box>
-          </Box>
-        )}
+        <TemporaryMessage message={temporaryMessage} />
       </>
     );
   }
@@ -481,13 +335,7 @@ export function App(props: AppProps = {}) {
           />
         }
       />
-      {temporaryMessage && (
-        <Box position="absolute" marginLeft={2} marginTop={2}>
-          <Box borderStyle="round" padding={1}>
-            <Text color="yellow">{temporaryMessage}</Text>
-          </Box>
-        </Box>
-      )}
+      <TemporaryMessage message={temporaryMessage} />
     </>
   );
 }
