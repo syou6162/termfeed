@@ -1,5 +1,5 @@
 import { useApp, useStdout } from 'ink';
-import { useCallback, useEffect, useState, useRef } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ArticleList } from './components/ArticleList.js';
 import { FeedList } from './components/FeedList.js';
 import { TwoPaneLayout } from './components/TwoPaneLayout.js';
@@ -17,6 +17,7 @@ import { useViewedArticles } from './hooks/useViewedArticles.js';
 import { usePinManager } from './hooks/usePinManager.js';
 import { useTemporaryMessage } from './hooks/useTemporaryMessage.js';
 import { useBrowserActions } from './hooks/useBrowserActions.js';
+import { useProcessExitHandler } from './hooks/useProcessExitHandler.js';
 import { openUrlInBrowser } from './utils/browser.js';
 import { ERROR_SOURCES } from './types/error.js';
 import type { DatabaseManager } from '../../models/database.js';
@@ -167,27 +168,10 @@ export function App(props: AppProps = {}) {
     }
   }, [currentArticle, togglePin]);
 
-  // 閲覧済み記事の参照を保持（プロセス終了時の既読化用）
-  const markViewedArticlesAsReadRef = useRef(markViewedArticlesAsRead);
-  useEffect(() => {
-    markViewedArticlesAsReadRef.current = markViewedArticlesAsRead;
-  }, [markViewedArticlesAsRead]);
-
-  // プロセス終了時の既読化処理（アプリ全体で1回だけ登録）
-  useEffect(() => {
-    const handleExit = () => {
-      // 閲覧済み記事をまとめて既読化
-      markViewedArticlesAsReadRef.current();
-    };
-
-    process.on('SIGINT', handleExit);
-    process.on('SIGTERM', handleExit);
-
-    return () => {
-      process.off('SIGINT', handleExit);
-      process.off('SIGTERM', handleExit);
-    };
-  }, []); // 空の依存配列 = アプリ起動時に1回だけ実行
+  // プロセス終了時の既読化処理
+  useProcessExitHandler(() => {
+    markViewedArticlesAsRead();
+  });
 
   const handleQuit = useCallback(() => {
     // 閲覧済み記事をまとめて既読化
