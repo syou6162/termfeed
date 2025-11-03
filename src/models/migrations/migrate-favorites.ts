@@ -114,10 +114,10 @@ function migrateToFavoritesTable() {
       .prepare(
         `
       INSERT INTO articles_new (
-        id, feed_id, title, url, content, author, published_at, 
+        id, feed_id, title, url, content, author, published_at,
         is_read, thumbnail_url, created_at, updated_at
       )
-      SELECT 
+      SELECT
         id, feed_id, title, url, content, author, published_at,
         is_read, thumbnail_url, created_at, updated_at
       FROM articles

@@ -152,7 +152,7 @@ https://example.com/feed3.atom`;
 
 # This is a comment
 https://example.com/feed2.xml
-  
+
   https://example.com/feed3.atom  `;
 
       const urls = OPMLService.parseText(text);
@@ -218,9 +218,9 @@ https://example.com/feed2.xml`;
     });
 
     it('should handle whitespace correctly', () => {
-      const xmlContent = `  
+      const xmlContent = `
       <?xml version="1.0"?>`;
-      const textContent = `  
+      const textContent = `
       https://example.com/feed.rss`;
 
       expect(OPMLService.detectFormatFromContent(xmlContent)).toBe('opml');

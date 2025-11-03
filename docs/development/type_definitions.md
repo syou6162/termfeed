@@ -283,7 +283,7 @@ export type ArticleSyncState = { isSyncing: boolean; };
    type LocalHelperType = { ... };  // このファイル内でのみ使用
    ```
 
-3. **複数箇所で使用するが既存分類に合わない場合**: 
+3. **複数箇所で使用するが既存分類に合わない場合**:
    - 新しいカテゴリーファイルの作成を検討（例: `common.ts`）
    - チームで議論して方針を決定
 
@@ -297,10 +297,10 @@ export type ArticleSyncState = { isSyncing: boolean; };
    ```typescript
    // ユニオン型
    type Status = 'active' | 'inactive';
-   
+
    // インターセクション型
    type TimestampedArticle = Article & { viewedAt: Date };
-   
+
    // 条件型
    type Nullable<T> = T | null;
    ```
@@ -312,22 +312,22 @@ export type ArticleSyncState = { isSyncing: boolean; };
    } satisfies FeedService;
    ```
 
-4. **拡張性の制限**: 
+4. **拡張性の制限**:
    - termfeedはライブラリとして提供する予定がない
    - `interface`の宣言マージによる意図しない拡張を防ぐ
    - 型定義の完全性を保証し、予期しない拡張による破壊的変更を回避
-   
+
    ```typescript
    // interfaceの場合（意図しない拡張が可能）
    interface FeedService {
      addFeed(url: string): Promise<Feed>;
    }
-   
+
    // 別の場所で勝手に拡張される可能性
    interface FeedService {
      deleteFeed(id: number): void;  // 意図しない拡張！
    }
-   
+
    // typeの場合（拡張不可）
    type FeedService = {
      addFeed(url: string): Promise<Feed>;
@@ -367,7 +367,7 @@ export type ArticleSyncState = { isSyncing: boolean; };
    ```typescript
    // 悪い例（相対パスは階層が深くなると複雑）
    import type { Feed } from '../../../types/domain';
-   
+
    // 良い例（常に同じパス）
    import type { Feed } from '@/types';
    ```

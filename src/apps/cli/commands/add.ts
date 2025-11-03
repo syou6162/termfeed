@@ -12,14 +12,19 @@ export function createAddCommand(): Command {
     .action(async (url: string) => {
       const dbManager = createDatabaseManager();
 
+      // AbortController作成（Ctrl+C対応）
+      const abortController = new AbortController();
+      const sigintHandler = () => abortController.abort();
+      process.on('SIGINT', sigintHandler);
+
       try {
         dbManager.migrate();
         const { feedService } = createFeedServices(dbManager);
 
         console.log(`Adding feed: ${url}`);
 
-        // フィード追加
-        const result = await feedService.addFeed(url);
+        // フィード追加（AbortSignal付き）
+        const result = await feedService.addFeed(url, abortController.signal);
 
         console.log(`Feed added successfully!`);
         console.log(`  ID: ${result.feed.id}`);
@@ -29,6 +34,13 @@ export function createAddCommand(): Command {
         }
         console.log(`  Articles added: ${result.articlesCount}`);
       } catch (error) {
+        // キャンセルされた場合はフレンドリーなメッセージで終了
+        if (abortController.signal.aborted) {
+          console.log('\nOperation cancelled by user');
+          process.exit(130); // 128 + SIGINT(2) = 130
+          return;
+        }
+
         if (error instanceof Error) {
           console.error(`Error adding feed: ${error.message}`);
         } else {
@@ -36,6 +48,7 @@ export function createAddCommand(): Command {
         }
         process.exit(1);
       } finally {
+        process.off('SIGINT', sigintHandler);
         dbManager.close();
       }
     });

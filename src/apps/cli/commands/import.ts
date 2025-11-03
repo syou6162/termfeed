@@ -60,26 +60,52 @@ export const importCommand = new Command('import')
       dbManager.migrate();
       const { feedService } = createFeedServices(dbManager);
 
+      // AbortController作成（Ctrl+C対応）
+      const abortController = new AbortController();
+      const sigintHandler = () => abortController.abort();
+      process.on('SIGINT', sigintHandler);
+
       // 各URLを追加
       let successCount = 0;
       let duplicateCount = 0;
       let errorCount = 0;
 
-      for (const url of urls) {
-        try {
-          console.log(chalk.gray(`Adding ${url}...`));
-          await feedService.addFeed(url);
-          successCount++;
-          console.log(chalk.green(`✓ Added ${url}`));
-        } catch (error) {
-          if (error instanceof DuplicateFeedError) {
-            duplicateCount++;
-            console.log(chalk.yellow(`⚠ Skipped (already exists): ${url}`));
-          } else {
-            errorCount++;
-            console.error(chalk.red(`✗ Failed to add ${url}:`), error);
+      try {
+        for (const url of urls) {
+          // 中断チェック
+          if (abortController.signal.aborted) {
+            console.log(chalk.yellow('\nImport cancelled by user'));
+            process.exit(130); // 128 + SIGINT(2) = 130
+          }
+
+          try {
+            console.log(chalk.gray(`Adding ${url}...`));
+            await feedService.addFeed(url, abortController.signal);
+            successCount++;
+            console.log(chalk.green(`✓ Added ${url}`));
+          } catch (error) {
+            // キャンセルされた場合はエラーとしてカウントせずループ脱出
+            if (abortController.signal.aborted) {
+              break;
+            }
+
+            if (error instanceof DuplicateFeedError) {
+              duplicateCount++;
+              console.log(chalk.yellow(`⚠ Skipped (already exists): ${url}`));
+            } else {
+              errorCount++;
+              console.error(chalk.red(`✗ Failed to add ${url}:`), error);
+            }
           }
         }
+
+        // ループ脱出後にキャンセルチェック（最後のURLで中断された場合）
+        if (abortController.signal.aborted) {
+          console.log(chalk.yellow('\nImport cancelled by user'));
+          process.exit(130); // 128 + SIGINT(2) = 130
+        }
+      } finally {
+        process.off('SIGINT', sigintHandler);
       }
 
       // 結果のサマリー

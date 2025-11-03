@@ -79,7 +79,7 @@ describe('migrate-favorites', () => {
     database
       .prepare(
         `
-      INSERT INTO feeds (url, title, description, created_at) 
+      INSERT INTO feeds (url, title, description, created_at)
       VALUES (?, ?, ?, ?)
     `
       )
@@ -144,8 +144,8 @@ describe('migrate-favorites', () => {
     const favorites = database
       .prepare(
         `
-      SELECT f.*, a.title 
-      FROM favorites f 
+      SELECT f.*, a.title
+      FROM favorites f
       JOIN articles a ON f.article_id = a.id
       ORDER BY f.article_id
     `
@@ -316,10 +316,10 @@ function migrateToFavoritesTable(database: Database) {
       .prepare(
         `
       INSERT INTO articles_new (
-        id, feed_id, title, url, content, author, published_at, 
+        id, feed_id, title, url, content, author, published_at,
         is_read, thumbnail_url, created_at, updated_at
       )
-      SELECT 
+      SELECT
         id, feed_id, title, url, content, author, published_at,
         is_read, thumbnail_url, created_at, updated_at
       FROM articles

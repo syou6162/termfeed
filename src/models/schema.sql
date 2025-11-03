@@ -54,4 +54,3 @@ CREATE TABLE IF NOT EXISTS favorites (
 -- Favoritesテーブルのインデックス
 CREATE INDEX IF NOT EXISTS idx_favorites_article_id ON favorites(article_id);
 CREATE INDEX IF NOT EXISTS idx_favorites_created_at ON favorites(created_at DESC);
-

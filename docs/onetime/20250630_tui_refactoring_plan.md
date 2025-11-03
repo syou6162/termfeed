@@ -175,25 +175,25 @@ src/apps/tui/hooks/useAutoMarkAsRead.ts
 export function App() {
   // データ層の初期化
   const { feedService } = useTermfeedData();
-  
+
   // ビジネスロジック層
   const feedManager = useFeedManager(feedService);
   const articleManager = useArticleManager(feedService, feedManager.selectedFeedId);
-  
+
   // 自動既読機能
   useAutoMarkAsRead(
     articleManager.selectedArticle,
     articleManager.markAsRead
   );
-  
+
   // UI状態のみ
   const [showHelp, setShowHelp] = useState(false);
-  
+
   // キーボードナビゲーション
   useKeyboardNavigation({
     // プロパティは各マネージャーから取得
   });
-  
+
   // レンダリング（変更なし）
 }
 ```
