@@ -14,7 +14,8 @@ export function createAddCommand(): Command {
 
       // AbortController作成（Ctrl+C対応）
       const abortController = new AbortController();
-      process.on('SIGINT', () => abortController.abort());
+      const sigintHandler = () => abortController.abort();
+      process.on('SIGINT', sigintHandler);
 
       try {
         dbManager.migrate();
@@ -33,6 +34,13 @@ export function createAddCommand(): Command {
         }
         console.log(`  Articles added: ${result.articlesCount}`);
       } catch (error) {
+        // キャンセルされた場合はフレンドリーなメッセージで終了
+        if (abortController.signal.aborted) {
+          console.log('\nOperation cancelled by user');
+          process.exit(130); // 128 + SIGINT(2) = 130
+          return;
+        }
+
         if (error instanceof Error) {
           console.error(`Error adding feed: ${error.message}`);
         } else {
@@ -40,6 +48,7 @@ export function createAddCommand(): Command {
         }
         process.exit(1);
       } finally {
+        process.off('SIGINT', sigintHandler);
         dbManager.close();
       }
     });

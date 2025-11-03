@@ -62,34 +62,44 @@ export const importCommand = new Command('import')
 
       // AbortController作成（Ctrl+C対応）
       const abortController = new AbortController();
-      process.on('SIGINT', () => abortController.abort());
+      const sigintHandler = () => abortController.abort();
+      process.on('SIGINT', sigintHandler);
 
       // 各URLを追加
       let successCount = 0;
       let duplicateCount = 0;
       let errorCount = 0;
 
-      for (const url of urls) {
-        // 中断チェック
-        if (abortController.signal.aborted) {
-          console.log(chalk.yellow('\nImport cancelled by user'));
-          break;
-        }
+      try {
+        for (const url of urls) {
+          // 中断チェック
+          if (abortController.signal.aborted) {
+            console.log(chalk.yellow('\nImport cancelled by user'));
+            break;
+          }
 
-        try {
-          console.log(chalk.gray(`Adding ${url}...`));
-          await feedService.addFeed(url, abortController.signal);
-          successCount++;
-          console.log(chalk.green(`✓ Added ${url}`));
-        } catch (error) {
-          if (error instanceof DuplicateFeedError) {
-            duplicateCount++;
-            console.log(chalk.yellow(`⚠ Skipped (already exists): ${url}`));
-          } else {
-            errorCount++;
-            console.error(chalk.red(`✗ Failed to add ${url}:`), error);
+          try {
+            console.log(chalk.gray(`Adding ${url}...`));
+            await feedService.addFeed(url, abortController.signal);
+            successCount++;
+            console.log(chalk.green(`✓ Added ${url}`));
+          } catch (error) {
+            // キャンセルされた場合はエラーとしてカウントしない
+            if (abortController.signal.aborted) {
+              continue;
+            }
+
+            if (error instanceof DuplicateFeedError) {
+              duplicateCount++;
+              console.log(chalk.yellow(`⚠ Skipped (already exists): ${url}`));
+            } else {
+              errorCount++;
+              console.error(chalk.red(`✗ Failed to add ${url}:`), error);
+            }
           }
         }
+      } finally {
+        process.off('SIGINT', sigintHandler);
       }
 
       // 結果のサマリー
