@@ -84,9 +84,9 @@ export const importCommand = new Command('import')
             successCount++;
             console.log(chalk.green(`✓ Added ${url}`));
           } catch (error) {
-            // キャンセルされた場合はエラーとしてカウントしない
+            // キャンセルされた場合はエラーとしてカウントせずループ脱出
             if (abortController.signal.aborted) {
-              continue;
+              break;
             }
 
             if (error instanceof DuplicateFeedError) {
@@ -97,6 +97,12 @@ export const importCommand = new Command('import')
               console.error(chalk.red(`✗ Failed to add ${url}:`), error);
             }
           }
+        }
+
+        // ループ脱出後にキャンセルチェック（最後のURLで中断された場合）
+        if (abortController.signal.aborted) {
+          console.log(chalk.yellow('\nImport cancelled by user'));
+          process.exit(130); // 128 + SIGINT(2) = 130
         }
       } finally {
         process.off('SIGINT', sigintHandler);
