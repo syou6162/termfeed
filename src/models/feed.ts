@@ -116,7 +116,7 @@ export class FeedModel {
     updateValues.push(id);
 
     const stmt = this.db.getDb().prepare(`
-      UPDATE feeds 
+      UPDATE feeds
       SET ${updateFields.join(', ')}
       WHERE id = ?
     `);
@@ -137,7 +137,7 @@ export class FeedModel {
 
   public updateLastUpdatedAt(id: number): void {
     const stmt = this.db.getDb().prepare(`
-      UPDATE feeds 
+      UPDATE feeds
       SET last_updated_at = ?
       WHERE id = ?
     `);
@@ -151,7 +151,7 @@ export class FeedModel {
     }
 
     const stmt = this.db.getDb().prepare(`
-      UPDATE feeds 
+      UPDATE feeds
       SET rating = ?
       WHERE id = ?
     `);

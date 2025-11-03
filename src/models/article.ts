@@ -61,7 +61,7 @@ export class ArticleModel {
     const now = nowInUnixSeconds();
     const stmt = this.db.getDb().prepare(`
       INSERT INTO articles (
-        feed_id, title, url, content, author, 
+        feed_id, title, url, content, author,
         published_at, is_read, thumbnail_url, created_at, updated_at
       )
       VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?)
@@ -152,7 +152,7 @@ export class ArticleModel {
 
   public findAllWithPinStatus(filter: ArticleFilter = {}): (Article & { is_pinned: boolean })[] {
     let query = `
-      SELECT 
+      SELECT
         a.*,
         CASE WHEN p.article_id IS NOT NULL THEN 1 ELSE 0 END as is_pinned
       FROM articles a
@@ -197,7 +197,7 @@ export class ArticleModel {
 
   public getPinnedArticles(): Article[] {
     const query = `
-      SELECT 
+      SELECT
         a.*
       FROM articles a
       INNER JOIN pins p ON a.id = p.article_id
@@ -236,7 +236,7 @@ export class ArticleModel {
     const offsetClause = options.offset ? `OFFSET ${options.offset}` : '';
 
     const query = `
-      SELECT 
+      SELECT
         a.*
       FROM articles a
       INNER JOIN favorites f ON a.id = f.article_id
@@ -270,7 +270,7 @@ export class ArticleModel {
     updateValues.push(id);
 
     const stmt = this.db.getDb().prepare(`
-      UPDATE articles 
+      UPDATE articles
       SET ${updateFields.join(', ')}
       WHERE id = ?
     `);
@@ -355,9 +355,9 @@ export class ArticleModel {
 
   public getUnreadCountsByFeedIds(): { [feedId: number]: number } {
     const query = `
-      SELECT feed_id, COUNT(*) as unread_count 
-      FROM articles 
-      WHERE is_read = 0 
+      SELECT feed_id, COUNT(*) as unread_count
+      FROM articles
+      WHERE is_read = 0
       GROUP BY feed_id
     `;
 
@@ -379,7 +379,7 @@ export class ArticleModel {
    */
   public markAllAsRead(feedId?: number): number {
     let query = `
-      UPDATE articles 
+      UPDATE articles
       SET is_read = 1, updated_at = ?
       WHERE is_read = 0
     `;

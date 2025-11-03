@@ -349,10 +349,10 @@ export type ArticleService = {
    ```typescript
    // ユニオン型
    type Status = 'pending' | 'success' | 'error';
-   
+
    // インターセクション型
    type TimestampedFeed = Feed & { lastChecked: Date };
-   
+
    // 条件型
    type Nullable<T> = T | null;
    ```
@@ -400,7 +400,7 @@ export type ArticleService = {
    // Before
    import { Feed } from '../models/types';
    import { FeedService } from '../services/interfaces/feed-service';
-   
+
    // After
    import type { Feed, FeedService } from '@/types';
    ```
@@ -471,7 +471,7 @@ describe('add command integration', () => {
   let mockRSSCrawler: MockRSSCrawler;
   let database: DatabaseManager;
   let tempDir: string;
-  
+
   beforeEach(() => {
     // 一時ファイルDBを使用、HTTPリクエストはモック
     tempDir = mkdtempSync(join(tmpdir(), 'termfeed-test-'));
@@ -487,12 +487,12 @@ describe('add command integration', () => {
 
   it('RSSフィードを追加して記事を保存できる', async () => {
     mockRSSCrawler.setMockResponse('https://example.com/rss', mockRSSData);
-    
-    await addCommand.execute('https://example.com/rss', { 
-      database, 
-      crawler: mockRSSCrawler 
+
+    await addCommand.execute('https://example.com/rss', {
+      database,
+      crawler: mockRSSCrawler
     });
-    
+
     const feeds = await database.getDb().prepare('SELECT * FROM feeds').all();
     expect(feeds).toHaveLength(1);
   });
@@ -511,7 +511,7 @@ describe('スモークテスト', () => {
     const result = await exec('termfeed --help');
     expect(result).toContain('RSS reader');
   });
-  
+
   it('基本的なフィード操作フロー', async () => {
     // モックRSSサーバーを使用
     await exec('termfeed add http://localhost:3000/mock.rss');
@@ -541,25 +541,25 @@ describe('スモークテスト', () => {
    import { mkdtempSync, rmSync } from 'fs';
    import { join } from 'path';
    import { tmpdir } from 'os';
-   
+
    export function createTestContext() {
      // 一時ファイルDBを使用（インメモリDBは後回し）
      const tempDir = mkdtempSync(join(tmpdir(), 'termfeed-test-'));
      const dbPath = join(tempDir, 'test.db');
-     
+
      const database = new DatabaseManager(dbPath);
      database.migrate();
-     
+
      const mockCrawler = new MockRSSCrawler();
      const feedService = new FeedService(
        new FeedModel(database),
        new ArticleModel(database),
        mockCrawler
      );
-     
-     return { 
-       database, 
-       mockCrawler, 
+
+     return {
+       database,
+       mockCrawler,
        feedService,
        cleanup: () => {
          database.close();
@@ -645,7 +645,7 @@ export class FeedService implements IFeedService {
 ```typescript
 export class ArticleService implements IArticleService {
   constructor(private articleModel: ArticleModel) {}
-  
+
   async getArticles(options: ArticleQueryOptions): Promise<Article[]> {
     return this.articleModel.findAll(options);
   }
@@ -660,11 +660,11 @@ export class ArticleService implements IArticleService {
 // src/container.ts
 export class Container {
   private services = new Map();
-  
+
   register<T>(token: string, factory: () => T): void {
     this.services.set(token, factory);
   }
-  
+
   resolve<T>(token: string): T {
     const factory = this.services.get(token);
     if (!factory) throw new Error(`Service ${token} not found`);
