@@ -12,14 +12,18 @@ export function createAddCommand(): Command {
     .action(async (url: string) => {
       const dbManager = createDatabaseManager();
 
+      // AbortController作成（Ctrl+C対応）
+      const abortController = new AbortController();
+      process.on('SIGINT', () => abortController.abort());
+
       try {
         dbManager.migrate();
         const { feedService } = createFeedServices(dbManager);
 
         console.log(`Adding feed: ${url}`);
 
-        // フィード追加
-        const result = await feedService.addFeed(url);
+        // フィード追加（AbortSignal付き）
+        const result = await feedService.addFeed(url, abortController.signal);
 
         console.log(`Feed added successfully!`);
         console.log(`  ID: ${result.feed.id}`);

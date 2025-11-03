@@ -60,15 +60,25 @@ export const importCommand = new Command('import')
       dbManager.migrate();
       const { feedService } = createFeedServices(dbManager);
 
+      // AbortController作成（Ctrl+C対応）
+      const abortController = new AbortController();
+      process.on('SIGINT', () => abortController.abort());
+
       // 各URLを追加
       let successCount = 0;
       let duplicateCount = 0;
       let errorCount = 0;
 
       for (const url of urls) {
+        // 中断チェック
+        if (abortController.signal.aborted) {
+          console.log(chalk.yellow('\nImport cancelled by user'));
+          break;
+        }
+
         try {
           console.log(chalk.gray(`Adding ${url}...`));
-          await feedService.addFeed(url);
+          await feedService.addFeed(url, abortController.signal);
           successCount++;
           console.log(chalk.green(`✓ Added ${url}`));
         } catch (error) {
