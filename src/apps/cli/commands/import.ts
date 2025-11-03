@@ -75,7 +75,7 @@ export const importCommand = new Command('import')
           // 中断チェック
           if (abortController.signal.aborted) {
             console.log(chalk.yellow('\nImport cancelled by user'));
-            break;
+            process.exit(130); // 128 + SIGINT(2) = 130
           }
 
           try {
