@@ -246,4 +246,27 @@ https://example.com/bad.rss`;
     expect(output.stdout).toContain('Successfully imported: 1 feeds');
     expect(output.stdout).toContain('Failed to import: 1 feeds');
   });
+
+  it('should pass AbortSignal to RSSCrawler.crawl() when importing', async () => {
+    // Arrange - テキストファイルを作成
+    const textContent = 'https://example.com/feed1.rss';
+    const textPath = path.join(context.tempDir, 'feeds.txt');
+    await fs.writeFile(textPath, textContent, 'utf-8');
+
+    const mockData = createMockRSSData({
+      title: 'Test Feed',
+      feedUrl: 'https://example.com/feed1.rss',
+    });
+    rssMock.mockFeedResponse('https://example.com/feed1.rss', mockData);
+
+    // Act
+    await runCommand(['import', textPath], {
+      dbPath: context.dbPath,
+    });
+
+    // Assert - crawl() の第2引数がAbortSignalであることを確認
+    expect(rssMock.crawlSpy).toHaveBeenCalled();
+    const secondArg = rssMock.crawlSpy.mock.calls[0][1];
+    expect(secondArg).toBeInstanceOf(AbortSignal);
+  });
 });

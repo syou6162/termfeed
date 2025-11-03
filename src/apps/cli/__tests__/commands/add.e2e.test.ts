@@ -120,4 +120,24 @@ describe('add command E2E', () => {
     const feeds = context.feedModel.findAll();
     expect(feeds).toHaveLength(0);
   });
+
+  it('should pass AbortSignal to RSSCrawler.crawl()', async () => {
+    // Arrange
+    const feedUrl = 'https://example.com/feed.rss';
+    const mockData = createMockRSSData({
+      title: 'Test Feed',
+      feedUrl,
+    });
+    rssMock.mockFeedResponse(feedUrl, mockData);
+
+    // Act
+    await runCommand(['add', feedUrl], {
+      dbPath: context.dbPath,
+    });
+
+    // Assert - crawl() の第2引数がAbortSignalであることを確認
+    expect(rssMock.crawlSpy).toHaveBeenCalledTimes(1);
+    const secondArg = rssMock.crawlSpy.mock.calls[0][1];
+    expect(secondArg).toBeInstanceOf(AbortSignal);
+  });
 });
